@@ -1,8 +1,8 @@
 // src/api/apiClient.js
 import { logApi } from '@/lib/errorHandler';
 
-// ✅ POPRAWNIE - używa zmiennej środowiskowej Vite
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// ✅ DLA PRODUKCJI NA RENDERZE
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://longdrive-2.onrender.com/api';
 
 const getToken = () => localStorage.getItem('token');
 const setToken = (token) => {
