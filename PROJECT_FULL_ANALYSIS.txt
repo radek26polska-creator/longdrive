@@ -1,0 +1,6980 @@
+
+########## MAPA PROJEKTU ##########
+src\api\apiClient.js
+src\App.jsx
+src\components\calendar\CalendarWidget.jsx
+src\components\ConfirmModal.jsx
+src\components\forms\TripStartForm.jsx
+src\components\maps\GPSLiveTracker.jsx
+src\components\maps\index.js
+src\components\maps\LocationSearch.jsx
+src\components\maps\MapControls.jsx
+src\components\maps\MapView.jsx
+src\components\maps\MapWidget.jsx
+src\components\maps\TrackedTripsList.jsx
+src\components\maps\TripDetailsModal.jsx
+src\components\maps\TripHistoryMap.jsx
+src\components\print\KartaDrogowa.jsx
+src\components\print\PolecenieWyjazdu.jsx
+src\components\trips\TripCardPDF.jsx
+src\components\ui\accordion.jsx
+src\components\ui\alert-dialog.jsx
+src\components\ui\alert.jsx
+src\components\ui\aspect-ratio.jsx
+src\components\ui\avatar.jsx
+src\components\ui\badge.jsx
+src\components\ui\breadcrumb.jsx
+src\components\ui\button.jsx
+src\components\ui\calendar.jsx
+src\components\ui\card.jsx
+src\components\ui\carousel.jsx
+src\components\ui\chart.jsx
+src\components\ui\checkbox.jsx
+src\components\ui\collapsible.jsx
+src\components\ui\command.jsx
+src\components\ui\context-menu.jsx
+src\components\ui\dialog.jsx
+src\components\ui\drawer.jsx
+src\components\ui\dropdown-menu.jsx
+src\components\ui\form.jsx
+src\components\ui\FormError.jsx
+src\components\ui\GlassCard.jsx
+src\components\ui\hover-card.jsx
+src\components\ui\input-otp.jsx
+src\components\ui\input.jsx
+src\components\ui\label.jsx
+src\components\ui\menubar.jsx
+src\components\ui\Modal.jsx
+src\components\ui\navigation-menu.jsx
+src\components\ui\PageHeader.jsx
+src\components\ui\pagination.jsx
+src\components\ui\popover.jsx
+src\components\ui\progress.jsx
+src\components\ui\radio-group.jsx
+src\components\ui\resizable.jsx
+src\components\ui\SaveButton.jsx
+src\components\ui\scroll-area.jsx
+src\components\ui\SearchBar.jsx
+src\components\ui\select.jsx
+src\components\ui\separator.jsx
+src\components\ui\sheet.jsx
+src\components\ui\sidebar.jsx
+src\components\ui\skeleton.jsx
+src\components\ui\slider.jsx
+src\components\ui\sonner.jsx
+src\components\ui\SortButton.jsx
+src\components\ui\StatCard.jsx
+src\components\ui\switch.jsx
+src\components\ui\table.jsx
+src\components\ui\tabs.jsx
+src\components\ui\textarea.jsx
+src\components\ui\toast.jsx
+src\components\ui\toaster.jsx
+src\components\ui\toggle-group.jsx
+src\components\ui\toggle.jsx
+src\components\ui\tooltip.jsx
+src\components\ui\use-toast.jsx
+src\components\UserNotRegisteredError.jsx
+src\components\weather\WeatherWidget.jsx
+src\hooks\use-mobile.jsx
+src\hooks\useAutofill.js
+src\hooks\useFormDraft.js
+src\hooks\useFormValidation.js
+src\hooks\useGeolocation.js
+src\hooks\useKeyBlocker.js
+src\hooks\useMap.js
+src\hooks\useMapSearch.js
+src\hooks\useSearch.js
+src\hooks\useTrackedTrips.js
+src\hooks\useWeather.js
+src\Layout.jsx
+src\lib\AuthContext.jsx
+src\lib\calendarUtils.js
+src\lib\errorHandler.js
+src\lib\logger.js
+src\lib\mapConfig.js
+src\lib\mapProviders.js
+src\lib\NavigationTracker.jsx
+src\lib\PageNotFound.jsx
+src\lib\query-client.js
+src\lib\ThemeContext.jsx
+src\lib\utils.js
+src\lib\validation.js
+src\lib\weatherApi.js
+src\main.jsx
+src\pages\Calculators.jsx
+src\pages\Dashboard.jsx
+src\pages\Drivers.jsx
+src\pages\Keys.jsx
+src\pages\LoginPage.jsx
+src\pages\MapPage.jsx
+src\pages\Refueling.jsx
+src\pages\RegisterPage.jsx
+src\pages\Services.jsx
+src\pages\Settings.jsx
+src\pages\Statistics.jsx
+src\pages\TripDetail.jsx
+src\pages\Trips.jsx
+src\pages\Vehicles.jsx
+src\pages\WeatherPage.jsx
+src\pages\WeatherWidget.jsx
+src\pages.config.js
+src\types\map.ts
+src\utils\index.ts
+
+########## ANALIZA PLIKÓW ##########
+
+====================================
+PLIK: src\api\apiClient.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const getToken = () =>
+const setToken = (token) =>
+const buildQueryString = (params) =>
+function apiRequest
+
+--- IMPORTY ---
+@/lib/errorHandler
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+  exportData: (type, params = {}) => {
+    return apiRequest(`/export/${type}${query}`, {
+export default api;
+
+--- SKRÓT LOGIKI ---
+import  from '@/lib/errorHandler';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http:
+const getToken = () => localStorage.getItem('token');
+const setToken = (token) =>  else 
+};
+const buildQueryString = (params) => =$`)
+    .join('&');
+  return query ? `?$` : '';
+};
+async function apiRequest(endpoint, options = ) $`;
+  const method = options.method || 'GET';
+  const startTime = Date.now();
+  const headers = ;
+  const token = getToken();
+  if (token) `;
+  }
+  if (options.body instanceof FormData) 
+  const config = ;
+  if (method === 'GET' || method === 'HEAD') 
+  try );
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) 
+      throw new Error('Sesja wygasła. Zaloguj się ponownie.');
+    }
+    if (!response.ok)  catch ;
+      }
+      logApi(endpoint, method, response.status, );
+      throw new Error(errorData.error || errorData.message || `Błąd $: $`);
+    }
+    if (response.status === 204) );
+      return null;
+    }
+    const data = await response.json();
+    logApi(endpoint, method, response.status, );
+    return data;
+  } catch (error) );
+      throw new Error('Brak połączenia z serwerem. Sprawdź swoje połączenie internetowe.');
+    }
+    logApi(endpoint, method, 'UNKNOWN_ERROR', );
+    throw error;
+  }
+
+====================================
+
+====================================
+PLIK: src\App.jsx
+
+--- KOMPONENTY ---
+ProtectedRoute
+AppLayout
+SettingsRefreshAnimation
+AnimatedPage
+
+--- FUNKCJE ---
+const ProtectedRoute = () =>
+const AppLayout = () =>
+const getCurrentPageName = () =>
+const matchedKey = pageKeys.find(key =>
+const getAnimationVariants = (type) =>
+const SettingsRefreshAnimation = ({ settingsChanged, onComplete }) =>
+const timer = setTimeout(() =>
+const AnimatedPage = () =>
+const handleAnimationComplete = () =>
+function App
+
+--- IMPORTY ---
+@/components/ui/toaster
+@tanstack/react-query
+@/lib/query-client
+@/lib/NavigationTracker
+./pages.config
+react-router-dom
+./lib/PageNotFound
+@/lib/AuthContext
+@/lib/ThemeContext
+framer-motion
+@/pages/LoginPage
+@/pages/RegisterPage
+@/pages/WeatherPage
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default App;
+
+--- SKRÓT LOGIKI ---
+import  from "@/components/ui/toaster"
+import  from '@tanstack/react-query'
+import  from '@/lib/query-client'
+import NavigationTracker from '@/lib/NavigationTracker'
+import  from './pages.config'
+import  from 'react-router-dom';
+import PageNotFound from './lib/PageNotFound';
+import  from '@/lib/AuthContext';
+import  from '@/lib/ThemeContext';
+import  from 'framer-motion';
+import LoginPage from '@/pages/LoginPage';
+import RegisterPage from '@/pages/RegisterPage';
+import WeatherPage from '@/pages/WeatherPage';  
+import  from 'react';
+const  = pagesConfig;
+const mainPageKey = mainPage ?? Object.keys(Pages)[0];
+const MainPage = mainPageKey ? Pages[mainPageKey] : ;
+const ProtectedRoute = () =>  = useAuth();
+  if (loading) 
+  return isAuthenticated ?  : ;
+};
+const AppLayout = () => ;
+  const currentPageName = getCurrentPageName();
+  if (Layout) 
+  return ;
+};
+const getAnimationVariants = (type) => , animate:  };
+    case 'slide':
+      return , animate:  };
+    case 'scale':
+      return , animate:  };
+    case 'zoom-rotate':
+      return , animate:  };
+    case 'flip':
+      return , animate:  };
+    case 'swing':
+      return , animate:  };
+    case 'elastic':
+      return , animate:  };
+    case 'blur':
+
+====================================
+
+====================================
+PLIK: src\components\calendar\CalendarWidget.jsx
+
+--- KOMPONENTY ---
+CalendarWidget
+
+--- FUNKCJE ---
+const getEventTypeConfig = (type) =>
+const buildMonthDays = (date) =>
+const checkReminders = (events) =>
+const reminders = events.filter((e) =>
+const saveCustomEvents = (events) =>
+const events = useMemo(() =>
+const tripEvents = trips.map((trip) =>
+const serviceEvents = services.map((service) =>
+const refuelingEvents = refuelings.map((refueling) =>
+const custom = customEvents.map((e) =>
+const monthDays = useMemo(() =>
+const getEventsForDay = (day) =>
+const prevMonth = () =>
+const nextMonth = () =>
+const goToToday = () =>
+const handleDayClick = (day) =>
+const handleAddEvent = () =>
+const handleSaveEvent = () =>
+const updated = customEvents.map((e) =>
+const handleEditEvent = (event) =>
+const handleDeleteEvent = (eventId) =>
+const updated = customEvents.filter((e) =>
+const getEventDotColor = (type) =>
+
+--- IMPORTY ---
+react
+framer-motion
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/badge
+@/components/ui/input
+@/components/ui/label
+@/components/ui/textarea
+date-fns
+date-fns/locale
+sonner
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export default CalendarWidget;
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "framer-motion";
+import  from "lucide-react";
+import GlassCard from "@/components/ui/GlassCard";
+import  from "@/components/ui/button";
+import  from "@/components/ui/badge";
+import  from "@/components/ui/input";
+import  from "@/components/ui/label";
+import  from "@/components/ui/textarea";
+import  from "@/components/ui/select";
+import  from "date-fns";
+import  from "date-fns/locale";
+import  from "sonner";
+const STORAGE_KEY = "calendar_events";
+const eventTypeOptions = [
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+];
+const getEventTypeConfig = (type) =>
+  eventTypeOptions.find((o) => o.id === type) || eventTypeOptions[eventTypeOptions.length - 1];
+const buildMonthDays = (date) => );
+  useEffect(() =>  catch (e) 
+    }
+  }, []);
+  const checkReminders = (events) => ;
+  const events = useMemo(() => `,
+      type: "trip",
+      title: `$ → $`,
+      date: trip.startDate,
+      endDate: trip.endDate,
+      vehicleId: trip.vehicleId,
+      details: trip,
+      isCustom: false,
+    }));
+    const serviceEvents = services.map((service) => (`,
+
+====================================
+
+====================================
+PLIK: src\components\ConfirmModal.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function ConfirmModal
+
+--- IMPORTY ---
+react
+lucide-react
+@/components/ui/button
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function ConfirmModal({ isOpen, onClose, onConfirm, title, message }) {
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+import  from 'lucide-react';
+import  from '@/components/ui/button';
+export default function ConfirmModal() 
+      >
+              Anuluj
+              Usuń
+  );
+}
+
+====================================
+
+====================================
+PLIK: src\components\forms\TripStartForm.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function TripStartForm
+const handleVehicleChange = (vehicleId) =>
+const vehicle = vehicles.find(v =>
+const handleSubmit = (e) =>
+const set = (key, value) =>
+
+--- IMPORTY ---
+react
+@/components/ui/button
+@/components/ui/input
+@/components/ui/label
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function TripStartForm({ vehicles, drivers, onSubmit, onCancel }) {
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from '@/components/ui/button';
+import  from '@/components/ui/input';
+import  from '@/components/ui/label';
+import  from '@/components/ui/select';
+export default function TripStartForm() );
+  const [formData, setFormData] = useState();
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const handleVehicleChange = (vehicleId) => ));
+    if (vehicle && vehicle.fuelLevel !== undefined) ));
+    }
+  };
+  const handleSubmit = (e) => T$:00`).toISOString();
+    }
+    const tripData = ;
+    console.log('🚀 Rozpoczęcie trasy:', tripData);
+    onSubmit(tripData);
+  };
+  const set = (key, value) => setFormData(prev => ());
+  return (
+          Pojazd *
+                ()
+              ))}
+          Kierowca *
+           set('driverId', v)} required>
+              ))}
+          Data rozpoczęcia przejazdu *
+           set('departureDate', e.target.value)}
+            className="bg-slate-800 border-slate-700 text-white"
+            required
+          />
+          Godzina rozpoczęcia *
+           set('departureTime', e.target.value)}
+            className="bg-slate-800 border-slate-700 text-white"
+            required
+          />
+       km
+              Stan paliwa:
+               L
+      )}
+
+====================================
+
+====================================
+PLIK: src\components\maps\GPSLiveTracker.jsx
+
+--- KOMPONENTY ---
+GPSLiveTracker
+
+--- FUNKCJE ---
+const calculateDistance = (lat1, lng1, lat2, lng2) =>
+const getErrorMessage = (err) =>
+const startTracking = useCallback(() =>
+const stopTracking = useCallback(() =>
+const resetTracking = useCallback(() =>
+const formatDuration = (seconds) =>
+const formatDistance = (km) =>
+const getAccuracyStatus = () =>
+const renderError = () =>
+
+--- IMPORTY ---
+react
+framer-motion
+lucide-react
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/progress
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default GPSLiveTracker;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'framer-motion';
+import  from 'lucide-react';
+import GlassCard from '@/components/ui/GlassCard';
+import  from '@/components/ui/button';
+import  from '@/components/ui/progress';
+const GPSLiveTracker = () => ;
+  const getErrorMessage = (err) => `;
+        type = 'general';
+    }
+    return ;
+  };
+  const startTracking = useCallback(() => 
+    setError(null);
+    setErrorType(null);
+    setTracking(true);
+    const id = navigator.geolocation.watchPosition(
+      (position) =>  = position.coords;
+        const timestamp = new Date(position.timestamp);
+        const newPosition = ;
+        setCurrentPosition(newPosition);
+        setAccuracy(acc);
+        setError(null);
+        setErrorType(null);
+        if (trackHistory.length > 0) 
+        setTrackHistory(prev => [...prev, newPosition]);
+        if (onLocationUpdate) 
+      },
+      (err) =>  = getErrorMessage(err);
+        setError(message);
+        setErrorType(type);
+        setTracking(false);
+        if (watchId) 
+      },
+    );
+    setWatchId(id);
+  }, [highAccuracy, trackHistory, onLocationUpdate, watchId]);
+  const stopTracking = useCallback(() => 
+    setTracking(false);
+  }, [watchId]);
+
+====================================
+
+====================================
+PLIK: src\components\maps\index.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+brak
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { default as MapView } from './MapView';
+export { default as MapWidget } from './MapWidget';
+export { default as GPSLiveTracker } from './GPSLiveTracker';
+export { default as LocationSearch } from './LocationSearch';
+export { default as MapControls } from './MapControls';
+export { default as TripHistoryMap } from './TripHistoryMap';
+export { default as TrackedTripsList } from './TrackedTripsList';
+export { default as TripDetailsModal } from './TripDetailsModal';
+export { default as useMap } from '@/hooks/useMap';
+export { default as useTrackedTrips } from '@/hooks/useTrackedTrips';
+
+--- SKRÓT LOGIKI ---
+export  from './MapView';
+export  from './MapWidget';
+export  from './GPSLiveTracker';
+export  from './LocationSearch';
+export  from './MapControls';
+export  from './TripHistoryMap';
+export  from './TrackedTripsList';
+export  from './TripDetailsModal';
+export  from '@/hooks/useMap';
+export  from '@/hooks/useTrackedTrips';
+
+====================================
+
+====================================
+PLIK: src\components\maps\LocationSearch.jsx
+
+--- KOMPONENTY ---
+LocationSearch
+
+--- FUNKCJE ---
+const searchLocation = useCallback(async (searchQuery) =>
+const handleSearchChange = (e) =>
+const handleSelectLocation = (location) =>
+const closeResults = () =>
+
+--- IMPORTY ---
+react
+framer-motion
+lucide-react
+@/components/ui/GlassCard
+@/components/ui/input
+@/components/ui/button
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default LocationSearch;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'framer-motion';
+import  from 'lucide-react';
+import GlassCard from '@/components/ui/GlassCard';
+import  from '@/components/ui/input';
+import  from '@/components/ui/button';
+const LocationSearch = () => )) || [];
+      } else ));
+      }
+      setResults(formattedResults);
+      setShowResults(true);
+    } catch (error)  finally 
+  }, [provider, apiKey]);
+  const handleSearchChange = (e) => 
+    searchTimeoutRef.current = setTimeout(() => , 500);
+  };
+  const handleSelectLocation = (location) => 
+    if (onLocationSelect) 
+    setShowResults(false);
+    setQuery(location.display_name || location.name);
+  };
+  const closeResults = () => ;
+  return (
+           results.length > 0 && setShowResults(true)}
+            placeholder=
+            className="pl-9 pr-9 bg-slate-800 border-slate-700 text-theme-white placeholder:text-slate-500"
+          />
+          }
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+            >
+          )}
+                    className="w-full text-left p-2 rounded-lg hover:bg-slate-700/50 transition-colors flex items-start gap-2"
+                  >
+                ))
+              )}
+        )}
+  );
+};
+export default LocationSearch;
+
+====================================
+
+====================================
+PLIK: src\components\maps\MapControls.jsx
+
+--- KOMPONENTY ---
+MapControls
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+react
+framer-motion
+@/components/ui/GlassCard
+@/components/ui/button
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default MapControls;
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+import  from 'framer-motion';
+import  from 'lucide-react';
+import GlassCard from '@/components/ui/GlassCard';
+import  from '@/components/ui/button';
+const MapControls = () => ,
+    ,
+    ,
+    ,
+    ,
+  ];
+  const providers = [
+    ,
+    ,
+    ,
+    ,
+  ];
+  return (
+                title=
+              >
+            );
+          })}
+      )}
+              title=$`}
+            >
+          ))}
+      )}
+  );
+};
+export default MapControls;
+
+====================================
+
+====================================
+PLIK: src\components\maps\MapView.jsx
+
+--- KOMPONENTY ---
+MapView
+
+--- FUNKCJE ---
+const startTracking = () =>
+const stopTracking = () =>
+const centerOnLocation = () =>
+const toggleFullscreen = () =>
+const handleZoomIn = () =>
+const handleZoomOut = () =>
+
+--- IMPORTY ---
+react
+framer-motion
+lucide-react
+@/components/ui/button
+@/components/ui/GlassCard
+leaflet
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default MapView;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'framer-motion';
+import  from 'lucide-react';
+import  from '@/components/ui/button';
+import GlassCard from '@/components/ui/GlassCard';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions();
+const MapView = () => .tile.openstreetmap.org
+    if (mapStyle === 'satellite') 
+    } else if (mapStyle === 'terrain') .tile.opentopomap.org
+    }
+    const mapInstance = L.map(mapContainerRef.current).setView([52.2297, 21.0122], 12);
+    L.tileLayer(tileUrl, ).addTo(mapInstance);
+    setMap(mapInstance);
+    return () => ;
+  }, [mapStyle]);
+  useEffect(() => 
+    const marker = L.marker([userLocation.lat, userLocation.lng]);
+    marker.addTo(map);
+    marker.bindPopup(`
+      Twoja lokalizacja
+      Dokładność: ~$m
+      $, $
+    `).openPopup();
+    userMarkerRef.current = marker;
+    if (autoCenter) 
+    console.log('✅ Marker dodany!');
+  }, [map, userLocation, autoCenter]);
+  const startTracking = () => ;
+        setCurrentPosition(newPosition);
+        if (map && userMarkerRef.current) m
+            $, $
+          `);
+          if (autoCenter) 
+        }
+      },
+      (error) => console.error('Błąd GPS:', error),
+    );
+
+====================================
+
+====================================
+PLIK: src\components\maps\MapWidget.jsx
+
+--- KOMPONENTY ---
+MapWidget
+
+--- FUNKCJE ---
+const toggleTracking = () =>
+const centerOnCurrentLocation = async () =>
+const activeTrips = trips.filter(t =>
+
+--- IMPORTY ---
+react
+framer-motion
+lucide-react
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/badge
+@/hooks/useMap
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default MapWidget;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'framer-motion';
+import  from 'lucide-react';
+import GlassCard from '@/components/ui/GlassCard';
+import  from '@/components/ui/button';
+import  from '@/components/ui/badge';
+import  from '@/hooks/useMap';
+const MapWidget = (,
+  onFullscreen = null,
+  onTripClick = null,
+  className = '',
+}) =>  = useMap(mapContainerRef, );
+  const toggleTracking = () =>  else 
+  };
+  useEffect(() => );
+    }
+    if (activeTrip.startCoordinates) `,
+      });
+    }
+    if (activeTrip.endCoordinates) `,
+      });
+    }
+    return () => ;
+  }, [isMapReady, activeTrip, drawRoute, clearRoute, addMarker, clearMarkers]);
+  useEffect(() => m`,
+    });
+  }, [isMapReady, trackedPosition, addMarker]);
+  const centerOnCurrentLocation = async () =>  = position.coords;
+          centerOnPosition();
+        },
+        (error) => 
+      );
+    }
+  };
+  const activeTrips = trips.filter(t => t.status === 'in_progress');
+  return (
+            Mapa tras
+             aktywna trasa
+            )}
+                    className="text-left text-xs text-theme-white hover:text-primary transition-colors p-1 rounded hover:bg-slate-800"
+
+====================================
+
+====================================
+PLIK: src\components\maps\TrackedTripsList.jsx
+
+--- KOMPONENTY ---
+TrackedTripsList
+
+--- FUNKCJE ---
+const formatDistance = (km) =>
+const formatDuration = (seconds) =>
+const getStatusColor = (status) =>
+const getStatusLabel = (status) =>
+
+--- IMPORTY ---
+react
+framer-motion
+@/components/ui/button
+@/components/ui/badge
+date-fns
+date-fns/locale
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default TrackedTripsList;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'framer-motion';
+import  from 'lucide-react';
+import  from '@/components/ui/button';
+import  from '@/components/ui/badge';
+import  from 'date-fns';
+import  from 'date-fns/locale';
+const TrackedTripsList = () => h $m`;
+    if (minutes > 0) return `$m`;
+    return `$s`;
+  };
+  const getStatusColor = (status) => 
+  };
+  const getStatusLabel = (status) => 
+  };
+  if (trips.length === 0) 
+  return (
+             setExpandedTripId(isExpanded ? null : trip.id)}
+            >
+                    )}
+                      )}
+                    )}
+                    )}
+                          Dystans
+                          Czas
+                          Średnia prędkość
+                           km/h`
+                            : '---'}
+                       onViewOnMap?.(trip)}
+                      >
+                        Pokaż na mapie
+                       onExportToKarta?.(trip)}
+                      >
+                        Karta drogowa
+                       onExportToTrip?.(trip)}
+                      >
+                        Dodaj do podróży
+                       onDelete?.(trip.id)}
+                      >
+                        Usuń
+
+====================================
+
+====================================
+PLIK: src\components\maps\TripDetailsModal.jsx
+
+--- KOMPONENTY ---
+TripDetailsModal
+
+--- FUNKCJE ---
+const formatDistance = (km) =>
+const formatDuration = (seconds) =>
+const getAverageSpeed = () =>
+
+--- IMPORTY ---
+react
+framer-motion
+@/components/ui/button
+date-fns
+date-fns/locale
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default TripDetailsModal;
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+import  from 'framer-motion';
+import  from 'lucide-react';
+import  from '@/components/ui/button';
+import  from 'date-fns';
+import  from 'date-fns/locale';
+const TripDetailsModal = () => h $m`;
+    if (minutes > 0) return `$m`;
+    return `$s`;
+  };
+  const getAverageSpeed = () =>  km/h`;
+  };
+  return (
+                Szczegóły trasy
+                  Start
+                  Meta
+                    Dystans
+                    Czas
+                    Średnia prędkość
+                    Punkty GPS
+                  Data i czas
+                  Rozpoczęcie: )}
+                )}
+                )}
+                 onViewOnMap?.(trip)}
+                >
+                  Pokaż na mapie
+                 onExportToKarta?.(trip)}
+                >
+                  Karta drogowa
+                 onExportToTrip?.(trip)}
+                >
+                  Dodaj do modułu Podróże
+      )}
+  );
+};
+export default TripDetailsModal;
+
+====================================
+
+====================================
+PLIK: src\components\maps\TripHistoryMap.jsx
+
+--- KOMPONENTY ---
+TripHistoryMap
+
+--- FUNKCJE ---
+const filteredTrips = useMemo(() =>
+const handleTripSelect = useCallback((trip) =>
+const animateTrip = useCallback(() =>
+const getVehicleName = (vehicleId) =>
+const vehicle = vehicles.find(v =>
+const getDriverName = (driverId) =>
+const driver = drivers.find(d =>
+const getRouteColor = (vehicleId) =>
+const vehicle = vehicles.find(v =>
+
+--- IMPORTY ---
+react
+framer-motion
+lucide-react
+./MapView
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/select
+@/components/ui/badge
+date-fns
+date-fns/locale
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default TripHistoryMap;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'framer-motion';
+import  from 'lucide-react';
+import MapView from './MapView';
+import GlassCard from '@/components/ui/GlassCard';
+import  from '@/components/ui/button';
+import  from '@/components/ui/select';
+import  from '@/components/ui/badge';
+import  from 'date-fns';
+import  from 'date-fns/locale';
+const TripHistoryMap = (,
+  className = '',
+  onTripSelect = null,
+}) => 
+    if (filterDriver !== 'all') 
+    if (filterDate !== 'all') 
+    }
+    return filtered.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+  }, [trips, filterVehicle, filterDriver, filterDate]);
+  const handleTripSelect = useCallback((trip) => , [onTripSelect]);
+  const animateTrip = useCallback(() => , []);
+  const getVehicleName = (vehicleId) =>  ($)` : 'Nieznany';
+  };
+  const getDriverName = (driverId) => ;
+  const getRouteColor = (vehicleId) => 
+  };
+  const vehicleOptions = [
+    ,
+    ...vehicles.map(v => ( ($)` }))
+  ];
+  const driverOptions = [
+    ,
+    ...drivers.map(d => ())
+  ];
+  const dateOptions = [
+    ,
+    ,
+    ,
+    ,
+    ,
+
+====================================
+
+====================================
+PLIK: src\components\print\KartaDrogowa.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMileage, endFuel, fuelAdded, format = 'A4' }, ref) =>
+const formatDate = (dateStr) =>
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default KartaDrogowa;
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+const KartaDrogowa = React.forwardRef((, ref) => );
+  };
+  const actualEndMileage = trip?.endOdometer || endMileage || trip?.startOdometer || 0;
+  const actualEndFuel = trip?.endFuel ?? endFuel ?? vehicle?.fuelLevel ?? 0;
+  const actualFuelAdded = trip?.fuelAdded ?? fuelAdded ?? 0;
+  const distance = actualEndMileage - (trip?.startOdometer || 0);
+  const fuelConsumption = vehicle?.fuelConsumption || 7.5;
+  const fuelUsedNorm = (distance / 100) * fuelConsumption;
+  const fuelUsedActual = (trip?.startFuel || 0) + actualFuelAdded - actualEndFuel;
+  const fuelDiff = fuelUsedNorm - fuelUsedActual;
+  const fuelSavings = fuelDiff > 0 ? fuelDiff : 0;
+  const fuelOveruse = fuelDiff 
+              1
+                    }
+                    )}
+                    }
+                    }
+                    }
+                    }
+              ) : (
+                  Pieczęć jednostki organizacyjnej
+              )}
+                  2
+                    KARTA DROGOWA
+                    Nr
+                    Data
+                  SM
+                  101
+              3
+              Samochód osobowy - specjalny - motocykl*)&nbsp;&nbsp;
+              Nr rej.&nbsp;
+              Marka i typ:&nbsp;
+                 $`.trim() : '...................................'}
+              Pojemność cylindrów:&nbsp;
+                 cm³` : '...................................'}
+              Rodzaj paliwa:&nbsp;
+              Rodzaj nadwozia:&nbsp;
+              4 Imię i nazwisko kierowcy
+                Cel:&nbsp;
+
+====================================
+
+====================================
+PLIK: src\components\print\PolecenieWyjazdu.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const PolecenieWyjazdu = React.forwardRef(({ trip, vehicle, driver, company, format = 'A4' }, ref) =>
+const formatDate = (dateStr) =>
+const formatTime = (dateStr) =>
+const getCurrentDate = () =>
+const getCurrentTime = () =>
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default PolecenieWyjazdu;
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+const PolecenieWyjazdu = React.forwardRef((, ref) => ;
+  const formatTime = (dateStr) => );
+  };
+  const getCurrentDate = () => new Date().toLocaleDateString('pl-PL');
+  const getCurrentTime = () => new Date().toLocaleTimeString('pl-PL', );
+  const startDateTime = trip?.startTime || trip?.startDate;
+  const endDateTime   = trip?.endTime   || trip?.endDate;
+  const distance = (trip?.endOdometer || 0) - (trip?.startOdometer || 0);
+  const departureTimeStr = startDateTime ? formatTime(startDateTime) : getCurrentTime();
+  const departureDateStr = startDateTime ? formatDate(startDateTime) : getCurrentDate();
+  const greenColor  = '#4a7c59';
+  const lightGreen  = '#e8f5e9';
+  const borderColor = '#5a8a6a';
+  const isA5 = format === 'A5';
+  const pageWidth  = isA5 ? '148mm' : '210mm';
+  const pageHeight = isA5 ? '210mm' : '297mm';
+  const pagePad    = isA5 ? '4mm 5mm' : '7mm 9mm';
+  const fontSize       = isA5 ? '7px'   : '9px';
+  const smallFontSize  = isA5 ? '5.5px' : '7px';
+  const tinyFontSize   = isA5 ? '5px'   : '6px';
+  const headerFontSize = isA5 ? '13px'  : '16px';
+  const routeText = trip?.startLocation && trip?.endLocation
+    ? `$ - $`
+    : trip?.purpose || '';
+  const driverName = driver?.name ||
+    (driver ? `$ $`.trim() : '');
+  const cell = `,
+    padding: isA5 ? '1px 2px' : '2px 3px',
+    fontSize,
+    textAlign: 'center',
+    verticalAlign: 'middle',
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
+    lineHeight: '1.2',
+  };
+  const hCell = ;
+  const printCSS = `
+    @media print  portrait;
+        margin: 0mm;
+
+====================================
+
+====================================
+PLIK: src\components\trips\TripCardPDF.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const generatePDFFromKartaDrogowa = async (ref, format = 'A4') =>
+function TripCardPDF
+const generatePDF = React.useCallback(async () =>
+const handleDownload = async () =>
+const handlePreview = async () =>
+
+--- IMPORTY ---
+react
+jspdf
+@/components/ui/button
+lucide-react
+./KartaDrogowa
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function TripCardPDF({ trip, vehicle, driver, company, format = 'A4' }) {
+
+--- SKRÓT LOGIKI ---
+import React from "react";
+import jsPDF from "jspdf";
+import  from "@/components/ui/button";
+import  from "lucide-react";
+import KartaDrogowa from "./KartaDrogowa";
+const MM_TO_PX = 96 / 25.4;
+const generatePDFFromKartaDrogowa = async (ref, format = 'A4') => );
+  const pdf = new jsPDF();
+  const imgW_mm = pageW_mm;
+  const imgH_mm = (canvas.height / canvas.width) * pageW_mm;
+  const finalH = Math.min(imgH_mm, pageH_mm);
+  let yOffset = 0;
+  if (imgH_mm   finally 
+  }, [format]);
+  const handleDownload = async () => .pdf`);
+    } catch (err)  finally 
+  };
+  const handlePreview = async () =>  catch (err)  finally 
+  };
+  return (
+  );
+}
+
+====================================
+
+====================================
+PLIK: src\components\ui\accordion.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const AccordionItem = React.forwardRef(({ className, ...props }, ref) =>
+const AccordionTrigger = React.forwardRef(({ className, children, ...props }, ref) =>
+const AccordionContent = React.forwardRef(({ className, children, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-accordion
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as AccordionPrimitive from "@radix-ui/react-accordion"
+import  from "lucide-react"
+import  from "@/lib/utils"
+const Accordion = AccordionPrimitive.Root
+const AccordionItem = React.forwardRef((, ref) => (
+))
+AccordionItem.displayName = "AccordionItem"
+const AccordionTrigger = React.forwardRef((, ref) => (
+    svg]:rotate-180",
+        className
+      )}
+      >
+))
+AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
+const AccordionContent = React.forwardRef((, ref) => (
+))
+AccordionContent.displayName = AccordionPrimitive.Content.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\alert-dialog.jsx
+
+--- KOMPONENTY ---
+AlertDialogHeader
+AlertDialogFooter
+
+--- FUNKCJE ---
+const AlertDialogOverlay = React.forwardRef(({ className, ...props }, ref) =>
+const AlertDialogContent = React.forwardRef(({ className, ...props }, ref) =>
+const AlertDialogTitle = React.forwardRef(({ className, ...props }, ref) =>
+const AlertDialogDescription = React.forwardRef(({ className, ...props }, ref) =>
+const AlertDialogAction = React.forwardRef(({ className, ...props }, ref) =>
+const AlertDialogCancel = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-alert-dialog
+@/lib/utils
+@/components/ui/button
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
+import  from "@/lib/utils"
+import  from "@/components/ui/button"
+const AlertDialog = AlertDialogPrimitive.Root
+const AlertDialogTrigger = AlertDialogPrimitive.Trigger
+const AlertDialogPortal = AlertDialogPrimitive.Portal
+const AlertDialogOverlay = React.forwardRef((, ref) => (
+))
+AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
+const AlertDialogContent = React.forwardRef((, ref) => (
+))
+AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
+const AlertDialogHeader = () => (
+)
+AlertDialogHeader.displayName = "AlertDialogHeader"
+const AlertDialogFooter = () => (
+)
+AlertDialogFooter.displayName = "AlertDialogFooter"
+const AlertDialogTitle = React.forwardRef((, ref) => (
+))
+AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName
+const AlertDialogDescription = React.forwardRef((, ref) => (
+))
+AlertDialogDescription.displayName =
+  AlertDialogPrimitive.Description.displayName
+const AlertDialogAction = React.forwardRef((, ref) => (
+))
+AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName
+const AlertDialogCancel = React.forwardRef((, ref) => (
+))
+AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\alert.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Alert = React.forwardRef(({ className, variant, ...props }, ref) =>
+const AlertTitle = React.forwardRef(({ className, ...props }, ref) =>
+const AlertDescription = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+class-variance-authority
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Alert, AlertTitle, AlertDescription }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "class-variance-authority";
+import  from "@/lib/utils"
+const alertVariants = cva(
+  "relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
+  ,
+    },
+    defaultVariants: ,
+  }
+)
+const Alert = React.forwardRef((, ref) => (
+))
+Alert.displayName = "Alert"
+const AlertTitle = React.forwardRef((, ref) => (
+))
+AlertTitle.displayName = "AlertTitle"
+const AlertDescription = React.forwardRef((, ref) => (
+))
+AlertDescription.displayName = "AlertDescription"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\aspect-ratio.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+@radix-ui/react-aspect-ratio
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { AspectRatio }
+
+--- SKRÓT LOGIKI ---
+import * as AspectRatioPrimitive from "@radix-ui/react-aspect-ratio"
+const AspectRatio = AspectRatioPrimitive.Root
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\avatar.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Avatar = React.forwardRef(({ className, ...props }, ref) =>
+const AvatarImage = React.forwardRef(({ className, ...props }, ref) =>
+const AvatarFallback = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-avatar
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Avatar, AvatarImage, AvatarFallback }
+
+--- SKRÓT LOGIKI ---
+"use client"
+import * as React from "react"
+import * as AvatarPrimitive from "@radix-ui/react-avatar"
+import  from "@/lib/utils"
+const Avatar = React.forwardRef((, ref) => (
+))
+Avatar.displayName = AvatarPrimitive.Root.displayName
+const AvatarImage = React.forwardRef((, ref) => (
+))
+AvatarImage.displayName = AvatarPrimitive.Image.displayName
+const AvatarFallback = React.forwardRef((, ref) => (
+))
+AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\badge.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Badge
+
+--- IMPORTY ---
+react
+class-variance-authority
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Badge, badgeVariants }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "class-variance-authority";
+import  from "@/lib/utils"
+const badgeVariants = cva(
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  ,
+    },
+    defaultVariants: ,
+  }
+)
+function Badge() 
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\breadcrumb.jsx
+
+--- KOMPONENTY ---
+BreadcrumbSeparator
+BreadcrumbEllipsis
+
+--- FUNKCJE ---
+const BreadcrumbList = React.forwardRef(({ className, ...props }, ref) =>
+const BreadcrumbItem = React.forwardRef(({ className, ...props }, ref) =>
+const BreadcrumbLink = React.forwardRef(({ asChild, className, ...props }, ref) =>
+const BreadcrumbPage = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-slot
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "@radix-ui/react-slot"
+import  from "lucide-react"
+import  from "@/lib/utils"
+const Breadcrumb = React.forwardRef(
+  (, ref) => 
+)
+Breadcrumb.displayName = "Breadcrumb"
+const BreadcrumbList = React.forwardRef((, ref) => (
+))
+BreadcrumbList.displayName = "BreadcrumbList"
+const BreadcrumbItem = React.forwardRef((, ref) => (
+))
+BreadcrumbItem.displayName = "BreadcrumbItem"
+const BreadcrumbLink = React.forwardRef((, ref) => )
+BreadcrumbLink.displayName = "BreadcrumbLink"
+const BreadcrumbPage = React.forwardRef((, ref) => (
+))
+BreadcrumbPage.displayName = "BreadcrumbPage"
+const BreadcrumbSeparator = () => (
+  svg]:w-3.5 [&>svg]:h-3.5", className)}
+    >
+)
+BreadcrumbSeparator.displayName = "BreadcrumbSeparator"
+const BreadcrumbEllipsis = () => (
+    More
+)
+BreadcrumbEllipsis.displayName = "BreadcrumbElipssis"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\button.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-slot
+class-variance-authority
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Button, buttonVariants }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "@radix-ui/react-slot"
+import  from "class-variance-authority";
+import  from "@/lib/utils"
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  ,
+      size: ,
+    },
+    defaultVariants: ,
+  }
+)
+const Button = React.forwardRef((, ref) => )
+Button.displayName = "Button"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\calendar.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Calendar
+
+--- IMPORTY ---
+react
+lucide-react
+react-day-picker
+@/lib/utils
+@/components/ui/button
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Calendar }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "lucide-react"
+import  from "react-day-picker"
+import  from "@/lib/utils"
+import  from "@/components/ui/button"
+function Calendar() ),
+          "h-8 w-8 p-0 font-normal aria-selected:opacity-100"
+        ),
+        day_range_start: "day-range-start",
+        day_range_end: "day-range-end",
+        day_selected:
+          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        day_today: "bg-accent text-accent-foreground",
+        day_outside:
+          "day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
+        day_disabled: "text-muted-foreground opacity-50",
+        day_range_middle:
+          "aria-selected:bg-accent aria-selected:text-accent-foreground",
+        day_hidden: "invisible",
+        ...classNames,
+      }}
+      components=) => (
+        ),
+        IconRight: () => (
+        ),
+      }}
+       />)
+  );
+}
+Calendar.displayName = "Calendar"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\card.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Card = React.forwardRef(({ className, ...props }, ref) =>
+const CardHeader = React.forwardRef(({ className, ...props }, ref) =>
+const CardTitle = React.forwardRef(({ className, ...props }, ref) =>
+const CardDescription = React.forwardRef(({ className, ...props }, ref) =>
+const CardContent = React.forwardRef(({ className, ...props }, ref) =>
+const CardFooter = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "@/lib/utils"
+const Card = React.forwardRef((, ref) => (
+))
+Card.displayName = "Card"
+const CardHeader = React.forwardRef((, ref) => (
+))
+CardHeader.displayName = "CardHeader"
+const CardTitle = React.forwardRef((, ref) => (
+))
+CardTitle.displayName = "CardTitle"
+const CardDescription = React.forwardRef((, ref) => (
+))
+CardDescription.displayName = "CardDescription"
+const CardContent = React.forwardRef((, ref) => (
+))
+CardContent.displayName = "CardContent"
+const CardFooter = React.forwardRef((, ref) => (
+))
+CardFooter.displayName = "CardFooter"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\carousel.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function useCarousel
+const onSelect = React.useCallback((api) =>
+const scrollPrev = React.useCallback(() =>
+const scrollNext = React.useCallback(() =>
+const handleKeyDown = React.useCallback((event) =>
+const CarouselContent = React.forwardRef(({ className, ...props }, ref) =>
+const CarouselItem = React.forwardRef(({ className, ...props }, ref) =>
+const CarouselPrevious = React.forwardRef(({ className, variant = "outline", size = "icon", ...props }, ref) =>
+const CarouselNext = React.forwardRef(({ className, variant = "outline", size = "icon", ...props }, ref) =>
+
+--- IMPORTY ---
+react
+embla-carousel-react
+lucide-react
+@/lib/utils
+@/components/ui/button
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext };
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import useEmblaCarousel from "embla-carousel-react";
+import  from "lucide-react"
+import  from "@/lib/utils"
+import  from "@/components/ui/button"
+const CarouselContext = React.createContext(null)
+function useCarousel() 
+  return context
+}
+const Carousel = React.forwardRef((
+  ,
+  ref
+) => , plugins)
+  const [canScrollPrev, setCanScrollPrev] = React.useState(false)
+  const [canScrollNext, setCanScrollNext] = React.useState(false)
+  const onSelect = React.useCallback((api) => 
+    setCanScrollPrev(api.canScrollPrev())
+    setCanScrollNext(api.canScrollNext())
+  }, [])
+  const scrollPrev = React.useCallback(() => , [api])
+  const scrollNext = React.useCallback(() => , [api])
+  const handleKeyDown = React.useCallback((event) =>  else if (event.key === "ArrowRight") 
+  }, [scrollPrev, scrollNext])
+  React.useEffect(() => 
+    setApi(api)
+  }, [api, setApi])
+  React.useEffect(() => 
+    onSelect(api)
+    api.on("reInit", onSelect)
+    api.on("select", onSelect)
+    return () => ;
+  }, [api, onSelect])
+  return (
+    (
+    )
+  );
+})
+Carousel.displayName = "Carousel"
+const CarouselContent = React.forwardRef((, ref) =>  = useCarousel()
+  return (
+
+====================================
+
+====================================
+PLIK: src\components\ui\chart.jsx
+
+--- KOMPONENTY ---
+ChartStyle
+
+--- FUNKCJE ---
+function useChart
+const ChartContainer = React.forwardRef(({ id, className, children, config, ...props }, ref) =>
+const colorConfig = Object.entries(config).filter(([, config]) =>
+const tooltipLabel = React.useMemo(() =>
+function getPayloadConfigFromPayload
+
+--- IMPORTY ---
+react
+recharts
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+"use client";
+import * as React from "react"
+import * as RechartsPrimitive from "recharts"
+import  from "@/lib/utils"
+const THEMES = 
+const ChartContext = React.createContext(null)
+function useChart() 
+  return context
+}
+const ChartContainer = React.forwardRef((, ref) => `
+  return (
+    (
+    )
+  );
+})
+ChartContainer.displayName = "Chart"
+const ChartStyle = () => 
+  return (
+    ( `
+$ [data-chart=$] : $;` : null
+})
+.join("\n")}
+}
+`)
+          .join("\n"),
+      }} />)
+  );
+}
+const ChartTooltip = RechartsPrimitive.Tooltip
+const ChartTooltipContent = React.forwardRef((
+  ,
+  ref
+) =>  = useChart()
+  const tooltipLabel = React.useMemo(() => 
+    const [item] = payload
+    const key = `$`
+    const itemConfig = getPayloadConfigFromPayload(config, item, key)
+    const value =
+      !labelKey && typeof label === "string"
+        ? config[label]?.label || label
+
+====================================
+
+====================================
+PLIK: src\components\ui\checkbox.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Checkbox = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-checkbox
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Checkbox }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
+import  from "lucide-react"
+import  from "@/lib/utils"
+const Checkbox = React.forwardRef((, ref) => (
+))
+Checkbox.displayName = CheckboxPrimitive.Root.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\collapsible.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+@radix-ui/react-collapsible
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Collapsible, CollapsibleTrigger, CollapsibleContent }
+
+--- SKRÓT LOGIKI ---
+"use client"
+import * as CollapsiblePrimitive from "@radix-ui/react-collapsible"
+const Collapsible = CollapsiblePrimitive.Root
+const CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger
+const CollapsibleContent = CollapsiblePrimitive.CollapsibleContent
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\command.jsx
+
+--- KOMPONENTY ---
+CommandDialog
+CommandShortcut
+
+--- FUNKCJE ---
+const Command = React.forwardRef(({ className, ...props }, ref) =>
+const CommandInput = React.forwardRef(({ className, ...props }, ref) =>
+const CommandList = React.forwardRef(({ className, ...props }, ref) =>
+const CommandEmpty = React.forwardRef((props, ref) =>
+const CommandGroup = React.forwardRef(({ className, ...props }, ref) =>
+const CommandSeparator = React.forwardRef(({ className, ...props }, ref) =>
+const CommandItem = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+cmdk
+lucide-react
+@/lib/utils
+@/components/ui/dialog
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "cmdk"
+import  from "lucide-react"
+import  from "@/lib/utils"
+import  from "@/components/ui/dialog"
+const Command = React.forwardRef((, ref) => (
+))
+Command.displayName = CommandPrimitive.displayName
+const CommandDialog = () => 
+    )
+  );
+}
+const CommandInput = React.forwardRef((, ref) => (
+))
+CommandInput.displayName = CommandPrimitive.Input.displayName
+const CommandList = React.forwardRef((, ref) => (
+))
+CommandList.displayName = CommandPrimitive.List.displayName
+const CommandEmpty = React.forwardRef((props, ref) => (
+))
+CommandEmpty.displayName = CommandPrimitive.Empty.displayName
+const CommandGroup = React.forwardRef((, ref) => (
+))
+CommandGroup.displayName = CommandPrimitive.Group.displayName
+const CommandSeparator = React.forwardRef((, ref) => (
+))
+CommandSeparator.displayName = CommandPrimitive.Separator.displayName
+const CommandItem = React.forwardRef((, ref) => (
+))
+CommandItem.displayName = CommandPrimitive.Item.displayName
+const CommandShortcut = () => 
+CommandShortcut.displayName = "CommandShortcut"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\context-menu.jsx
+
+--- KOMPONENTY ---
+ContextMenuShortcut
+
+--- FUNKCJE ---
+const ContextMenuSubTrigger = React.forwardRef(({ className, inset, children, ...props }, ref) =>
+const ContextMenuSubContent = React.forwardRef(({ className, ...props }, ref) =>
+const ContextMenuContent = React.forwardRef(({ className, ...props }, ref) =>
+const ContextMenuItem = React.forwardRef(({ className, inset, ...props }, ref) =>
+const ContextMenuCheckboxItem = React.forwardRef(({ className, children, checked, ...props }, ref) =>
+const ContextMenuRadioItem = React.forwardRef(({ className, children, ...props }, ref) =>
+const ContextMenuLabel = React.forwardRef(({ className, inset, ...props }, ref) =>
+const ContextMenuSeparator = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-context-menu
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as ContextMenuPrimitive from "@radix-ui/react-context-menu"
+import  from "lucide-react"
+import  from "@/lib/utils"
+const ContextMenu = ContextMenuPrimitive.Root
+const ContextMenuTrigger = ContextMenuPrimitive.Trigger
+const ContextMenuGroup = ContextMenuPrimitive.Group
+const ContextMenuPortal = ContextMenuPrimitive.Portal
+const ContextMenuSub = ContextMenuPrimitive.Sub
+const ContextMenuRadioGroup = ContextMenuPrimitive.RadioGroup
+const ContextMenuSubTrigger = React.forwardRef((, ref) => (
+))
+ContextMenuSubTrigger.displayName = ContextMenuPrimitive.SubTrigger.displayName
+const ContextMenuSubContent = React.forwardRef((, ref) => (
+))
+ContextMenuSubContent.displayName = ContextMenuPrimitive.SubContent.displayName
+const ContextMenuContent = React.forwardRef((, ref) => (
+))
+ContextMenuContent.displayName = ContextMenuPrimitive.Content.displayName
+const ContextMenuItem = React.forwardRef((, ref) => (
+))
+ContextMenuItem.displayName = ContextMenuPrimitive.Item.displayName
+const ContextMenuCheckboxItem = React.forwardRef((, ref) => (
+))
+ContextMenuCheckboxItem.displayName =
+  ContextMenuPrimitive.CheckboxItem.displayName
+const ContextMenuRadioItem = React.forwardRef((, ref) => (
+))
+ContextMenuRadioItem.displayName = ContextMenuPrimitive.RadioItem.displayName
+const ContextMenuLabel = React.forwardRef((, ref) => (
+))
+ContextMenuLabel.displayName = ContextMenuPrimitive.Label.displayName
+const ContextMenuSeparator = React.forwardRef((, ref) => (
+))
+ContextMenuSeparator.displayName = ContextMenuPrimitive.Separator.displayName
+const ContextMenuShortcut = () => 
+ContextMenuShortcut.displayName = "ContextMenuShortcut"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\dialog.jsx
+
+--- KOMPONENTY ---
+DialogHeader
+DialogFooter
+
+--- FUNKCJE ---
+const DialogOverlay = React.forwardRef(({ className, ...props }, ref) =>
+const DialogContent = React.forwardRef(({ className, children, ...props }, ref) =>
+const DialogTitle = React.forwardRef(({ className, ...props }, ref) =>
+const DialogDescription = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-dialog
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+"use client"
+import * as React from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import  from "lucide-react"
+import  from "@/lib/utils"
+const Dialog = DialogPrimitive.Root
+const DialogTrigger = DialogPrimitive.Trigger
+const DialogPortal = DialogPrimitive.Portal
+const DialogClose = DialogPrimitive.Close
+const DialogOverlay = React.forwardRef((, ref) => (
+))
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+const DialogContent = React.forwardRef((, ref) => (
+        Close
+))
+DialogContent.displayName = DialogPrimitive.Content.displayName
+const DialogHeader = () => (
+)
+DialogHeader.displayName = "DialogHeader"
+const DialogFooter = () => (
+)
+DialogFooter.displayName = "DialogFooter"
+const DialogTitle = React.forwardRef((, ref) => (
+))
+DialogTitle.displayName = DialogPrimitive.Title.displayName
+const DialogDescription = React.forwardRef((, ref) => (
+))
+DialogDescription.displayName = DialogPrimitive.Description.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\drawer.jsx
+
+--- KOMPONENTY ---
+Drawer
+DrawerHeader
+DrawerFooter
+
+--- FUNKCJE ---
+const DrawerOverlay = React.forwardRef(({ className, ...props }, ref) =>
+const DrawerContent = React.forwardRef(({ className, children, ...props }, ref) =>
+const DrawerTitle = React.forwardRef(({ className, ...props }, ref) =>
+const DrawerDescription = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+vaul
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+"use client"
+import * as React from "react"
+import  from "vaul"
+import  from "@/lib/utils"
+const Drawer = () => (
+)
+Drawer.displayName = "Drawer"
+const DrawerTrigger = DrawerPrimitive.Trigger
+const DrawerPortal = DrawerPrimitive.Portal
+const DrawerClose = DrawerPrimitive.Close
+const DrawerOverlay = React.forwardRef((, ref) => (
+))
+DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
+const DrawerContent = React.forwardRef((, ref) => (
+))
+DrawerContent.displayName = "DrawerContent"
+const DrawerHeader = () => (
+)
+DrawerHeader.displayName = "DrawerHeader"
+const DrawerFooter = () => (
+)
+DrawerFooter.displayName = "DrawerFooter"
+const DrawerTitle = React.forwardRef((, ref) => (
+))
+DrawerTitle.displayName = DrawerPrimitive.Title.displayName
+const DrawerDescription = React.forwardRef((, ref) => (
+))
+DrawerDescription.displayName = DrawerPrimitive.Description.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\dropdown-menu.jsx
+
+--- KOMPONENTY ---
+DropdownMenuShortcut
+
+--- FUNKCJE ---
+const DropdownMenuSubTrigger = React.forwardRef(({ className, inset, children, ...props }, ref) =>
+const DropdownMenuSubContent = React.forwardRef(({ className, ...props }, ref) =>
+const DropdownMenuContent = React.forwardRef(({ className, sideOffset = 4, ...props }, ref) =>
+const DropdownMenuItem = React.forwardRef(({ className, inset, ...props }, ref) =>
+const DropdownMenuCheckboxItem = React.forwardRef(({ className, children, checked, ...props }, ref) =>
+const DropdownMenuRadioItem = React.forwardRef(({ className, children, ...props }, ref) =>
+const DropdownMenuLabel = React.forwardRef(({ className, inset, ...props }, ref) =>
+const DropdownMenuSeparator = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-dropdown-menu
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
+import  from "lucide-react"
+import  from "@/lib/utils"
+const DropdownMenu = DropdownMenuPrimitive.Root
+const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
+const DropdownMenuGroup = DropdownMenuPrimitive.Group
+const DropdownMenuPortal = DropdownMenuPrimitive.Portal
+const DropdownMenuSub = DropdownMenuPrimitive.Sub
+const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup
+const DropdownMenuSubTrigger = React.forwardRef((, ref) => (
+))
+DropdownMenuSubTrigger.displayName =
+  DropdownMenuPrimitive.SubTrigger.displayName
+const DropdownMenuSubContent = React.forwardRef((, ref) => (
+))
+DropdownMenuSubContent.displayName =
+  DropdownMenuPrimitive.SubContent.displayName
+const DropdownMenuContent = React.forwardRef((, ref) => (
+))
+DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
+const DropdownMenuItem = React.forwardRef((, ref) => (
+  svg]:size-4 [&>svg]:shrink-0",
+      inset && "pl-8",
+      className
+    )}
+     />
+))
+DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
+const DropdownMenuCheckboxItem = React.forwardRef((, ref) => (
+))
+DropdownMenuCheckboxItem.displayName =
+  DropdownMenuPrimitive.CheckboxItem.displayName
+const DropdownMenuRadioItem = React.forwardRef((, ref) => (
+))
+DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName
+const DropdownMenuLabel = React.forwardRef((, ref) => (
+))
+DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName
+const DropdownMenuSeparator = React.forwardRef((, ref) => (
+
+====================================
+
+====================================
+PLIK: src\components\ui\form.jsx
+
+--- KOMPONENTY ---
+FormField
+
+--- FUNKCJE ---
+const useFormField = () =>
+const FormItem = React.forwardRef(({ className, ...props }, ref) =>
+const FormLabel = React.forwardRef(({ className, ...props }, ref) =>
+const FormControl = React.forwardRef(({ ...props }, ref) =>
+const FormDescription = React.forwardRef(({ className, ...props }, ref) =>
+const FormMessage = React.forwardRef(({ className, children, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-slot
+react-hook-form
+@/lib/utils
+@/components/ui/label
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+"use client";
+import * as React from "react"
+import  from "@radix-ui/react-slot"
+import  from "react-hook-form";
+import  from "@/lib/utils"
+import  from "@/components/ui/label"
+const Form = FormProvider
+const FormFieldContext = React.createContext()
+const FormField = (
+) => 
+const useFormField = () =>  = useFormContext()
+  const fieldState = getFieldState(fieldContext.name, formState)
+  if (!fieldContext) 
+  const  = itemContext
+  return -form-item`,
+    formDescriptionId: `$-form-item-description`,
+    formMessageId: `$-form-item-message`,
+    ...fieldState,
+  }
+}
+const FormItemContext = React.createContext()
+const FormItem = React.forwardRef((, ref) => )
+FormItem.displayName = "FormItem"
+const FormLabel = React.forwardRef((, ref) =>  = useFormField()
+  return (
+    ()
+  );
+})
+FormLabel.displayName = "FormLabel"
+const FormControl = React.forwardRef((, ref) =>  = useFormField()
+  return (
+    ()
+  );
+})
+FormControl.displayName = "FormControl"
+const FormDescription = React.forwardRef((, ref) =>  = useFormField()
+  return (
+    ()
+  );
+})
+
+====================================
+
+====================================
+PLIK: src\components\ui\FormError.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function FormError
+
+--- IMPORTY ---
+react
+framer-motion
+lucide-react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function FormError({ error }) {
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+import  from 'framer-motion';
+import  from 'lucide-react';
+/**
+ * Animowany komunikat błędu pod polem formularza.
+ *
+ * Użycie:
+ *   
+ *   
+ */
+export default function FormError() 
+      )}
+  );
+}
+
+====================================
+
+====================================
+PLIK: src\components\ui\GlassCard.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function GlassCard
+
+--- IMPORTY ---
+react
+framer-motion
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function GlassCard({ 
+
+--- SKRÓT LOGIKI ---
+import React from "react";
+import  from "framer-motion";
+export default function GlassCard() 
+  );
+  if (!animate) return content;
+  return (
+  );
+}
+
+====================================
+
+====================================
+PLIK: src\components\ui\hover-card.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const HoverCardContent = React.forwardRef(({ className, align = "center", sideOffset = 4, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-hover-card
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { HoverCard, HoverCardTrigger, HoverCardContent }
+
+--- SKRÓT LOGIKI ---
+"use client"
+import * as React from "react"
+import * as HoverCardPrimitive from "@radix-ui/react-hover-card"
+import  from "@/lib/utils"
+const HoverCard = HoverCardPrimitive.Root
+const HoverCardTrigger = HoverCardPrimitive.Trigger
+const HoverCardContent = React.forwardRef((, ref) => (
+))
+HoverCardContent.displayName = HoverCardPrimitive.Content.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\input-otp.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const InputOTP = React.forwardRef(({ className, containerClassName, ...props }, ref) =>
+const InputOTPGroup = React.forwardRef(({ className, ...props }, ref) =>
+const InputOTPSlot = React.forwardRef(({ index, className, ...props }, ref) =>
+const InputOTPSeparator = React.forwardRef(({ ...props }, ref) =>
+
+--- IMPORTY ---
+react
+input-otp
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+input-otp
+
+--- EXPORTY ---
+export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "input-otp"
+import  from "lucide-react"
+import  from "@/lib/utils"
+const InputOTP = React.forwardRef((, ref) => (
+))
+InputOTP.displayName = "InputOTP"
+const InputOTPGroup = React.forwardRef((, ref) => (
+))
+InputOTPGroup.displayName = "InputOTPGroup"
+const InputOTPSlot = React.forwardRef((, ref) =>  = inputOTPContext.slots[index]
+  return (
+    (
+    )
+  );
+})
+InputOTPSlot.displayName = "InputOTPSlot"
+const InputOTPSeparator = React.forwardRef((, ref) => (
+))
+InputOTPSeparator.displayName = "InputOTPSeparator"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\input.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Input = React.forwardRef(({ className, type, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Input }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "@/lib/utils"
+const Input = React.forwardRef((, ref) => )
+Input.displayName = "Input"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\label.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Label = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-label
+class-variance-authority
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Label }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as LabelPrimitive from "@radix-ui/react-label"
+import  from "class-variance-authority";
+import  from "@/lib/utils"
+const labelVariants = cva(
+  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+)
+const Label = React.forwardRef((, ref) => (
+))
+Label.displayName = LabelPrimitive.Root.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\menubar.jsx
+
+--- KOMPONENTY ---
+MenubarShortcut
+
+--- FUNKCJE ---
+function MenubarMenu
+function MenubarGroup
+function MenubarPortal
+function MenubarRadioGroup
+function MenubarSub
+const Menubar = React.forwardRef(({ className, ...props }, ref) =>
+const MenubarTrigger = React.forwardRef(({ className, ...props }, ref) =>
+const MenubarSubTrigger = React.forwardRef(({ className, inset, children, ...props }, ref) =>
+const MenubarSubContent = React.forwardRef(({ className, ...props }, ref) =>
+const MenubarItem = React.forwardRef(({ className, inset, ...props }, ref) =>
+const MenubarCheckboxItem = React.forwardRef(({ className, children, checked, ...props }, ref) =>
+const MenubarRadioItem = React.forwardRef(({ className, children, ...props }, ref) =>
+const MenubarLabel = React.forwardRef(({ className, inset, ...props }, ref) =>
+const MenubarSeparator = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-menubar
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+"use client"
+import * as React from "react"
+import * as MenubarPrimitive from "@radix-ui/react-menubar"
+import  from "lucide-react"
+import  from "@/lib/utils"
+function MenubarMenu() 
+function MenubarGroup() 
+function MenubarPortal() 
+function MenubarRadioGroup() 
+function MenubarSub() 
+const Menubar = React.forwardRef((, ref) => (
+))
+Menubar.displayName = MenubarPrimitive.Root.displayName
+const MenubarTrigger = React.forwardRef((, ref) => (
+))
+MenubarTrigger.displayName = MenubarPrimitive.Trigger.displayName
+const MenubarSubTrigger = React.forwardRef((, ref) => (
+))
+MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName
+const MenubarSubContent = React.forwardRef((, ref) => (
+))
+MenubarSubContent.displayName = MenubarPrimitive.SubContent.displayName
+const MenubarContent = React.forwardRef((
+  ,
+  ref
+) => (
+))
+MenubarContent.displayName = MenubarPrimitive.Content.displayName
+const MenubarItem = React.forwardRef((, ref) => (
+))
+MenubarItem.displayName = MenubarPrimitive.Item.displayName
+const MenubarCheckboxItem = React.forwardRef((, ref) => (
+))
+MenubarCheckboxItem.displayName = MenubarPrimitive.CheckboxItem.displayName
+const MenubarRadioItem = React.forwardRef((, ref) => (
+))
+MenubarRadioItem.displayName = MenubarPrimitive.RadioItem.displayName
+const MenubarLabel = React.forwardRef((, ref) => (
+))
+MenubarLabel.displayName = MenubarPrimitive.Label.displayName
+
+====================================
+
+====================================
+PLIK: src\components\ui\Modal.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Modal
+
+--- IMPORTY ---
+react
+lucide-react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function Modal({ title, onClose, children }) {
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+import  from 'lucide-react';
+export default function Modal() 
+      >
+  );
+}
+
+====================================
+
+====================================
+PLIK: src\components\ui\navigation-menu.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const NavigationMenu = React.forwardRef(({ className, children, ...props }, ref) =>
+const NavigationMenuList = React.forwardRef(({ className, ...props }, ref) =>
+const NavigationMenuTrigger = React.forwardRef(({ className, children, ...props }, ref) =>
+const NavigationMenuContent = React.forwardRef(({ className, ...props }, ref) =>
+const NavigationMenuViewport = React.forwardRef(({ className, ...props }, ref) =>
+const NavigationMenuIndicator = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-navigation-menu
+class-variance-authority
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu"
+import  from "class-variance-authority"
+import  from "lucide-react"
+import  from "@/lib/utils"
+const NavigationMenu = React.forwardRef((, ref) => (
+))
+NavigationMenu.displayName = NavigationMenuPrimitive.Root.displayName
+const NavigationMenuList = React.forwardRef((, ref) => (
+))
+NavigationMenuList.displayName = NavigationMenuPrimitive.List.displayName
+const NavigationMenuItem = NavigationMenuPrimitive.Item
+const navigationMenuTriggerStyle = cva(
+  "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+)
+const NavigationMenuTrigger = React.forwardRef((, ref) => (
+))
+NavigationMenuTrigger.displayName = NavigationMenuPrimitive.Trigger.displayName
+const NavigationMenuContent = React.forwardRef((, ref) => (
+))
+NavigationMenuContent.displayName = NavigationMenuPrimitive.Content.displayName
+const NavigationMenuLink = NavigationMenuPrimitive.Link
+const NavigationMenuViewport = React.forwardRef((, ref) => (
+))
+NavigationMenuViewport.displayName =
+  NavigationMenuPrimitive.Viewport.displayName
+const NavigationMenuIndicator = React.forwardRef((, ref) => (
+))
+NavigationMenuIndicator.displayName =
+  NavigationMenuPrimitive.Indicator.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\PageHeader.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function PageHeader
+
+--- IMPORTY ---
+react
+framer-motion
+./button
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function PageHeader({ 
+
+--- SKRÓT LOGIKI ---
+import React from "react";
+import  from "framer-motion";
+import  from "./button";
+export default function PageHeader() 
+          )}
+      )}
+  );
+}
+
+====================================
+
+====================================
+PLIK: src\components\ui\pagination.jsx
+
+--- KOMPONENTY ---
+Pagination
+PaginationLink
+PaginationPrevious
+PaginationNext
+PaginationEllipsis
+
+--- FUNKCJE ---
+const PaginationContent = React.forwardRef(({ className, ...props }, ref) =>
+const PaginationItem = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+lucide-react
+@/lib/utils
+@/components/ui/button
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "lucide-react"
+import  from "@/lib/utils"
+import  from "@/components/ui/button";
+const Pagination = () => (
+)
+Pagination.displayName = "Pagination"
+const PaginationContent = React.forwardRef((, ref) => (
+))
+PaginationContent.displayName = "PaginationContent"
+const PaginationItem = React.forwardRef((, ref) => (
+))
+PaginationItem.displayName = "PaginationItem"
+const PaginationLink = () => (
+)
+PaginationLink.displayName = "PaginationLink"
+const PaginationPrevious = () => (
+    Previous
+)
+PaginationPrevious.displayName = "PaginationPrevious"
+const PaginationNext = () => (
+    Next
+)
+PaginationNext.displayName = "PaginationNext"
+const PaginationEllipsis = () => (
+    More pages
+)
+PaginationEllipsis.displayName = "PaginationEllipsis"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\popover.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const PopoverContent = React.forwardRef(({ className, align = "center", sideOffset = 4, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-popover
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as PopoverPrimitive from "@radix-ui/react-popover"
+import  from "@/lib/utils"
+const Popover = PopoverPrimitive.Root
+const PopoverTrigger = PopoverPrimitive.Trigger
+const PopoverAnchor = PopoverPrimitive.Anchor
+const PopoverContent = React.forwardRef((, ref) => (
+))
+PopoverContent.displayName = PopoverPrimitive.Content.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\progress.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Progress = React.forwardRef(({ className, value, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-progress
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Progress }
+
+--- SKRÓT LOGIKI ---
+"use client"
+import * as React from "react"
+import * as ProgressPrimitive from "@radix-ui/react-progress"
+import  from "@/lib/utils"
+const Progress = React.forwardRef((, ref) => (
+))
+Progress.displayName = ProgressPrimitive.Root.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\radio-group.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const RadioGroup = React.forwardRef(({ className, ...props }, ref) =>
+const RadioGroupItem = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-radio-group
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { RadioGroup, RadioGroupItem }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
+import  from "lucide-react"
+import  from "@/lib/utils"
+const RadioGroup = React.forwardRef((, ref) => )
+RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
+const RadioGroupItem = React.forwardRef((, ref) => )
+RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\resizable.jsx
+
+--- KOMPONENTY ---
+ResizablePanelGroup
+ResizableHandle
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+lucide-react
+react-resizable-panels
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { ResizablePanelGroup, ResizablePanel, ResizableHandle }
+
+--- SKRÓT LOGIKI ---
+"use client"
+import  from "lucide-react"
+import * as ResizablePrimitive from "react-resizable-panels"
+import  from "@/lib/utils"
+const ResizablePanelGroup = () => (
+)
+const ResizablePanel = ResizablePrimitive.Panel
+const ResizableHandle = () => (
+  div]:rotate-90",
+      className
+    )}
+    >
+)
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\SaveButton.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function SaveButton
+const handleClick = async () =>
+
+--- IMPORTY ---
+react
+./button
+lucide-react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function SaveButton({
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from './button';
+import  from 'lucide-react';
+export default function SaveButton() );
+        });
+      }
+      if (onSuccess) onSuccess();
+      setTimeout(() => setIsSuccess(false), 2000);
+    } catch (error)  finally 
+  };
+  if (isSuccess) 
+    );
+  }
+  return (
+      ) : (
+      )}
+  );
+}
+
+====================================
+
+====================================
+PLIK: src\components\ui\scroll-area.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const ScrollArea = React.forwardRef(({ className, children, ...props }, ref) =>
+const ScrollBar = React.forwardRef(({ className, orientation = "vertical", ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-scroll-area
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { ScrollArea, ScrollBar }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area"
+import  from "@/lib/utils"
+const ScrollArea = React.forwardRef((, ref) => (
+))
+ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName
+const ScrollBar = React.forwardRef((, ref) => (
+))
+ScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\SearchBar.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function SearchBar
+
+--- IMPORTY ---
+react
+lucide-react
+@/components/ui/input
+@/components/ui/button
+framer-motion
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function SearchBar({
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+import  from 'lucide-react';
+import  from '@/components/ui/input';
+import  from '@/components/ui/button';
+import  from 'framer-motion';
+/**
+ * Gotowy pasek wyszukiwania z licznikiem wyników.
+ *
+ * Użycie:
+ *   
+ */
+export default function SearchBar() 
+          placeholder=
+          className="pl-10 pr-10 bg-slate-800 border-slate-700 text-theme-white placeholder:text-slate-500 focus:border-primary"
+        />
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+            >
+          )}
+               / 
+          ) : (
+          )}
+      )}
+  );
+}
+
+====================================
+
+====================================
+PLIK: src\components\ui\select.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const SelectTrigger = React.forwardRef(({ className, children, ...props }, ref) =>
+const SelectScrollUpButton = React.forwardRef(({ className, ...props }, ref) =>
+const SelectScrollDownButton = React.forwardRef(({ className, ...props }, ref) =>
+const SelectContent = React.forwardRef(({ className, children, position = "popper", ...props }, ref) =>
+const SelectLabel = React.forwardRef(({ className, ...props }, ref) =>
+const SelectItem = React.forwardRef(({ className, children, ...props }, ref) =>
+const SelectSeparator = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-select
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+"use client"
+import * as React from "react"
+import * as SelectPrimitive from "@radix-ui/react-select"
+import  from "lucide-react"
+import  from "@/lib/utils"
+const Select = SelectPrimitive.Root
+const SelectGroup = SelectPrimitive.Group
+const SelectValue = SelectPrimitive.Value
+const SelectTrigger = React.forwardRef((, ref) => (
+  span]:line-clamp-1",
+      className
+    )}
+    >
+))
+SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
+const SelectScrollUpButton = React.forwardRef((, ref) => (
+))
+SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName
+const SelectScrollDownButton = React.forwardRef((, ref) => (
+))
+SelectScrollDownButton.displayName =
+  SelectPrimitive.ScrollDownButton.displayName
+const SelectContent = React.forwardRef((, ref) => (
+))
+SelectContent.displayName = SelectPrimitive.Content.displayName
+const SelectLabel = React.forwardRef((, ref) => (
+))
+SelectLabel.displayName = SelectPrimitive.Label.displayName
+const SelectItem = React.forwardRef((, ref) => (
+))
+SelectItem.displayName = SelectPrimitive.Item.displayName
+const SelectSeparator = React.forwardRef((, ref) => (
+))
+SelectSeparator.displayName = SelectPrimitive.Separator.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\separator.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+react
+@radix-ui/react-separator
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Separator }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as SeparatorPrimitive from "@radix-ui/react-separator"
+import  from "@/lib/utils"
+const Separator = React.forwardRef((
+  ,
+  ref
+) => (
+))
+Separator.displayName = SeparatorPrimitive.Root.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\sheet.jsx
+
+--- KOMPONENTY ---
+SheetHeader
+SheetFooter
+
+--- FUNKCJE ---
+const SheetOverlay = React.forwardRef(({ className, ...props }, ref) =>
+const SheetContent = React.forwardRef(({ side = "right", className, children, ...props }, ref) =>
+const SheetTitle = React.forwardRef(({ className, ...props }, ref) =>
+const SheetDescription = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-dialog
+class-variance-authority
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+"use client";
+import * as React from "react"
+import * as SheetPrimitive from "@radix-ui/react-dialog"
+import  from "class-variance-authority";
+import  from "lucide-react"
+import  from "@/lib/utils"
+const Sheet = SheetPrimitive.Root
+const SheetTrigger = SheetPrimitive.Trigger
+const SheetClose = SheetPrimitive.Close
+const SheetPortal = SheetPrimitive.Portal
+const SheetOverlay = React.forwardRef((, ref) => (
+))
+SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
+const sheetVariants = cva(
+  "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
+  ,
+    },
+    defaultVariants: ,
+  }
+)
+const SheetContent = React.forwardRef((, ref) => (
+        Close
+))
+SheetContent.displayName = SheetPrimitive.Content.displayName
+const SheetHeader = () => (
+)
+SheetHeader.displayName = "SheetHeader"
+const SheetFooter = () => (
+)
+SheetFooter.displayName = "SheetFooter"
+const SheetTitle = React.forwardRef((, ref) => (
+))
+SheetTitle.displayName = SheetPrimitive.Title.displayName
+const SheetDescription = React.forwardRef((, ref) => (
+))
+SheetDescription.displayName = SheetPrimitive.Description.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\sidebar.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function useSidebar
+const setOpen = React.useCallback((value) =>
+const toggleSidebar = React.useCallback(() =>
+const handleKeyDown = (event) =>
+const contextValue = React.useMemo(() =>
+const SidebarTrigger = React.forwardRef(({ className, onClick, asChild = false, ...props }, ref) =>
+const SidebarRail = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarInset = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarInput = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarHeader = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarFooter = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarSeparator = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarContent = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarGroup = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarGroupLabel = React.forwardRef(({ className, asChild = false, ...props }, ref) =>
+const SidebarGroupAction = React.forwardRef(({ className, asChild = false, ...props }, ref) =>
+const SidebarGroupContent = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarMenu = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarMenuItem = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarMenuAction = React.forwardRef(({ className, asChild = false, showOnHover = false, ...props }, ref) =>
+const SidebarMenuBadge = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarMenuSkeleton = React.forwardRef(({ className, showIcon = false, ...props }, ref) =>
+const width = React.useMemo(() =>
+const SidebarMenuSub = React.forwardRef(({ className, ...props }, ref) =>
+const SidebarMenuSubItem = React.forwardRef(({ ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-slot
+class-variance-authority
+lucide-react
+@/hooks/use-mobile
+@/lib/utils
+@/components/ui/button
+@/components/ui/input
+@/components/ui/separator
+@/components/ui/sheet
+@/components/ui/skeleton
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "@radix-ui/react-slot"
+import  from "class-variance-authority";
+import  from "lucide-react"
+import  from "@/hooks/use-mobile"
+import  from "@/lib/utils"
+import  from "@/components/ui/button"
+import  from "@/components/ui/input"
+import  from "@/components/ui/separator"
+import  from "@/components/ui/sheet"
+import  from "@/components/ui/skeleton"
+import  from "@/components/ui/tooltip"
+const SIDEBAR_COOKIE_NAME = "sidebar_state"
+const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+const SIDEBAR_WIDTH = "16rem"
+const SIDEBAR_WIDTH_MOBILE = "18rem"
+const SIDEBAR_WIDTH_ICON = "3rem"
+const SIDEBAR_KEYBOARD_SHORTCUT = "b"
+const SidebarContext = React.createContext(null)
+function useSidebar() 
+  return context
+}
+const SidebarProvider = React.forwardRef((
+  ,
+  ref
+) =>  else 
+    document.cookie = `$=$; path=/; max-age=$`
+  }, [setOpenProp, open])
+  const toggleSidebar = React.useCallback(() => , [isMobile, setOpen, setOpenMobile])
+  React.useEffect(() => 
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleSidebar])
+  const state = open ? "expanded" : "collapsed"
+  const contextValue = React.useMemo(() => (), [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar])
+  return (
+    (
+    )
+  );
+
+====================================
+
+====================================
+PLIK: src\components\ui\skeleton.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Skeleton
+
+--- IMPORTY ---
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Skeleton }
+
+--- SKRÓT LOGIKI ---
+import  from "@/lib/utils"
+function Skeleton() 
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\slider.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Slider = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-slider
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Slider }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as SliderPrimitive from "@radix-ui/react-slider"
+import  from "@/lib/utils"
+const Slider = React.forwardRef((, ref) => (
+))
+Slider.displayName = SliderPrimitive.Root.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\sonner.jsx
+
+--- KOMPONENTY ---
+Toaster
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+next-themes
+sonner
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export { Toaster }
+
+--- SKRÓT LOGIKI ---
+"use client";
+import  from "next-themes"
+import  from "sonner"
+const Toaster = () =>  = useTheme()
+  return (
+    ()
+  );
+}
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\SortButton.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function SortButton
+
+--- IMPORTY ---
+react
+lucide-react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function SortButton({ field, sortConfig, onSort, children, className = '' }) {
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+import  from 'lucide-react';
+/**
+ * Przycisk nagłówka kolumny z sortowaniem.
+ *
+ * Użycie:
+ *   
+ *     Nazwa
+ *   
+ */
+export default function SortButton() 
+      className= $`}
+    >
+  );
+}
+
+====================================
+
+====================================
+PLIK: src\components\ui\StatCard.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function StatCard
+
+--- IMPORTY ---
+react
+framer-motion
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function StatCard({ 
+
+--- SKRÓT LOGIKI ---
+import React from "react";
+import  from "framer-motion";
+export default function StatCard() 
+            )}
+          )}
+  );
+}
+
+====================================
+
+====================================
+PLIK: src\components\ui\switch.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Switch = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-switch
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Switch }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as SwitchPrimitives from "@radix-ui/react-switch"
+import  from "@/lib/utils"
+const Switch = React.forwardRef((, ref) => (
+))
+Switch.displayName = SwitchPrimitives.Root.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\table.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Table = React.forwardRef(({ className, ...props }, ref) =>
+const TableHeader = React.forwardRef(({ className, ...props }, ref) =>
+const TableBody = React.forwardRef(({ className, ...props }, ref) =>
+const TableFooter = React.forwardRef(({ className, ...props }, ref) =>
+const TableRow = React.forwardRef(({ className, ...props }, ref) =>
+const TableHead = React.forwardRef(({ className, ...props }, ref) =>
+const TableCell = React.forwardRef(({ className, ...props }, ref) =>
+const TableCaption = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "@/lib/utils"
+const Table = React.forwardRef((, ref) => (
+))
+Table.displayName = "Table"
+const TableHeader = React.forwardRef((, ref) => (
+))
+TableHeader.displayName = "TableHeader"
+const TableBody = React.forwardRef((, ref) => (
+))
+TableBody.displayName = "TableBody"
+const TableFooter = React.forwardRef((, ref) => (
+  tr]:last:border-b-0", className)}
+     />
+))
+TableFooter.displayName = "TableFooter"
+const TableRow = React.forwardRef((, ref) => (
+))
+TableRow.displayName = "TableRow"
+const TableHead = React.forwardRef((, ref) => (
+  [role=checkbox]]:translate-y-[2px]",
+      className
+    )}
+     />
+))
+TableHead.displayName = "TableHead"
+const TableCell = React.forwardRef((, ref) => (
+  [role=checkbox]]:translate-y-[2px]",
+      className
+    )}
+     />
+))
+TableCell.displayName = "TableCell"
+const TableCaption = React.forwardRef((, ref) => (
+))
+TableCaption.displayName = "TableCaption"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\tabs.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const TabsList = React.forwardRef(({ className, ...props }, ref) =>
+const TabsTrigger = React.forwardRef(({ className, ...props }, ref) =>
+const TabsContent = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-tabs
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Tabs, TabsList, TabsTrigger, TabsContent }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as TabsPrimitive from "@radix-ui/react-tabs"
+import  from "@/lib/utils"
+const Tabs = TabsPrimitive.Root
+const TabsList = React.forwardRef((, ref) => (
+))
+TabsList.displayName = TabsPrimitive.List.displayName
+const TabsTrigger = React.forwardRef((, ref) => (
+))
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+const TabsContent = React.forwardRef((, ref) => (
+))
+TabsContent.displayName = TabsPrimitive.Content.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\textarea.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Textarea = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Textarea }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import  from "@/lib/utils"
+const Textarea = React.forwardRef((, ref) => )
+Textarea.displayName = "Textarea"
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\toast.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const ToastProvider = React.forwardRef(({ ...props }, ref) =>
+const ToastViewport = React.forwardRef(({ ...props }, ref) =>
+const Toast = React.forwardRef(({ className, variant, ...props }, ref) =>
+const ToastAction = React.forwardRef(({ className, ...props }, ref) =>
+const ToastClose = React.forwardRef(({ className, ...props }, ref) =>
+const ToastTitle = React.forwardRef(({ className, ...props }, ref) =>
+const ToastDescription = React.forwardRef(({ className, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+class-variance-authority
+lucide-react
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react";
+import  from "class-variance-authority";
+import  from "lucide-react";
+import  from "@/lib/utils";
+const ToastProvider = React.forwardRef((, ref) => (
+));
+ToastProvider.displayName = "ToastProvider";
+const ToastViewport = React.forwardRef((, ref) => (
+));
+ToastViewport.displayName = "ToastViewport";
+const toastVariants = cva(
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+  ,
+    },
+    defaultVariants: ,
+  }
+);
+const Toast = React.forwardRef((, ref) => );
+Toast.displayName = "Toast";
+const ToastAction = React.forwardRef((, ref) => (
+));
+ToastAction.displayName = "ToastAction";
+const ToastClose = React.forwardRef((, ref) => (
+));
+ToastClose.displayName = "ToastClose";
+const ToastTitle = React.forwardRef((, ref) => (
+));
+ToastTitle.displayName = "ToastTitle";
+const ToastDescription = React.forwardRef((, ref) => (
+));
+ToastDescription.displayName = "ToastDescription";
+export ; 
+
+====================================
+
+====================================
+PLIK: src\components\ui\toaster.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Toaster
+
+--- IMPORTY ---
+@/components/ui/use-toast
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export function Toaster() {
+
+--- SKRÓT LOGIKI ---
+import  from "@/components/ui/use-toast";
+import  from "@/components/ui/toast";
+export function Toaster()  = useToast();
+  return (
+      ) }
+              )}
+        );
+      })}
+  );
+} 
+
+====================================
+
+====================================
+PLIK: src\components\ui\toggle-group.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const ToggleGroup = React.forwardRef(({ className, variant, size, children, ...props }, ref) =>
+const ToggleGroupItem = React.forwardRef(({ className, children, variant, size, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-toggle-group
+@/lib/utils
+@/components/ui/toggle
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { ToggleGroup, ToggleGroupItem }
+
+--- SKRÓT LOGIKI ---
+"use client";
+import * as React from "react"
+import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
+import  from "@/lib/utils"
+import  from "@/components/ui/toggle"
+const ToggleGroupContext = React.createContext()
+const ToggleGroup = React.forwardRef((, ref) => (
+))
+ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName
+const ToggleGroupItem = React.forwardRef((, ref) => 
+    )
+  );
+})
+ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\toggle.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const Toggle = React.forwardRef(({ className, variant, size, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-toggle
+class-variance-authority
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Toggle, toggleVariants }
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+import * as TogglePrimitive from "@radix-ui/react-toggle"
+import  from "class-variance-authority";
+import  from "@/lib/utils"
+const toggleVariants = cva(
+  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  ,
+      size: ,
+    },
+    defaultVariants: ,
+  }
+)
+const Toggle = React.forwardRef((, ref) => (
+))
+Toggle.displayName = TogglePrimitive.Root.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\tooltip.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const TooltipContent = React.forwardRef(({ className, sideOffset = 4, ...props }, ref) =>
+
+--- IMPORTY ---
+react
+@radix-ui/react-tooltip
+@/lib/utils
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+
+--- SKRÓT LOGIKI ---
+"use client"
+import * as React from "react"
+import * as TooltipPrimitive from "@radix-ui/react-tooltip"
+import  from "@/lib/utils"
+const TooltipProvider = TooltipPrimitive.Provider
+const Tooltip = TooltipPrimitive.Root
+const TooltipTrigger = TooltipPrimitive.Trigger
+const TooltipContent = React.forwardRef((, ref) => (
+))
+TooltipContent.displayName = TooltipPrimitive.Content.displayName
+export 
+
+====================================
+
+====================================
+PLIK: src\components\ui\use-toast.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function genId
+const addToRemoveQueue = (toastId) =>
+const timeout = setTimeout(() =>
+const _clearFromRemoveQueue = (toastId) =>
+const reducer = (state, action) =>
+function dispatch
+function toast
+const update = (props) =>
+const dismiss = () =>
+function useToast
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const reducer = (state, action) => {
+export { useToast, toast };
+
+--- SKRÓT LOGIKI ---
+import  from "react";
+const TOAST_LIMIT = 20;
+const TOAST_REMOVE_DELAY = 1000; 
+const actionTypes = ;
+let count = 0;
+function genId() 
+const toastTimeouts = new Map();
+const addToRemoveQueue = (toastId) => 
+  const timeout = setTimeout(() => );
+  }, TOAST_REMOVE_DELAY);
+  toastTimeouts.set(toastId, timeout);
+};
+const _clearFromRemoveQueue = (toastId) => 
+};
+export const reducer = (state, action) => ;
+    case actionTypes.UPDATE_TOAST:
+      return  : t
+        ),
+      };
+    case actionTypes.DISMISS_TOAST:  = action;
+      if (toastId)  else );
+      }
+      return 
+            : t
+        ),
+      };
+    }
+    case actionTypes.REMOVE_TOAST:
+      if (action.toastId === undefined) ;
+      }
+      return ;
+  }
+};
+const listeners = [];
+let memoryState = ;
+function dispatch(action) );
+}
+function toast() ,
+    });
+  const dismiss = () =>
+
+====================================
+
+====================================
+PLIK: src\components\UserNotRegisteredError.jsx
+
+--- KOMPONENTY ---
+UserNotRegisteredError
+
+--- FUNKCJE ---
+const UserNotRegisteredError = () =>
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default UserNotRegisteredError;
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+const UserNotRegisteredError = () => ;
+export default UserNotRegisteredError;
+
+====================================
+
+====================================
+PLIK: src\components\weather\WeatherWidget.jsx
+
+--- KOMPONENTY ---
+WeatherWidget
+
+--- FUNKCJE ---
+const getWeatherIcon = (iconCode, size = 48) =>
+const getWeatherDescription = (description) =>
+const formatTemp = (temp) =>
+const handleGoToWeatherPage = () =>
+const handleDaysChange = (value) =>
+
+--- IMPORTY ---
+react
+framer-motion
+react-router-dom
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/select
+@/hooks/useWeather
+date-fns
+date-fns/locale
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default WeatherWidget;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'framer-motion';
+import  from 'react-router-dom';
+import  from 'lucide-react';
+import GlassCard from '@/components/ui/GlassCard';
+import  from '@/components/ui/button';
+import  from '@/components/ui/select';
+import  from '@/hooks/useWeather';
+import  from 'date-fns';
+import  from 'date-fns/locale';
+const WeatherWidget = () =>  = useWeather(
+    location,
+    apiKey,
+    autoRefresh,
+    forecastDays
+  );
+  const getWeatherIcon = (iconCode, size = 48) => ;
+    return iconMap[iconCode] || ;
+  };
+  const getWeatherDescription = (description) => ;
+    return descMap[description.toLowerCase()] || description;
+  };
+  const formatTemp = (temp) => °C`;
+  };
+  const handleGoToWeatherPage = () =>  });
+  };
+  const handleDaysChange = (value) => ;
+  if (loading && !currentWeather) 
+  if (error) 
+            Spróbuj ponownie
+    );
+  }
+  if (!currentWeather) 
+  const displayedForecast = forecast;
+  return (
+          Pogoda
+          )}
+             Odczuwalna: 
+             Wiatr:  km/h
+           Wilgotność
+
+====================================
+
+====================================
+PLIK: src\hooks\use-mobile.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function useIsMobile
+const onChange = () =>
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export function useIsMobile() {
+
+--- SKRÓT LOGIKI ---
+import * as React from "react"
+const MOBILE_BREAKPOINT = 768
+export function useIsMobile() px)`)
+    const onChange = () => , [])
+  return !!isMobile
+}
+
+====================================
+
+====================================
+PLIK: src\hooks\useAutofill.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function useAutofill
+const saveAutofill = useCallback((key, value) =>
+const getAutofill = useCallback((key) =>
+const clearAutofill = useCallback((key) =>
+const clearAllAutofill = useCallback(() =>
+const getTripAutofill = useCallback(() =>
+const saveTripAutofill = useCallback((tripData, vehicles, drivers) =>
+const vehicle = vehicles?.find(v =>
+const driver = drivers?.find(d =>
+const saveServiceAutofill = useCallback((serviceData) =>
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export function useAutofill() {
+
+--- SKRÓT LOGIKI ---
+import  from 'react';
+const AUTOFILL_KEYS = ;
+/**
+ * Hook do autofill — zapamiętuje ostatnio używane wartości
+ * i proponuje je przy kolejnym otwarciu formularza.
+ *
+ * Użycie:
+ *   const  = useAutofill();
+ *
+ *   
+ *   saveAutofill('lastVehicle', );
+ *
+ *   
+ *   const autofill = getAutofill('lastVehicle');
+ *   if (autofill && !currentValue) setVehicleId(autofill.id);
+ */
+export function useAutofill() `;
+      localStorage.setItem(storageKey, JSON.stringify(value));
+    } catch (e) 
+  }, []);
+  const getAutofill = useCallback((key) => `;
+      const raw = localStorage.getItem(storageKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch 
+  }, []);
+  const clearAutofill = useCallback((key) => `;
+    localStorage.removeItem(storageKey);
+  }, []);
+  const clearAllAutofill = useCallback(() => , []);
+  /**
+   * Zwraca sugestie autofill dla formularza trasy.
+   * Użyj przy inicjalizacji formularza AddTrip/EditTrip.
+   */
+  const getTripAutofill = useCallback(() => ;
+  }, [getAutofill]);
+  /**
+   * Zapisz dane trasy do autofill po pomyślnym zapisaniu formularza.
+   * Wywołaj w onSuccess mutacji.
+   */
+  const saveTripAutofill = useCallback((tripData, vehicles, drivers) =>  $`,
+
+====================================
+
+====================================
+PLIK: src\hooks\useFormDraft.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function useFormDraft
+const clearDraft = useCallback(() =>
+const getDraftInfo = useCallback(() =>
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export function useFormDraft(key, values, setValues, options = {}) {
+
+--- SKRÓT LOGIKI ---
+import  from 'react';
+/**
+ * Hook do automatycznego zapisywania draftu formularza w localStorage.
+ *
+ * Użycie:
+ *   const  = useFormDraft('trip-form', values, setValues);
+ *
+ * @param  key - unikalny klucz w localStorage
+ * @param  values - aktualne wartości formularza
+ * @param  setValues - setter stanu formularza
+ * @param  options
+ *   @param  options.debounceMs - opóźnienie zapisu (domyślnie 800ms)
+ *   @param  options.exclude - pola które nie mają być zapisywane
+ *   @param  options.restoreOnMount - czy przywrócić draft przy montowaniu (domyślnie true)
+ */
+export function useFormDraft(key, values, setValues, options = )  = options;
+  const storageKey = `draft_$`;
+  const timerRef = useRef(null);
+  const isRestoredRef = useRef(false);
+  useEffect(() => ;
+      for (const [k, v] of Object.entries(draft)) 
+      }
+      setValues(merged);
+    } catch (e) 
+  }, []);
+  useEffect(() => ;
+        exclude.forEach(k => delete toSave[k]);
+        toSave._draftSavedAt = new Date().toISOString();
+        localStorage.setItem(storageKey, JSON.stringify(toSave));
+      } catch (e) 
+    }, debounceMs);
+    return () => ;
+  }, [values, storageKey, debounceMs, exclude]);
+  const clearDraft = useCallback(() => , [storageKey]);
+  const getDraftInfo = useCallback(() => ;
+    } catch 
+  }, [storageKey]);
+  const hasDraft = !!localStorage.getItem(storageKey);
+  return ;
+}
+
+====================================
+
+====================================
+PLIK: src\hooks\useFormValidation.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function useFormValidation
+const touch = useCallback((field) =>
+const validateField = useCallback((field, value) =>
+const validateAll = useCallback(() =>
+const allTouched = Object.keys(schemaRef.current).reduce((acc, k) =>
+const reset = useCallback(() =>
+const hasErrors = Object.keys(errors).some(k =>
+const fieldProps = useCallback((field) =>
+
+--- IMPORTY ---
+react
+@/lib/validation
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export function useFormValidation(values, schema) {
+
+--- SKRÓT LOGIKI ---
+import  from 'react';
+import  from '@/lib/validation';
+/**
+ * Hook do walidacji formularza na żywo.
+ *
+ * Użycie:
+ *   const  =
+ *     useFormValidation(values, schema);
+ *
+ * schema = 
+ */
+export function useFormValidation(values, schema) );
+  const [touched, setTouched] = useState();
+  const schemaRef = useRef(schema);
+  schemaRef.current = schema;
+  const touch = useCallback((field) => ));
+    const error = validate(values[field], schemaRef.current[field] || []);
+    setErrors(prev => ());
+  }, [values]);
+  const validateField = useCallback((field, value) => ));
+  }, [touched]);
+  const validateAll = useCallback(() =>  = validateForm(values, schemaRef.current);
+    setErrors(allErrors);
+    const allTouched = Object.keys(schemaRef.current).reduce((acc, k) => , );
+    setTouched(allTouched);
+    return isValid;
+  }, [values]);
+  const reset = useCallback(() => );
+    setTouched();
+  }, []);
+  const hasErrors = Object.keys(errors).some(k => touched[k] && errors[k]);
+  const fieldProps = useCallback((field) => (), [touch, validateField, errors, touched]);
+  return ;
+}
+
+====================================
+
+====================================
+PLIK: src\hooks\useGeolocation.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const useGeolocation = (options = {}) =>
+const checkPermission = useCallback(async () =>
+const getCurrentPosition = useCallback(() =>
+const startWatching = useCallback(() =>
+const stopWatching = useCallback(() =>
+const reset = useCallback(() =>
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const useGeolocation = (options = {}) => {
+export default useGeolocation;
+
+--- SKRÓT LOGIKI ---
+import  from 'react';
+export const useGeolocation = (options = ) =>  = options;
+  const [location, setLocation] = useState(null);
+  const [loading, setLoading] = useState(autoStart);
+  const [error, setError] = useState(null);
+  const [permission, setPermission] = useState(null);
+  const watchIdRef = useRef(null);
+  const checkPermission = useCallback(async () => 
+    try );
+      setPermission(result.state);
+      result.addEventListener('change', () => setPermission(result.state));
+    } catch (err) 
+  }, []);
+  const getCurrentPosition = useCallback(() => 
+    setLoading(true);
+    setError(null);
+    return new Promise((resolve, reject) => ;
+          setLocation(locData);
+          setLoading(false);
+          resolve(locData);
+          if (onLocationUpdate) onLocationUpdate(locData);
+        },
+        (err) => ,
+      );
+    });
+  }, [enableHighAccuracy, timeout, maximumAge, onLocationUpdate, onError]);
+  const startWatching = useCallback(() => 
+    if (watchIdRef.current) 
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => ;
+        setLocation(locData);
+        setError(null);
+        if (onLocationUpdate) onLocationUpdate(locData);
+      },
+      (err) => ,
+    );
+    watchIdRef.current = watchId;
+    return watchId;
+  }, [enableHighAccuracy, timeout, maximumAge, onLocationUpdate, onError]);
+  const stopWatching = useCallback(() => 
+
+====================================
+
+====================================
+PLIK: src\hooks\useKeyBlocker.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const useKeyBlocker = (vehicleId) =>
+const getRequireKeyForTrip = () =>
+const isVehicleKeyIssued = (vId) =>
+const vehicleLogs = keyLogs.filter(log =>
+const sortedLogs = [...vehicleLogs].sort((a, b) =>
+const getVehiclesWithIssuedKeys = () =>
+const issuedVehicleIds = vehiclesWithIssuedKeys.map(issue =>
+const isVehicleBlocked = (vId) =>
+
+--- IMPORTY ---
+@tanstack/react-query
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const useKeyBlocker = (vehicleId) => {
+export default useKeyBlocker;
+
+--- SKRÓT LOGIKI ---
+import  from '@tanstack/react-query';
+import api from '@/api/apiClient';
+export const useKeyBlocker = (vehicleId) =>  = useQuery()),
+  });
+  const  = useQuery();
+  const getRequireKeyForTrip = () => 
+    } catch (e) 
+    const settings = settingsArr && !Array.isArray(settingsArr) 
+      ? settingsArr 
+      : (Array.isArray(settingsArr) && settingsArr[0]) || ;
+    return settings.requireKeyForTrip === true;
+  };
+  const requireKeyForTrip = getRequireKeyForTrip();
+  console.log('🔑 useKeyBlocker - requireKeyForTrip:', requireKeyForTrip);
+  const isVehicleKeyIssued = (vId) => );
+    if (vehicleLogs.length === 0) return false;
+    const sortedLogs = [...vehicleLogs].sort((a, b) => );
+    const lastAction = sortedLogs[0]?.action;
+    const isIssued = lastAction === 'issued';
+    console.log(`🔑 useKeyBlocker - Pojazd $: ostatnia akcja = $, kluczyk wydany = $`);
+    return isIssued;
+  };
+  const getVehiclesWithIssuedKeys = () => );
+      }
+    });
+    const issued = [];
+    vehicleLastLog.forEach((item, vId) => );
+      }
+    });
+    console.log(`🔑 useKeyBlocker - Pojazdy z wydanymi kluczykami (DOZWOLONE): $`);
+    return issued;
+  };
+  const vehiclesWithIssuedKeys = getVehiclesWithIssuedKeys();
+  const issuedVehicleIds = vehiclesWithIssuedKeys.map(issue => issue.vehicleId);
+  const isVehicleBlocked = (vId) => ;
+  const isSelectedVehicleBlocked = vehicleId ? isVehicleBlocked(vehicleId) : false;
+  const allVehiclesBlocked = requireKeyForTrip && vehicleId ? isSelectedVehicleBlocked : false;
+  const blockedReason = allVehiclesBlocked
+    ? 'Brak wydanego kluczyka dla tego pojazdu. Najpierw pobierz kluczyk w module "Kluczyki".'
+    : null;
+
+====================================
+
+====================================
+PLIK: src\hooks\useMap.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function useMap
+const getCurrentLocation = useCallback(() =>
+const startTracking = useCallback(() =>
+const stopTracking = useCallback(() =>
+const addMarker = useCallback((latlng, markerOptions = {}) =>
+const clearMarkers = useCallback(() =>
+const drawRoute = useCallback((waypoints, routeOptions = {}) =>
+const latlngs = waypoints.map(w =>
+const clearRoute = useCallback(() =>
+const setZoom = useCallback((zoomLevel) =>
+const centerOnPosition = useCallback((position) =>
+const zoomIn = useCallback(() =>
+const zoomOut = useCallback(() =>
+
+--- IMPORTY ---
+react
+leaflet
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export function useMap(mapContainerRef, options = {}) {
+export default useMap;
+
+--- SKRÓT LOGIKI ---
+import  from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions();
+export function useMap(mapContainerRef, options = )  = options;
+  const [map, setMap] = useState(null);
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState(null);
+  const [tracking, setTracking] = useState(false);
+  const watchIdRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const initializedRef = useRef(false);
+  useEffect(() => .tile.openstreetmap.org
+    let attribution = '&copy; OpenStreetMap contributors';
+    const mapInstance = L.map(mapContainerRef.current).setView(initialCenter, initialZoom);
+    L.tileLayer(tileLayerUrl, ).addTo(mapInstance);
+    mapInstanceRef.current = mapInstance;
+    setMap(mapInstance);
+    setIsMapReady(true);
+    return () => 
+    };
+  }, [mapContainerRef, initialCenter, initialZoom]);
+  const getCurrentLocation = useCallback(() => 
+      navigator.geolocation.getCurrentPosition(
+        (position) => );
+        },
+        (error) => reject('Błąd lokalizacji'),
+      );
+    });
+  }, []);
+  const startTracking = useCallback(() => ;
+        setCurrentPosition(newPosition);
+        if (onLocationUpdate) onLocationUpdate(newPosition);
+      },
+      (error) => ,
+    );
+    watchIdRef.current = watchId;
+  }, [onLocationUpdate, onError]);
+  const stopTracking = useCallback(() => 
+
+====================================
+
+====================================
+PLIK: src\hooks\useMapSearch.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const useMapSearch = (options = {}) =>
+const searchNominatim = useCallback(async (searchQuery) =>
+const searchGoogle = useCallback(async (searchQuery) =>
+const search = useCallback(async (searchQuery) =>
+const searchDebounced = useCallback((searchQuery) =>
+const selectLocation = useCallback((location) =>
+const clearResults = useCallback(() =>
+const reset = useCallback(() =>
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const useMapSearch = (options = {}) => {
+export default useMapSearch;
+
+--- SKRÓT LOGIKI ---
+import  from 'react';
+export const useMapSearch = (options = ) =>  = options;
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const searchTimeoutRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const searchNominatim = useCallback(async (searchQuery) => &format=json&addressdetails=1&limit=$&countrycodes=$`;
+    const response = await fetch(url, ,
+    });
+    if (!response.ok) throw new Error('Błąd wyszukiwania');
+    const data = await response.json();
+    return data.map(item => ());
+  }, [limit, countryCodes, language]);
+  const searchGoogle = useCallback(async (searchQuery) => &key=$&language=$`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Błąd wyszukiwania');
+    const data = await response.json();
+    if (data.status !== 'OK') throw new Error(data.error_message || `Błąd API: $`);
+    return data.results.map(result => ());
+  }, [apiKey, language]);
+  const search = useCallback(async (searchQuery) => 
+    searchTimeoutRef.current = setTimeout(() => , debounceMs);
+  }, [search, debounceMs]);
+  const selectLocation = useCallback((location) => , []);
+  const clearResults = useCallback(() => , []);
+  const reset = useCallback(() => 
+    if (abortControllerRef.current) 
+  }, []);
+  return ;
+};
+export default useMapSearch;
+
+====================================
+
+====================================
+PLIK: src\hooks\useSearch.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function useSearch
+const setFilter = useCallback((key, value) =>
+const clearFilters = useCallback(() =>
+const setSort = useCallback((field) =>
+const result = useMemo(() =>
+const value = field.split('.').reduce((obj, key) =>
+const aVal = sortConfig.field.split('.').reduce((obj, k) =>
+const bVal = sortConfig.field.split('.').reduce((obj, k) =>
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export function useSearch(data = [], options = {}) {
+
+--- SKRÓT LOGIKI ---
+import  from 'react';
+/**
+ * Hook do live search, filtrowania i sortowania list danych.
+ *
+ * Użycie:
+ *   const  = useSearch(data, ,
+ *   });
+ */
+export function useSearch(data = [], options = ) ,
+    defaultFilters = ,
+  } = options;
+  const [query, setQuery] = useState('');
+  const [filters, setFilters] = useState(defaultFilters);
+  const [sortConfig, setSortConfig] = useState(defaultSort);
+  const setFilter = useCallback((key, value) => ));
+  }, []);
+  const clearFilters = useCallback(() => , [defaultFilters]);
+  const setSort = useCallback((field) => ));
+  }, []);
+  const result = useMemo(() => )
+      );
+    }
+    for (const [key, value] of Object.entries(filters)) );
+      } else if (key.endsWith('_to') || key.endsWith('_lte')) );
+      }
+    }
+    if (sortConfig.field) 
+        if (typeof aVal === 'number' && typeof bVal === 'number') 
+        const aStr = String(aVal ?? '').toLowerCase();
+        const bStr = String(bVal ?? '').toLowerCase();
+        const cmp = aStr.localeCompare(bStr, 'pl');
+        return sortConfig.direction === 'asc' ? cmp : -cmp;
+      });
+    }
+    return items;
+  }, [data, query, filters, sortConfig, searchFields]);
+  const hasActiveFilters = query.trim() !== '' ||
+    Object.values(filters).some(v => v !== '' && v !== null && v !== undefined && v !== 'all');
+  return ;
+}
+
+====================================
+
+====================================
+PLIK: src\hooks\useTrackedTrips.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const useTrackedTrips = () =>
+const loadTrips = () =>
+const tripsWithDates = parsed.map(trip =>
+const saveTrackedTrip = useCallback((tripData) =>
+const deleteTrackedTrip = useCallback((id) =>
+const updated = prev.filter(trip =>
+const updateTrackedTrip = useCallback((id, updates) =>
+const updated = prev.map(trip =>
+const getTrackedTrip = useCallback((id) =>
+
+--- IMPORTY ---
+react
+sonner
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export const useTrackedTrips = () => {
+export default useTrackedTrips;
+
+--- SKRÓT LOGIKI ---
+import  from 'react';
+import  from 'sonner';
+const STORAGE_KEY = 'tracked_trips';
+export const useTrackedTrips = () => ));
+          setTrackedTrips(tripsWithDates.sort((a, b) => b.startDate - a.startDate));
+        }
+      } catch (error)  finally 
+    };
+    loadTrips();
+  }, []);
+  const saveTrackedTrip = useCallback((tripData) => ;
+      setTrackedTrips(prev => );
+      toast.success('Trasa została zapisana!');
+      return newTrip;
+    } catch (error) 
+  }, []);
+  const deleteTrackedTrip = useCallback((id) => );
+      toast.success('Trasa usunięta');
+    } catch (error) 
+  }, []);
+  const updateTrackedTrip = useCallback((id, updates) =>  : trip
+        );
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+      });
+      toast.success('Trasa zaktualizowana');
+    } catch (error) 
+  }, []);
+  const getTrackedTrip = useCallback((id) => , [trackedTrips]);
+  return ;
+};
+export default useTrackedTrips;
+
+====================================
+
+====================================
+PLIK: src\hooks\useWeather.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function useWeather
+const getApiKey = useCallback(() =>
+const fetchWeather = useCallback(async (lat, lng) =>
+const fetchWeatherForCurrentLocation = useCallback(async () =>
+const geocodeAndFetch = async () =>
+const interval = setInterval(() =>
+
+--- IMPORTY ---
+react
+@/lib/weatherApi
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export function useWeather(location = null, apiKey = null, autoFetch = true, forecastDays = 5) {
+export default useWeather;
+
+--- SKRÓT LOGIKI ---
+import  from 'react';
+import  from '@/lib/weatherApi';
+export function useWeather(location = null, apiKey = null, autoFetch = true, forecastDays = 5) ;
+  }, []);
+  const getApiKey = useCallback(() =>  catch (e) 
+    }
+    return null;
+  }, [apiKey]);
+  const fetchWeather = useCallback(async (lat, lng) => 
+      return;
+    }
+    if (isMounted.current) 
+    try  else 
+        setForecast(forecastData || []);
+        setLastUpdate(new Date());
+      }
+    } catch (err) 
+    } finally 
+    }
+  }, [getApiKey, forecastDays]);
+  const fetchWeatherForCurrentLocation = useCallback(async () => 
+    if (isMounted.current) setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => fetchWeather(position.coords.latitude, position.coords.longitude),
+      (err) => 
+    );
+  }, [fetchWeather]);
+  useEffect(() =>  else if (location?.city) ,PL&limit=1&appid=$`);
+              const data = await res.json();
+              if (data?.[0]) fetchWeather(data[0].lat, data[0].lon);
+              else if (isMounted.current) setError('Nie znaleziono miasta');
+            } catch 
+          };
+          geocodeAndFetch();
+        } else 
+      } else 
+    }
+  }, [autoFetch, location, fetchWeather, fetchWeatherForCurrentLocation, getApiKey]);
+  useEffect(() =>  else if (location?.city) ,PL&limit=1&appid=$`)
+            .then(res => res.json())
+
+====================================
+
+====================================
+PLIK: src\Layout.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Layout
+const loadModules = () =>
+const navItems = allNavItems.filter((item) =>
+const handleLogout = () =>
+const isActive = (page) =>
+const getPageUrl = (page) =>
+
+--- IMPORTY ---
+react
+react-router-dom
+framer-motion
+@/components/ui/button
+@/components/ui/avatar
+@/lib/ThemeContext
+@/lib/AuthContext
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function Layout({ children, currentPageName }) {
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "react-router-dom";
+import  from "framer-motion";
+import  from "lucide-react";
+import  from "@/components/ui/button";
+import  from "@/components/ui/avatar";
+import  from "@/lib/ThemeContext";
+import  from "@/lib/AuthContext";
+const pageToPath = ;
+const allNavItems = [
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+];
+export default function Layout() );
+  const  = useAppSettings();
+  const  = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() =>  catch (e) 
+      }
+    };
+    loadModules();
+    window.addEventListener("storage", loadModules);
+    window.addEventListener("modulesSettingsChanged", loadModules);
+    return () => ;
+  }, []);
+  const navItems = allNavItems.filter((item) => );
+  const handleLogout = () => ;
+  const isActive = (page) => ` ||
+           location.pathname.toLowerCase().startsWith(`/$/`);
+  };
+
+====================================
+
+====================================
+PLIK: src\lib\AuthContext.jsx
+
+--- KOMPONENTY ---
+AuthProvider
+
+--- FUNKCJE ---
+const useAuth = () =>
+const AuthProvider = ({ children }) =>
+const verifyToken = async () =>
+const login = async (email, password) =>
+const register = async (name, email, password) =>
+const logout = () =>
+const updateUser = (updatedData) =>
+
+--- IMPORTY ---
+react
+@/api/apiClient
+@/lib/errorHandler
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const useAuth = () => {
+export const AuthProvider = ({ children }) => {
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import api from '@/api/apiClient';
+import  from '@/lib/errorHandler';
+const AuthContext = createContext();
+export const useAuth = () => 
+  return context;
+};
+export const AuthProvider = () => 
+    try );
+    } catch (error) );
+    } finally 
+  };
+  useEffect(() => , [token]);
+  const login = async (email, password) => );
+        return ;
+      }
+      logAction('login', );
+      return ;
+    } catch (error) );
+      return ;
+    }
+  };
+  const register = async (name, email, password) => );
+      if (result.token) );
+        return ;
+      }
+      logAction('register', );
+      return ;
+    } catch (error) );
+      return ;
+    }
+  };
+  const logout = () => );
+  };
+  const updateUser = (updatedData) => ));
+  };
+  const value = ;
+  return ;
+};
+
+====================================
+
+====================================
+PLIK: src\lib\calendarUtils.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const getWeekDays = (currentDate) =>
+const getMonthDays = (date) =>
+const getEventsForDay = (date, events) =>
+const groupEventsByDate = (events) =>
+
+--- IMPORTY ---
+date-fns
+date-fns/locale
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const getWeekDays = (currentDate) => {
+export const getMonthDays = (date) => {
+export const getEventsForDay = (date, events) => {
+export const groupEventsByDate = (events) => {
+export const eventTypes = {
+
+--- SKRÓT LOGIKI ---
+import  from 'date-fns';
+import  from 'date-fns/locale';
+export const getWeekDays = (currentDate) => );
+  const end = endOfWeek(currentDate, );
+  return eachDayOfInterval();
+};
+export const getMonthDays = (date) => );
+  const end = endOfWeek(lastDay, );
+  return eachDayOfInterval();
+};
+export const getEventsForDay = (date, events) => ;
+export const groupEventsByDate = (events) => ;
+  events.forEach(event => 
+    grouped[dateKey].push(event);
+  });
+  return grouped;
+};
+export const eventTypes = ,
+  service: ,
+  refueling: ,
+  inspection: ,
+  meeting: ,
+  other: ,
+};
+
+====================================
+
+====================================
+PLIK: src\lib\errorHandler.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const setupGlobalErrorHandler = () =>
+const logAction = (action, details = null) =>
+const logNavigation = (from, to) =>
+const logApi = (endpoint, method, status, data = null) =>
+
+--- IMPORTY ---
+./logger
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const setupGlobalErrorHandler = () => {
+export const logAction = (action, details = null) => {
+export const logNavigation = (from, to) => {
+export const logApi = (endpoint, method, status, data = null) => {
+
+--- SKRÓT LOGIKI ---
+import  from './logger';
+export const setupGlobalErrorHandler = () => );
+    return false;
+  };
+  window.onunhandledrejection = function (event) );
+  };
+  const originalConsoleError = console.error;
+  console.error = function (...args) );
+    originalConsoleError.apply(console, args);
+  };
+};
+export const logAction = (action, details = null) => `, details);
+};
+export const logNavigation = (from, to) =>  → $`, );
+};
+export const logApi = (endpoint, method, status, data = null) =>  $ → $`, );
+};
+
+====================================
+
+====================================
+PLIK: src\lib\logger.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const loadLogsFromStorage = () =>
+const saveLogsToStorage = () =>
+
+--- IMPORTY ---
+brak
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const loadLogsFromStorage = () => {
+export const logger = {
+  export() {
+      exportDate: new Date().toISOString(),
+
+--- SKRÓT LOGIKI ---
+const MAX_LOGS = 1000;
+const STORAGE_KEY = 'app_debug_logs';
+let logs = [];
+let enabled = false;
+export const loadLogsFromStorage = () =>  logów z pamięci`);
+    }
+  } catch (e) 
+};
+const saveLogsToStorage = () =>  catch (e) 
+};
+export const logger = ,
+  disable() ,
+  isEnabled() ,
+  log(type, message, data = null) ;
+    logs.push(entry);
+    if (logs.length > MAX_LOGS) 
+    saveLogsToStorage();
+    const logPrefix = `[$]`;
+    if (type === 'error')  else if (type === 'warn')  else 
+  },
+  getLogs() ,
+  getLogsByType(type) ,
+  clear() ,
+  export() ;
+  }
+};
+loadLogsFromStorage();
+
+====================================
+
+====================================
+PLIK: src\lib\mapConfig.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const formatCoordinates = (lat, lng) =>
+const calculateDistance = (lat1, lng1, lat2, lng2) =>
+const geocodeAddress = async (address) =>
+const reverseGeocode = async (lat, lng) =>
+
+--- IMPORTY ---
+brak
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const MAP_CONFIG = {
+export const formatCoordinates = (lat, lng) => {
+export const calculateDistance = (lat1, lng1, lat2, lng2) => {
+export const geocodeAddress = async (address) => {
+export const reverseGeocode = async (lat, lng) => {
+
+--- SKRÓT LOGIKI ---
+export const MAP_CONFIG = .tile.openstreetmap.org
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
+    },
+    carto: .basemaps.cartocdn.com/light_all
+      attribution: '&copy; OpenStreetMap &copy; CartoDB',
+      maxZoom: 19,
+    },
+    stadia: 
+      attribution: '&copy; Stadia Maps',
+      maxZoom: 20,
+    },
+    google: &y=&z=',
+      attribution: '&copy; Google Maps',
+      maxZoom: 20,
+    },
+    googleSatellite: &y=&z=',
+      attribution: '&copy; Google Maps',
+      maxZoom: 20,
+    },
+  },
+};
+export const formatCoordinates = (lat, lng) => ° $, $° $`;
+};
+export const calculateDistance = (lat1, lng1, lat2, lng2) => ;
+export const geocodeAddress = async (address) => &limit=1&addressdetails=1&countrycodes=pl`
+    );
+    const data = await response.json();
+    if (data && data.length > 0) ;
+    }
+    return null;
+  } catch (error) 
+};
+export const reverseGeocode = async (lat, lng) => &lon=$&zoom=18&addressdetails=1`
+    );
+    const data = await response.json();
+    return data.display_name || null;
+  } catch (error) 
+};
+
+====================================
+
+====================================
+PLIK: src\lib\mapProviders.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+brak
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const mapProviders = {
+export const mapStyles = {
+export const defaultRouteColors = {
+
+--- SKRÓT LOGIKI ---
+export const mapProviders = .tile.openstreetmap.org
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19,
+    free: true,
+  },
+  google: ,
+  maptiler: 
+    attribution: '&copy; MapTiler',
+    maxZoom: 20,
+    requiresApiKey: true,
+  },
+  carto: .basemaps.cartocdn.com/light_all
+    attribution: '&copy; OSM &copy; CartoDB',
+    maxZoom: 19,
+    free: true,
+  },
+  stadia: 
+    attribution: '&copy; Stadia Maps',
+    maxZoom: 20,
+    free: true,
+  },
+};
+export const mapStyles = .tile.openstreetmap.org
+  },
+  satellite: ,
+  terrain: 
+  },
+  dark: .basemaps.cartocdn.com/dark_all
+  },
+  light: .basemaps.cartocdn.com/light_all
+  },
+};
+export const defaultRouteColors = ;
+
+====================================
+
+====================================
+PLIK: src\lib\NavigationTracker.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function NavigationTracker
+
+--- IMPORTY ---
+react
+react-router-dom
+./AuthContext
+@/pages.config
+./errorHandler
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function NavigationTracker() {
+
+--- SKRÓT LOGIKI ---
+import  from 'react';
+import  from 'react-router-dom';
+import  from './AuthContext';
+import  from '@/pages.config';
+import  from './errorHandler';
+export default function NavigationTracker()  = useAuth();
+    const  = pagesConfig;
+    const mainPageKey = mainPage ?? Object.keys(Pages)[0];
+    useEffect(() =>  else 
+        if (isAuthenticated && pageName) 
+    }, [location, isAuthenticated, Pages, mainPageKey]);
+    return null;
+}
+
+====================================
+
+====================================
+PLIK: src\lib\PageNotFound.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function PageNotFound
+
+--- IMPORTY ---
+react
+react-router-dom
+@/components/ui/button
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function PageNotFound() {
+
+--- SKRÓT LOGIKI ---
+import React from 'react';
+import  from 'react-router-dom';
+import  from '@/components/ui/button';
+export default function PageNotFound() 
+
+====================================
+
+====================================
+PLIK: src\lib\query-client.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+@tanstack/react-query
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const queryClientInstance = new QueryClient({
+
+--- SKRÓT LOGIKI ---
+import  from '@tanstack/react-query';
+import api from '@/api/apiClient';
+export const queryClientInstance = new QueryClient() => ;
+        const apiFn = apiMap[endpoint];
+        if (apiFn) 
+            return result;
+          } catch (error) :`, error.message);
+            if (endpoint === 'companySettings' || endpoint === 'settings') ;
+            }
+            return [];
+          }
+        }
+        console.warn(`⚠️ Nieznany endpoint: $, zwracam pustą wartość`);
+        return endpoint.includes('Settings') ?  : [];
+      },
+      refetchOnWindowFocus: false,  
+      refetchOnMount: true,
+      staleTime: 5 * 60 * 1000,     
+      gcTime: 10 * 60 * 1000,       
+      retry: 1,                     
+    },
+  },
+});
+
+====================================
+
+====================================
+PLIK: src\lib\ThemeContext.jsx
+
+--- KOMPONENTY ---
+AppSettingsProvider
+
+--- FUNKCJE ---
+const AppSettingsProvider = ({ children }) =>
+const loadSettings = async () =>
+const saveSettings = async (newSettings) =>
+const useAppSettings = () =>
+
+--- IMPORTY ---
+react
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const AppSettingsProvider = ({ children }) => {
+export const useAppSettings = () => {
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+const defaultSettings = ;
+const STORAGE_KEY = 'app_settings';
+const themeClasses = [
+  'theme-dark', 'theme-blue', 'theme-purple', 'theme-green',
+  'theme-rose', 'theme-amber', 'theme-cyan', 'theme-orange',
+  'theme-pink', 'theme-lime', 'theme-sky'
+];
+const bgClasses = [
+  'bg-app-gradient1', 'bg-app-gradient2', 'bg-app-gradient3', 'bg-app-gradient4',
+  'bg-app-gradient5', 'bg-app-gradient6', 'bg-app-gradient7', 'bg-app-gradient8',
+  'bg-app-gradient9', 'bg-app-gradient10', 'bg-app-gradient11', 'bg-app-gradient12',
+  'bg-app-gradient13', 'bg-app-gradient14', 'bg-app-gradient15',
+  'bg-app-solid1', 'bg-app-solid2', 'bg-app-solid3', 'bg-app-solid4',
+  'bg-app-solid5', 'bg-app-solid6', 'bg-app-solid7', 'bg-app-solid8',
+  'bg-app-solid9', 'bg-app-solid10', 'bg-app-solid11', 'bg-app-solid12',
+  'bg-app-solid13', 'bg-app-solid14', 'bg-app-solid15'
+];
+const textColorClasses = [
+  'text-theme-white', 'text-theme-white-secondary', 'text-theme-white-muted',
+  'text-theme-blue', 'text-theme-blue-secondary', 'text-theme-blue-muted',
+  'text-theme-purple', 'text-theme-purple-secondary', 'text-theme-purple-muted',
+  'text-theme-green', 'text-theme-green-secondary', 'text-theme-green-muted',
+  'text-theme-amber', 'text-theme-amber-secondary', 'text-theme-amber-muted',
+  'text-theme-rose', 'text-theme-rose-secondary', 'text-theme-rose-muted',
+  'text-theme-cyan', 'text-theme-cyan-secondary', 'text-theme-cyan-muted',
+  'text-theme-orange', 'text-theme-orange-secondary', 'text-theme-orange-muted',
+  'text-theme-pink', 'text-theme-pink-secondary', 'text-theme-pink-muted',
+  'text-theme-lime', 'text-theme-lime-secondary', 'text-theme-lime-muted',
+  'text-theme-sky', 'text-theme-sky-secondary', 'text-theme-sky-muted'
+];
+const AppSettingsContext = createContext();
+export const AppSettingsProvider = () => );
+      } else 
+    } catch (error)  finally 
+  };
+  const saveSettings = async (newSettings) => ;
+  useEffect(() => `);
+  }, [settings.theme]);
+  useEffect(() => , [settings.backgroundColor]);
+
+====================================
+
+====================================
+PLIK: src\lib\utils.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function cn
+
+--- IMPORTY ---
+clsx
+tailwind-merge
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export function cn(...inputs) {
+export const isIframe = window.self !== window.top;
+
+--- SKRÓT LOGIKI ---
+import  from "clsx"
+import  from "tailwind-merge"
+export function cn(...inputs)  
+export const isIframe = window.self !== window.top;
+
+====================================
+
+====================================
+PLIK: src\lib\validation.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function validate
+function validateForm
+
+--- IMPORTY ---
+brak
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const rules = {
+export function validate(value, fieldRules = []) {
+export function validateForm(values, schema) {
+
+--- SKRÓT LOGIKI ---
+export const rules = ,
+  minLength: (min, msg) => (value) =>  znaków`;
+    return null;
+  },
+  min: (minVal, msg) => (value) => `;
+    return null;
+  },
+  pattern: (regex, msg = 'Nieprawidłowy format') => (value) => ,
+  email: (msg = 'Nieprawidłowy adres email') => (value) => ,
+  phone: (msg = 'Nieprawidłowy numer telefonu') => (value) => $/.test(value) ? null : msg;
+  },
+  nip: (msg = 'Nieprawidłowy NIP (10 cyfr)') => (value) => $/.test(digits) ? null : msg;
+  },
+  plateNumber: (msg = 'Nieprawidłowy numer rejestracyjny') => (value) => $/i.test(value.replace(/[\s\-]/g, '')) ? null : msg;
+  },
+  vin: (msg = 'VIN musi mieć 17 znaków') => (value) => ,
+  year: (msg = 'Nieprawidłowy rok') => (value) => ,
+  dateNotFuture: (msg = 'Data nie może być w przyszłości') => (value) => ,
+  endDateAfterStart: (startValue, msg = 'Data końca musi być po dacie początku') => (value) => ,
+  mileageGreaterThan: (compareValue, msg) => (value) =>  km`;
+  },
+  custom: (fn, msg = 'Nieprawidłowa wartość') => (value) => ,
+};
+export function validate(value, fieldRules = []) 
+  return null;
+}
+export function validateForm(values, schema) ;
+  let isValid = true;
+  for (const [field, fieldRules] of Object.entries(schema)) 
+  }
+  return ;
+}
+
+====================================
+
+====================================
+PLIK: src\lib\weatherApi.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const getCurrentWeather = async (lat, lng, apiKey) =>
+const getForecastFromOpenMeteo = async (lat, lng, days = 7) =>
+const mapWeatherCodeToIcon = (code) =>
+const getDescriptionFromCode = (code) =>
+const getForecast = async (lat, lng, apiKey, days = 5) =>
+const getWeatherIconEmoji = (iconCode) =>
+
+--- IMPORTY ---
+brak
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const getCurrentWeather = async (lat, lng, apiKey) => {
+export const getForecastFromOpenMeteo = async (lat, lng, days = 7) => {
+export const getForecast = async (lat, lng, apiKey, days = 5) => {
+export const getWeatherIconEmoji = (iconCode) => {
+
+--- SKRÓT LOGIKI ---
+const OPENWEATHER_BASE = 'https:
+export const getCurrentWeather = async (lat, lng, apiKey) => 
+  try /weather?lat=$&lon=$&units=metric&lang=pl&appid=$`
+    );
+    if (!response.ok) throw new Error('Błąd pobierania pogody');
+    const data = await response.json();
+    return ;
+  } catch (error) 
+};
+export const getForecastFromOpenMeteo = async (lat, lng, days = 7) => &longitude=$&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=$`
+    );
+    if (!response.ok) throw new Error('Błąd pobierania prognozy');
+    const data = await response.json();
+    const mapWeatherCodeToIcon = (code) => ));
+  } catch (error) 
+};
+export const getForecast = async (lat, lng, apiKey, days = 5) => ;
+export const getWeatherIconEmoji = (iconCode) => ;
+  return icons[iconCode] || '🌡️';
+};
+
+====================================
+
+====================================
+PLIK: src\main.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+react
+react-dom/client
+@/App.jsx
+@/lib/errorHandler
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+brak
+
+--- SKRÓT LOGIKI ---
+import '@/lib/logger'; 
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from '@/App.jsx'
+import '@/index.css'
+import  from '@/lib/errorHandler'
+import 'leaflet/dist/leaflet.css'
+setupGlobalErrorHandler()
+ReactDOM.createRoot(document.getElementById('root')).render(
+)
+
+====================================
+
+====================================
+PLIK: src\pages\Calculators.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const fetchFuelPricesFromCollectAPI = async () =>
+const poland = data.result.find(country =>
+const getFallbackPrices = (voivodeship) =>
+const fetchFuelPrices = async (voivodeship) =>
+function Calculators
+const fetchPrices = async () =>
+const calculateFuelConsumption = () =>
+const calculateRange = () =>
+const calculateCost = () =>
+const calculateTripFuel = () =>
+
+--- IMPORTY ---
+react
+framer-motion
+lucide-react
+@/components/ui/GlassCard
+@/components/ui/PageHeader
+@/components/ui/input
+@/components/ui/label
+@/components/ui/button
+sonner
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export default function Calculators() {
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "framer-motion";
+import  from "lucide-react";
+import GlassCard from "@/components/ui/GlassCard";
+import PageHeader from "@/components/ui/PageHeader";
+import  from "@/components/ui/input";
+import  from "@/components/ui/label";
+import  from "@/components/ui/button";
+import  from "@/components/ui/select";
+import  from "sonner";
+const voivodeships = [
+  "DOLNOŚLĄSKIE", "KUJAWSKO-POMORSKIE", "LUBELSKIE", "LUBUSKIE",
+  "ŁÓDZKIE", "MAŁOPOLSKIE", "MAZOWIECKIE", "OPOLSKIE",
+  "PODKARPACKIE", "PODLASKIE", "POMORSKIE", "ŚLĄSKIE",
+  "ŚWIĘTOKRZYSKIE", "WARMIŃSKO-MAZURSKIE", "WIELKOPOLSKIE", "ZACHODNIOPOMORSKIE"
+];
+const COLLECT_API_KEY = "apikey 3DVClldFLIRO4LSaryQwFw:6bNkoLjBB56fEpMEx66nzr";
+const fetchFuelPricesFromCollectAPI = async () => 
+    });
+    console.log("📡 Status odpowiedzi:", response.status);
+    if (response.status === 401) 
+    if (!response.ok) `);
+    }
+    const data = await response.json();
+    console.log("✅ Otrzymane dane z CollectAPI:", data);
+    if (data.result && Array.isArray(data.result)) 
+        return  zł)`
+        };
+      } else 
+    }
+    return null;
+  } catch (error) 
+};
+const getFallbackPrices = (voivodeship) => ,
+    "KUJAWSKO-POMORSKIE": ,
+    "LUBELSKIE": ,
+    "LUBUSKIE": ,
+    "ŁÓDZKIE": ,
+    "MAŁOPOLSKIE": ,
+    "MAZOWIECKIE": ,
+
+====================================
+
+====================================
+PLIK: src\pages\Dashboard.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+const safeFormatDistanceToNow = (date) =>
+function Dashboard
+const loadSettings = () =>
+const stats = useMemo(() =>
+const availableVehicles = vehicles.filter((v) =>
+const inUseVehicles = vehicles.filter((v) =>
+const maintenanceVehicles = vehicles.filter((v) =>
+const activeTrips = trips.filter((t) =>
+const completedTrips = trips.filter((t) =>
+const totalMileage = vehicles.reduce((sum, v) =>
+const totalServiceCost = services.reduce((sum, s) =>
+const totalFuelCost = refuelings.reduce((sum, r) =>
+const recentTrips = useMemo(() =>
+const upcomingServices = useMemo(() =>
+const recentRefuelings = useMemo(() =>
+const getVehicleName = (id) =>
+const v = vehicles.find((v) =>
+const getDriverName = (id) =>
+const d = drivers.find((d) =>
+const formatDate = (date) =>
+const formatDistance = (km) =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+framer-motion
+react-router-dom
+@/components/ui/StatCard
+@/components/ui/GlassCard
+@/components/ui/PageHeader
+@/components/ui/button
+@/components/ui/badge
+@/components/ui/progress
+@/components/ui/tabs
+@/components/weather/WeatherWidget
+@/components/calendar/CalendarWidget
+@/api/apiClient
+@/lib/ThemeContext
+@/lib/AuthContext
+date-fns
+date-fns/locale
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function Dashboard() {
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "@tanstack/react-query";
+import  from "framer-motion";
+import  from "react-router-dom";
+import  from "lucide-react";
+import StatCard from "@/components/ui/StatCard";
+import GlassCard from "@/components/ui/GlassCard";
+import PageHeader from "@/components/ui/PageHeader";
+import  from "@/components/ui/button";
+import  from "@/components/ui/badge";
+import  from "@/components/ui/progress";
+import  from "@/components/ui/tabs";
+import WeatherWidget from "@/components/weather/WeatherWidget";
+import CalendarWidget from "@/components/calendar/CalendarWidget";
+import api from "@/api/apiClient";
+import  from "@/lib/ThemeContext";
+import  from "@/lib/AuthContext";
+import  from "date-fns";
+import  from "date-fns/locale";
+const serviceTypeLabels = ;
+const statusColors = ;
+const statusLabels = ;
+const tripStatusColors = ;
+const tripStatusLabels = ;
+const safeFormatDistanceToNow = (date) => );
+};
+export default function Dashboard()  = useAppSettings();
+  const  = useAuth();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [modulesSettings, setModulesSettings] = useState();
+  const  = useQuery();
+  const  = useQuery();
+  const  = useQuery();
+  const  = useQuery();
+  const  = useQuery();
+  const  } = useQuery()),
+  });
+  const [apiSettings, setApiSettings] = useState();
+  useEffect(() =>  catch (e) 
+      }
+
+====================================
+
+====================================
+PLIK: src\pages\Drivers.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Drivers
+const drivers = rawDrivers.map(driver =>
+const isEmailDuplicate = (email, currentDriverId = null) =>
+const isLicenseNumberDuplicate = (licenseNumber, currentDriverId = null) =>
+const resetForm = () =>
+const handleEdit = (driver) =>
+const handleSubmit = (e) =>
+const filteredDrivers = drivers.filter(driver =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+framer-motion
+@/components/ui/PageHeader
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/input
+@/components/ui/badge
+@/components/ui/avatar
+@/components/ui/label
+sonner
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export default function Drivers() {
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "@tanstack/react-query";
+import  from "framer-motion";
+import  from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
+import  from "@/components/ui/button";
+import  from "@/components/ui/input";
+import  from "@/components/ui/badge";
+import  from "@/components/ui/avatar";
+import  from "@/components/ui/dialog";
+import  from "@/components/ui/select";
+import  from "@/components/ui/dropdown-menu";
+import  from "@/components/ui/label";
+import  from "sonner";
+import api from "@/api/apiClient";
+const statusConfig = ,
+  inactive: ,
+  on_leave: 
+};
+export default function Drivers() );
+  const queryClient = useQueryClient();
+  const  = useQuery();
+  const drivers = rawDrivers.map(driver => ( $`
+  }));
+  const isEmailDuplicate = (email, currentDriverId = null) => ;
+  const isLicenseNumberDuplicate = (licenseNumber, currentDriverId = null) => ;
+  const createMutation = useMutation(;
+      return api.createDriver(payload);
+    },
+    onSuccess: () => );
+      setIsDialogOpen(false);
+      resetForm();
+      toast.success('Kierowca został dodany pomyślnie');
+    },
+    onError: (error) =>  else if (errorMessage.includes('409') || errorMessage.includes('Conflict'))  else if (errorMessage.includes('email już istnieje'))  else if (errorMessage.includes('400'))  else `);
+      }
+    }
+  });
+  const updateMutation = useMutation() => ;
+
+====================================
+
+====================================
+PLIK: src\pages\Keys.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Keys
+const drivers = driversRaw.map(driver =>
+const resetForm = () =>
+const handleEdit = (log) =>
+const handleQuickReturn = (log) =>
+const handleSubmit = (e) =>
+const getVehicleName = (id) =>
+const v = vehicles.find(v =>
+const getDriverName = (id) =>
+const d = drivers.find(d =>
+const getLastActionPerVehicle = () =>
+const activeIssues = getLastActionPerVehicle().filter(log =>
+const filteredLogs = keyLogs.filter(log =>
+const vehicle = vehicles.find(v =>
+const driver = drivers.find(d =>
+const sortedLogs = [...filteredLogs].sort((a, b) =>
+const vehicle = vehicles.find(v =>
+const driver = drivers.find(d =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+framer-motion
+date-fns
+date-fns/locale
+@/components/ui/PageHeader
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/input
+@/components/ui/textarea
+@/components/ui/badge
+@/components/ui/label
+@/lib/ThemeContext
+sonner
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export default function Keys() {
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "@tanstack/react-query";
+import  from "framer-motion";
+import  from "date-fns";
+import  from "date-fns/locale";
+import  from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
+import  from "@/components/ui/button";
+import  from "@/components/ui/input";
+import  from "@/components/ui/textarea";
+import  from "@/components/ui/badge";
+import  from "@/components/ui/dialog";
+import  from "@/components/ui/select";
+import  from "@/components/ui/dropdown-menu";
+import  from "@/components/ui/label";
+import  from '@/lib/ThemeContext';
+import  from "sonner";
+import api from "@/api/apiClient";
+export default function Keys()  = useAppSettings();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingLog, setEditingLog] = useState(null);
+  const [formData, setFormData] = useState();
+  const queryClient = useQueryClient();
+  const  = useQuery();
+  const  = useQuery();
+  const  = useQuery();
+  const drivers = driversRaw.map(driver => ( $`
+  }));
+  const createMutation = useMutation(;
+      console.log('📤 Tworzenie wpisu kluczyka:', payload);
+      return api.createKeyLog(payload);
+    },
+    onSuccess: () => );
+      setIsDialogOpen(false);
+      resetForm();
+      toast.success('Kluczyk został wydany');
+    },
+    onError: (error) => `);
+
+====================================
+
+====================================
+PLIK: src\pages\LoginPage.jsx
+
+--- KOMPONENTY ---
+LoginPage
+
+--- FUNKCJE ---
+const LoginPage = () =>
+const handleSubmit = async (e) =>
+
+--- IMPORTY ---
+react
+react-router-dom
+@/components/ui/button
+@/components/ui/input
+@/components/ui/card
+@/components/ui/label
+@/components/ui/alert
+@/lib/AuthContext
+sonner
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export default LoginPage;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'react-router-dom';
+import  from '@/components/ui/button';
+import  from '@/components/ui/input';
+import  from '@/components/ui/card';
+import  from '@/components/ui/label';
+import  from '@/components/ui/alert';
+import  from '@/lib/AuthContext';
+import  from 'sonner';
+const LoginPage = () =>  = useAuth();
+  const handleSubmit = async (e) =>  else 
+    } catch (err)  finally 
+  };
+  return (
+          Logowanie
+            Wprowadź email i hasło, aby się zalogować
+          )}
+              Email
+               setEmail(e.target.value)}
+                placeholder="twoj@email.com"
+                required
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              Hasło
+               setPassword(e.target.value)}
+                required
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              Nie masz konta?
+                Zarejestruj się
+  );
+};
+export default LoginPage;
+
+====================================
+
+====================================
+PLIK: src\pages\MapPage.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function MapPage
+const activeTrips = trips.filter((t) =>
+const getVehicleName = (id) =>
+const vehicle = vehicles.find((v) =>
+const getRouteColor = (vehicleId) =>
+const vehicle = vehicles.find((v) =>
+const toggleFullscreen = () =>
+const handleFullscreenChange = () =>
+const getUserLocation = () =>
+const toggleGps = () =>
+const testGoogleMapsApi = () =>
+const startTrackingSession = () =>
+const stopTrackingSession = () =>
+const handleLocationUpdate = (position, history) =>
+const calculateDistance = (lat1, lng1, lat2, lng2) =>
+const openInGoogleMaps = (from, to) =>
+const saveRoute = () =>
+const deleteRoute = (id) =>
+const updated = savedRoutes.filter((r) =>
+const viewRouteOnGoogle = (route) =>
+const exportToTripsModule = (trip) =>
+const exportToKartaDrogowa = (trip) =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+framer-motion
+@/components/ui/PageHeader
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/badge
+@/components/ui/input
+@/components/ui/label
+@/components/ui/tabs
+@/components/ui/switch
+@/components/maps/MapView
+@/components/maps/GPSLiveTracker
+@/components/maps/TrackedTripsList
+@/components/maps/TripDetailsModal
+@/hooks/useTrackedTrips
+@/api/apiClient
+@/lib/ThemeContext
+sonner
+date-fns
+date-fns/locale
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export default function MapPage() {
+  const exportToTripsModule = (trip) => {
+  const exportToKartaDrogowa = (trip) => {
+                      onExportToTrip={exportToTripsModule}
+                      onExportToKarta={exportToKartaDrogowa}
+        onExportToTrip={exportToTripsModule}
+        onExportToKarta={exportToKartaDrogowa}
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "@tanstack/react-query";
+import  from "framer-motion";
+import  from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
+import  from "@/components/ui/button";
+import  from "@/components/ui/badge";
+import  from "@/components/ui/input";
+import  from "@/components/ui/label";
+import  from "@/components/ui/tabs";
+import  from "@/components/ui/switch";
+import MapView from "@/components/maps/MapView";  
+import GPSLiveTracker from "@/components/maps/GPSLiveTracker";
+import TrackedTripsList from "@/components/maps/TrackedTripsList";
+import TripDetailsModal from "@/components/maps/TripDetailsModal";
+import  from "@/hooks/useTrackedTrips";
+import api from "@/api/apiClient";
+import  from "@/lib/ThemeContext";
+import  from "sonner";
+import  from "date-fns";
+import  from "date-fns/locale";
+const SAVED_ROUTES_KEY = "saved_map_routes";
+export default function MapPage()  = useAppSettings();
+  const [activeTab, setActiveTab] = useState("live");
+  const [fullscreen, setFullscreen] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [selectedTrackedTrip, setSelectedTrackedTrip] = useState(null);
+  const [mapView, setMapView] = useState("road");
+  const [mapProvider, setMapProvider] = useState("osm");
+  const [showTripDetailsModal, setShowTripDetailsModal] = useState(false);
+  const [gpsEnabled, setGpsEnabled] = useState(true);
+  const [isTracking, setIsTracking] = useState(false);
+  const [currentTrackingTrip, setCurrentTrackingTrip] = useState(null);
+  const [trackingPoints, setTrackingPoints] = useState([]);
+  const [trackingStartTime, setTrackingStartTime] = useState(null);
+  const [trackingDistance, setTrackingDistance] = useState(0);
+  const  = useTrackedTrips();
+  const [locationSettings, setLocationSettings] = useState();
+
+====================================
+
+====================================
+PLIK: src\pages\Refueling.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Refueling
+const fetchFuelPrices = async () =>
+const poland = data.result?.find(c =>
+const vehicle = vehicles.find(v =>
+const sortedRefuels = [...refuels].sort((a, b) =>
+const updateVehicleFuel = async (vehicleId, liters, fullTank) =>
+const handleSubmit = (e) =>
+const openEditModal = (refuel) =>
+const deleteRefuel = async (id) =>
+const vehicle = vehicles.find(v =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+framer-motion
+lucide-react
+@/components/ui/GlassCard
+@/components/ui/PageHeader
+@/components/ui/button
+@/components/ui/input
+@/components/ui/label
+@/components/ui/textarea
+@/components/ui/SaveButton
+@/components/ui/use-toast
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function Refueling() {
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "@tanstack/react-query";
+import  from "framer-motion";
+import  from "lucide-react";
+import GlassCard from "@/components/ui/GlassCard";
+import PageHeader from "@/components/ui/PageHeader";
+import  from "@/components/ui/button";
+import  from "@/components/ui/dialog";
+import  from "@/components/ui/input";
+import  from "@/components/ui/label";
+import  from "@/components/ui/textarea";
+import  from "@/components/ui/select";
+import SaveButton from "@/components/ui/SaveButton";
+import  from "@/components/ui/use-toast";
+import api from "@/api/apiClient";
+const voivodeships = [
+  "DOLNOŚLĄSKIE", "KUJAWSKO-POMORSKIE", "LUBELSKIE", "LUBUSKIE",
+  "ŁÓDZKIE", "MAŁOPOLSKIE", "MAZOWIECKIE", "OPOLSKIE",
+  "PODKARPACKIE", "PODLASKIE", "POMORSKIE", "ŚLĄSKIE",
+  "ŚWIĘTOKRZYSKIE", "WARMIŃSKO-MAZURSKIE", "WIELKOPOLSKIE", "ZACHODNIOPOMORSKIE"
+];
+const COLLECT_API_KEY = "apikey 3DVClldFLIRO4LSaryQwFw:6bNkoLjBB56fEpMEx66nzr";
+export default function Refueling()  = useToast();
+  const queryClient = useQueryClient();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingRefuel, setEditingRefuel] = useState(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
+  const [selectedVehicleFuel, setSelectedVehicleFuel] = useState(0);
+  const [selectedVehicleTankSize, setSelectedVehicleTankSize] = useState(0);
+  const [selectedVoivodeship, setSelectedVoivodeship] = useState("");
+  const [fuelPrices, setFuelPrices] = useState(null);
+  const [loadingPrices, setLoadingPrices] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const [dataSource, setDataSource] = useState(null);
+  const  = useQuery();
+  const  = useQuery();
+  const fetchFuelPrices = async () => );
+      return;
+    }
+    setLoadingPrices(true);
+
+====================================
+
+====================================
+PLIK: src\pages\RegisterPage.jsx
+
+--- KOMPONENTY ---
+RegisterPage
+
+--- FUNKCJE ---
+const RegisterPage = () =>
+const handleSubmit = async (e) =>
+
+--- IMPORTY ---
+react
+react-router-dom
+@/components/ui/button
+@/components/ui/input
+@/components/ui/card
+@/components/ui/label
+@/components/ui/alert
+@/lib/AuthContext
+sonner
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export default RegisterPage;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'react-router-dom';
+import  from '@/components/ui/button';
+import  from '@/components/ui/input';
+import  from '@/components/ui/card';
+import  from '@/components/ui/label';
+import  from '@/components/ui/alert';
+import  from '@/lib/AuthContext';
+import  from 'sonner';
+const RegisterPage = () =>  = useAuth();
+  const handleSubmit = async (e) => 
+    if (password.length 
+          Rejestracja
+            Utwórz nowe konto w systemie
+          )}
+              Imię i nazwisko
+               setName(e.target.value)}
+                placeholder="Jan Kowalski"
+                required
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              Email
+               setEmail(e.target.value)}
+                placeholder="twoj@email.com"
+                required
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              Hasło
+               setPassword(e.target.value)}
+                required
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              Minimalnie 6 znaków
+              Potwierdź hasło
+               setConfirmPassword(e.target.value)}
+                required
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+              Masz już konto?
+                Zaloguj się
+
+====================================
+
+====================================
+PLIK: src\pages\Services.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Services
+const resetForm = () =>
+const handleEdit = (service) =>
+const handleSubmit = (e) =>
+const getVehicleName = (id) =>
+const v = vehicles.find(v =>
+const filteredServices = services.filter(service =>
+const vehicle = vehicles.find(v =>
+const totalCost = services.reduce((sum, s) =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+framer-motion
+date-fns
+date-fns/locale
+@/components/ui/PageHeader
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/input
+@/components/ui/textarea
+@/components/ui/badge
+@/components/ui/label
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function Services() {
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "@tanstack/react-query";
+import  from "framer-motion";
+import  from "date-fns";
+import  from "date-fns/locale";
+import  from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
+import  from "@/components/ui/button";
+import  from "@/components/ui/input";
+import  from "@/components/ui/textarea";
+import  from "@/components/ui/badge";
+import  from "@/components/ui/dialog";
+import  from "@/components/ui/select";
+import  from "@/components/ui/dropdown-menu";
+import  from "@/components/ui/label";
+import api from "@/api/apiClient";
+const serviceTypeConfig = ,
+  oil_change: ,
+  tires: ,
+  brakes: ,
+  repair: ,
+  other: 
+};
+export default function Services() );
+  const queryClient = useQueryClient();
+  const  = useQuery();
+  const  = useQuery();
+  const createMutation = useMutation(;
+      return api.createService(payload);
+    },
+    onSuccess: () => );
+      setIsDialogOpen(false);
+      resetForm();
+    }
+  });
+  const updateMutation = useMutation() => ;
+      return api.updateService(id, payload);
+    },
+    onSuccess: () => );
+
+====================================
+
+====================================
+PLIK: src\pages\Settings.jsx
+
+--- KOMPONENTY ---
+SaveAnimation
+
+--- FUNKCJE ---
+const SaveAnimation = ({ show }) =>
+function SettingsPage
+const triggerSaveAnimation = () =>
+const saveModulesSettings = () =>
+const saveLocationAndMapSettings = () =>
+const saveApiSettings = () =>
+const handleSave = async () =>
+const toggleDebug = async () =>
+const refreshLogs = async () =>
+const downloadLogs = async () =>
+const clearLogs = async () =>
+const handleChangePassword = async () =>
+const handleExportBackup = async () =>
+const handleImportBackup = async (e) =>
+const handleReset = async () =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+framer-motion
+date-fns
+date-fns/locale
+@/components/ui/PageHeader
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/input
+@/components/ui/label
+@/components/ui/avatar
+@/components/ui/switch
+@/components/ui/slider
+@/lib/ThemeContext
+@/lib/AuthContext
+sonner
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export default function SettingsPage() {
+    const exportData = logger.export();
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        exportDate: new Date().toISOString(),
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "@tanstack/react-query";
+import  from "framer-motion";
+import  from "date-fns";
+import  from "date-fns/locale";
+import  from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
+import  from "@/components/ui/button";
+import  from "@/components/ui/input";
+import  from "@/components/ui/label";
+import  from "@/components/ui/avatar";
+import  from "@/components/ui/switch";
+import  from "@/components/ui/slider";
+import  from "@/components/ui/select";
+import  from "@/lib/ThemeContext";
+import  from "@/lib/AuthContext";
+import  from "sonner";
+import api from "@/api/apiClient";
+const themes = [
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+];
+const backgrounds = [
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+
+====================================
+
+====================================
+PLIK: src\pages\Statistics.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Statistics
+const filterByDate = (items, dateField = 'date') =>
+const filterByVehicle = (items, vehicleField = 'vehicleId') =>
+const filterByDriver = (items) =>
+const totalMileage = vehicles.reduce((sum, v) =>
+const totalServiceCost = filteredServices.reduce((sum, s) =>
+const completedTrips = filteredTrips.filter(t =>
+const totalTripDistance = filteredTrips.reduce((sum, t) =>
+const vehicleStats = vehicles.map(vehicle =>
+const vehicleTrips = filteredTrips.filter(t =>
+const distance = vehicleTrips.reduce((sum, t) =>
+const driverStats = drivers.map(driver =>
+const driverTrips = filteredTrips.filter(t =>
+const distance = driverTrips.reduce((sum, t) =>
+const serviceCostsByType = filteredServices.reduce((acc, s) =>
+const serviceCostsData = Object.entries(serviceCostsByType).map(([type, cost]) =>
+const monthlyStats = filteredTrips.reduce((acc, trip) =>
+const monthlyData = Object.values(monthlyStats).map(item =>
+const exportStatistics = () =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+framer-motion
+date-fns
+date-fns/locale
+@/components/ui/PageHeader
+@/components/ui/GlassCard
+@/components/ui/StatCard
+@/components/ui/button
+@/components/ui/select
+@/components/ui/label
+sonner
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+sonner
+
+--- EXPORTY ---
+export default function Statistics() {
+  const exportStatistics = () => {
+        exportDate: new Date().toISOString(),
+            onClick={exportStatistics}
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "@tanstack/react-query";
+import  from "framer-motion";
+import  from "date-fns";
+import  from "date-fns/locale";
+import  from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
+import StatCard from "@/components/ui/StatCard";
+import  from "@/components/ui/button";
+import  from "@/components/ui/select";
+import  from "@/components/ui/label";
+import  from "sonner";
+import  from "recharts";
+import api from "@/api/apiClient";
+const COLORS = ['#6366f1', '#22d3ee', '#a855f7', '#f59e0b', '#10b981', '#ef4444'];
+export default function Statistics()  = useQuery();
+  const  = useQuery( $`.trim()
+    }))
+  });
+  const  = useQuery();
+  const  = useQuery();
+  const filterByDate = (items, dateField = 'date') =>  else if (dateRange === 'quarter')  else if (dateRange === 'year') 
+    return items.filter(item => new Date(item[dateField]) >= filterDate);
+  };
+  const filterByVehicle = (items, vehicleField = 'vehicleId') => ;
+  const filterByDriver = (items) => ;
+  const filteredTrips = filterByDate(filterByDriver(filterByVehicle(trips)), 'startDate');
+  const filteredServices = filterByDate(filterByVehicle(services), 'date');
+  const totalMileage = vehicles.reduce((sum, v) => sum + (v.mileage || 0), 0);
+  const avgMileage = vehicles.length > 0 ? Math.round(totalMileage / vehicles.length) : 0;
+  const totalServiceCost = filteredServices.reduce((sum, s) => sum + (s.cost || 0), 0);
+  const completedTrips = filteredTrips.filter(t => t.status === 'completed').length;
+  const totalTripDistance = filteredTrips.reduce((sum, t) => 
+    return sum;
+  }, 0);
+  const statusCounts = ;
+  const statusData = [
+    ,
+    ,
+
+====================================
+
+====================================
+PLIK: src\pages\TripDetail.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function TripDetail
+const trip = useMemo(() =>
+const vehicle = useMemo(() =>
+const driver = useMemo(() =>
+const handleEndTrip = async () =>
+const generateSinglePdf = async (docType, fmt) =>
+const generateBothPdf = async (fmt) =>
+const addPage = (canvas, addNew) =>
+const handlePrint = () =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+react-router-dom
+../utils
+lucide-react
+@/components/print/KartaDrogowa.jsx
+@/components/print/PolecenieWyjazdu.jsx
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function TripDetail() {
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from '@tanstack/react-query';
+import  from 'react-router-dom';
+import  from '../utils';
+import  from 'lucide-react';
+import KartaDrogowa from '@/components/print/KartaDrogowa.jsx';
+import PolecenieWyjazdu from '@/components/print/PolecenieWyjazdu.jsx';
+import api from '@/api/apiClient';
+export default function TripDetail()  = useParams();
+  const [searchParams] = useSearchParams();
+  const tripId = id ? String(id) : null;
+  const editMode = searchParams.get('edit') === 'true';
+  const [isEditing, setIsEditing] = useState(editMode);
+  const [showEndForm, setShowEndForm] = useState(false);
+  const [departureDate, setDepartureDate] = useState('');
+  const [departureTime, setDepartureTime] = useState('');
+  const [orderedBy, setOrderedBy] = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [startLocation, setStartLocation] = useState('');
+  const [endLocation, setEndLocation] = useState('');
+  const [startOdometer, setStartOdometer] = useState(0);
+  const [startFuel, setStartFuel] = useState(0);
+  const [endOdometer, setEndOdometer] = useState(0);
+  const [endFuel, setEndFuel] = useState(0);
+  const [fuelAdded, setFuelAdded] = useState(0);
+  const [fuelReceiptNumber, setFuelReceiptNumber] = useState('');
+  const [fuelStation, setFuelStation] = useState('');
+  const [fuelCost, setFuelCost] = useState(0);
+  const [returnDate, setReturnDate] = useState('');
+  const [returnTime, setReturnTime] = useState('');
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfFormat, setPdfFormat] = useState('A4');
+  const [activeTab, setActiveTab] = useState('karta');
+  const kartaRef = useRef(null);
+  const polecenieRef = useRef(null);
+  const queryClient = useQueryClient();
+  const  = useQuery())
+  });
+  const trips = tripsRaw;
+  const  = useQuery())
+
+====================================
+
+====================================
+PLIK: src\pages\Trips.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Trips
+const getVehicle = (id) =>
+const getDriver = (id) =>
+const filteredAndSortedTrips = useMemo(() =>
+const handleSelectTrip = (tripId) =>
+const handleSelectAll = () =>
+const allIds = filteredAndSortedTrips.map(t =>
+const ids = Array.from(selectedTrips).map(id =>
+const trip = trips.find(t =>
+const confirmDelete = () =>
+const handlePreview = (trip) =>
+const handlePrint = () =>
+const resetStartForm = () =>
+const resetEndForm = () =>
+const handleStartTripClick = () =>
+const handleStartTrip = (e) =>
+const handleEndTrip = async (e) =>
+const openEndTripDialog = (trip) =>
+const activeTrips = trips.filter(t =>
+const stats = useMemo(() =>
+const completed = trips.filter(t =>
+const totalDistance = completed.reduce((sum, t) =>
+const exportToCSV = () =>
+const rows = filteredAndSortedTrips.map(trip =>
+const csvContent = [headers, ...rows].map(row =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+framer-motion
+date-fns
+date-fns/locale
+react-router-dom
+../utils
+@/components/ui/PageHeader
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/input
+@/components/ui/textarea
+@/components/ui/badge
+@/components/ui/label
+@/components/ConfirmModal.jsx
+@/components/print/KartaDrogowa.jsx
+@/hooks/useKeyBlocker
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function Trips() {
+  const exportToCSV = () => {
+            onClick={exportToCSV}
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "@tanstack/react-query";
+import  from "framer-motion";
+import  from "date-fns";
+import  from "date-fns/locale";
+import  from "react-router-dom";
+import  from "../utils";
+import  from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
+import  from "@/components/ui/button";
+import  from "@/components/ui/input";
+import  from "@/components/ui/textarea";
+import  from "@/components/ui/badge";
+import  from "@/components/ui/dialog";
+import  from "@/components/ui/select";
+import  from "@/components/ui/dropdown-menu";
+import  from "@/components/ui/label";
+import ConfirmModal from "@/components/ConfirmModal.jsx";
+import KartaDrogowa from "@/components/print/KartaDrogowa.jsx";
+import  from '@/hooks/useKeyBlocker';
+import api from "@/api/apiClient";
+const statusConfig = ,
+  completed: ,
+  cancelled: 
+};
+const sortOptions = [
+  ,
+  ,
+  ,
+  ,
+  ,
+];
+const dateRangeOptions = [
+  ,
+  ,
+  ,
+  ,
+];
+export default function Trips() );
+
+====================================
+
+====================================
+PLIK: src\pages\Vehicles.jsx
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function Vehicles
+const resetForm = () =>
+const handleEdit = (vehicle) =>
+const handleSubmit = (e) =>
+const filteredVehicles = vehicles.filter(vehicle =>
+
+--- IMPORTY ---
+react
+@tanstack/react-query
+framer-motion
+@/components/ui/PageHeader
+@/components/ui/GlassCard
+@/components/ui/button
+@/components/ui/input
+@/components/ui/badge
+@/components/ui/progress
+@/components/ui/label
+@/api/apiClient
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default function Vehicles() {
+
+--- SKRÓT LOGIKI ---
+import React,  from "react";
+import  from "@tanstack/react-query";
+import  from "framer-motion";
+import  from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
+import  from "@/components/ui/button";
+import  from "@/components/ui/input";
+import  from "@/components/ui/badge";
+import  from "@/components/ui/progress";
+import  from "@/components/ui/dialog";
+import  from "@/components/ui/select";
+import  from "@/components/ui/dropdown-menu";
+import  from "@/components/ui/label";
+import api from "@/api/apiClient";
+const statusConfig = ,
+  in_use: ,
+  maintenance: ,
+  unavailable: 
+};
+const fuelTypes = ['Benzyna', 'Diesel', 'LPG', 'Elektryczny', 'Hybryda'];
+const vehicleTypes = ['Osobowe', 'BUS', 'Ciężarowe', 'Dostawcze'];
+export default function Vehicles() );
+  const queryClient = useQueryClient();
+  const  = useQuery())
+  });
+  const createMutation = useMutation();
+      setIsDialogOpen(false);
+      resetForm();
+    }
+  });
+  const updateMutation = useMutation() => api.updateVehicle(Number(id), data),
+    onSuccess: () => );
+      setIsDialogOpen(false);
+      resetForm();
+    }
+  });
+  const deleteMutation = useMutation();
+    }
+  });
+
+====================================
+
+====================================
+PLIK: src\pages\WeatherPage.jsx
+
+--- KOMPONENTY ---
+WeatherPage
+
+--- FUNKCJE ---
+const WeatherPage = () =>
+const getApiKey = () =>
+const getLocation = () =>
+const fetchWeatherData = async () =>
+const getWeatherIcon = (iconCode, size = 48) =>
+const getWeatherDescription = (description) =>
+const formatTemp = (temp) =>
+const getDayLabel = (date) =>
+
+--- IMPORTY ---
+react
+react-router-dom
+framer-motion
+@/components/ui/GlassCard
+@/components/ui/PageHeader
+@/components/ui/button
+@/components/ui/select
+@/lib/weatherApi
+date-fns
+date-fns/locale
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default WeatherPage;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'react-router-dom';
+import  from 'framer-motion';
+import  from 'lucide-react';
+import GlassCard from '@/components/ui/GlassCard';
+import PageHeader from '@/components/ui/PageHeader';
+import  from '@/components/ui/button';
+import  from '@/components/ui/select';
+import  from '@/lib/weatherApi';
+import  from 'date-fns';
+import  from 'date-fns/locale';
+const WeatherPage = () => ;
+  const  = passedState;
+  const getApiKey = () =>  catch (e) 
+    }
+    return null;
+  };
+  const getLocation = () => 
+      const companySettings = localStorage.getItem('company_settings');
+      if (companySettings) ,PL&limit=1&appid=$`)
+                .then(res => res.json())
+                .then(data => );
+                  } else 
+                })
+                .catch(reject);
+              return;
+            }
+          }
+        } catch (e) 
+      }
+      if (navigator.geolocation) );
+          },
+          (err) => reject('Nie udało się pobrać lokalizacji GPS')
+        );
+      } else 
+    });
+  };
+  const fetchWeatherData = async () => 
+      const locationData = await getLocation();
+      const current = await getCurrentWeather(locationData.lat, locationData.lng, apiKey);
+
+====================================
+
+====================================
+PLIK: src\pages\WeatherWidget.jsx
+
+--- KOMPONENTY ---
+WeatherWidget
+
+--- FUNKCJE ---
+const getWeatherIcon = (iconCode, size = 8) =>
+const getWeatherDescription = (description) =>
+const formatTemp = (temp) =>
+
+--- IMPORTY ---
+react
+framer-motion
+@/components/ui/GlassCard
+@/components/ui/button
+@/hooks/useWeather
+date-fns
+date-fns/locale
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export default WeatherWidget;
+
+--- SKRÓT LOGIKI ---
+import React,  from 'react';
+import  from 'framer-motion';
+import  from 'lucide-react';
+import GlassCard from '@/components/ui/GlassCard';
+import  from '@/components/ui/button';
+import  from '@/hooks/useWeather';
+import  from 'date-fns';
+import  from 'date-fns/locale';
+const WeatherWidget = () =>  = useWeather(
+    location,
+    apiKey,
+    autoRefresh
+  );
+  useEffect(() => 
+  }, [currentWeather]);
+  const getWeatherIcon = (iconCode, size = 8) =>  h-$`;
+    const iconMap = ;
+    return iconMap[iconCode] || ;
+  };
+  const getWeatherDescription = (description) => ;
+    const lower = description.toLowerCase();
+    return descMap[lower] || description;
+  };
+  const formatTemp = (temp) =>
+    temp !== undefined && temp !== null ? `$°C` : '---';
+  if (loading && !currentWeather) 
+  if (error) 
+    );
+  }
+  if (!currentWeather) ,
+              ,
+              ,
+              ,
+            ].map(() => (
+            ))}
+    );
+  }
+  return (
+          Pogoda
+              `}
+
+====================================
+
+====================================
+PLIK: src\pages.config.js
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+./pages/Dashboard
+./pages/Drivers
+./pages/Keys
+./pages/Services
+./pages/Settings
+./pages/Statistics
+./pages/Trips
+./pages/Vehicles
+./pages/TripDetail
+./pages/Calculators
+./pages/Refueling
+./pages/MapPage
+./Layout.jsx
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export const PAGES = {
+export const pagesConfig = {
+
+--- SKRÓT LOGIKI ---
+/**
+ * pages.config.js - Page routing configuration
+ * 
+ * This file is AUTO-GENERATED. Do not add imports or modify PAGES manually.
+ * Pages are auto-registered when you create files in the ./pages/ folder.
+ * 
+ * THE ONLY EDITABLE VALUE: mainPage
+ * This controls which page is the landing page (shown when users visit the app).
+ */
+import Dashboard from './pages/Dashboard';
+import Drivers from './pages/Drivers';
+import Keys from './pages/Keys';
+import Services from './pages/Services';
+import Settings from './pages/Settings';
+import Statistics from './pages/Statistics';
+import Trips from './pages/Trips';
+import Vehicles from './pages/Vehicles';
+import TripDetail from './pages/TripDetail';
+import Calculators from './pages/Calculators';
+import Refueling from './pages/Refueling';
+import MapPage from './pages/MapPage';
+import __Layout from './Layout.jsx';
+export const PAGES = ;
+export const pagesConfig = ;
+
+====================================
+
+====================================
+PLIK: src\types\map.ts
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+brak
+
+--- IMPORTY ---
+brak
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export interface Position {
+export interface MapSettings {
+export interface RouteColors {
+export interface MapProvider {
+export interface MapStyle {
+export interface RoutePoint extends Position {
+export interface TrackedTrip {
+export interface LocationSearchResult {
+export interface MapMarker {
+export interface MapRoute {
+
+--- SKRÓT LOGIKI ---
+export interface Position 
+export interface MapSettings 
+export interface RouteColors 
+export interface MapProvider 
+export interface MapStyle 
+export interface RoutePoint extends Position 
+export interface TrackedTrip 
+export interface LocationSearchResult 
+export interface MapMarker 
+export interface MapRoute 
+
+====================================
+
+====================================
+PLIK: src\utils\index.ts
+
+--- KOMPONENTY ---
+brak
+
+--- FUNKCJE ---
+function createPageUrl
+
+--- IMPORTY ---
+brak
+
+--- ZALEŻNOŚCI WEWNĘTRZNE ---
+brak
+
+--- EXPORTY ---
+export function createPageUrl(pageName: string) {
+
+--- SKRÓT LOGIKI ---
+export function createPageUrl(pageName: string) 
+
+====================================

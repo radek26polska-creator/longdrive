@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: longdrive-backend
+    runtime: node
+    buildCommand: cd server && npm install
+    startCommand: node server.cjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: longdrive-db
+          property: connectionString
+
+  - type: web
+    name: longdrive-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://longdrive-backend.onrender.com/api
+
+databases:
+  - name: longdrive-db
+    plan: free
