@@ -447,28 +447,34 @@ export default function SettingsPage() {
     }, 2000);
   };
 
-  const saveModulesSettings = () => {
-    localStorage.setItem("modules_settings", JSON.stringify(modulesSettings));
-    window.dispatchEvent(new Event("modulesSettingsChanged"));
-    window.dispatchEvent(new Event("storage"));
-    triggerSaveAnimation();
-  };
+const saveModulesSettings = () => {
+  localStorage.setItem("modules_settings", JSON.stringify(modulesSettings));
+  window.dispatchEvent(new Event("modulesSettingsChanged"));
+  window.dispatchEvent(new Event("storage"));
+  // 🔧 DODAJ TĘ LINIĘ:
+  queryClient.invalidateQueries({ queryKey: ["companySettings"] });
+  triggerSaveAnimation();
+};
 
-  const saveLocationAndMapSettings = () => {
-    localStorage.setItem("location_settings", JSON.stringify(locationSettings));
-    localStorage.setItem("map_settings", JSON.stringify(mapSettings));
-    // Dodatkowo zapisz klucz Google Maps w api_settings dla zgodności
-    if (locationSettings.googleMapsApiKey) {
-      const updatedApi = { ...apiSettings, googleMapsApiKey: locationSettings.googleMapsApiKey };
-      localStorage.setItem("api_settings", JSON.stringify(updatedApi));
-    }
-    triggerSaveAnimation();
-  };
+const saveLocationAndMapSettings = () => {
+  localStorage.setItem("location_settings", JSON.stringify(locationSettings));
+  localStorage.setItem("map_settings", JSON.stringify(mapSettings));
+  // Dodatkowo zapisz klucz Google Maps w api_settings dla zgodności
+  if (locationSettings.googleMapsApiKey) {
+    const updatedApi = { ...apiSettings, googleMapsApiKey: locationSettings.googleMapsApiKey };
+    localStorage.setItem("api_settings", JSON.stringify(updatedApi));
+  }
+  // 🔧 DODAJ TĘ LINIĘ:
+  queryClient.invalidateQueries({ queryKey: ["companySettings"] });
+  triggerSaveAnimation();
+};
 
   const saveApiSettings = () => {
-    localStorage.setItem("api_settings", JSON.stringify(apiSettings));
-    triggerSaveAnimation();
-  };
+  localStorage.setItem("api_settings", JSON.stringify(apiSettings));
+  // 🔧 DODAJ TĘ LINIĘ:
+  queryClient.invalidateQueries({ queryKey: ["companySettings"] });
+  triggerSaveAnimation();
+};
 
   const handleSave = async () => {
     try {
