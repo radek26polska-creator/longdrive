@@ -24,6 +24,13 @@ const buildQueryString = (params) => {
 };
 
 async function apiRequest(endpoint, options = {}) {
+  // 🔧 DIAGNOSTYKA: Pokaż w konsoli, jakie żądanie jest wysyłane
+  console.log(`🔍 [DIAGNOSTYKA] Wywołanie API:`);
+  console.log(`   - Endpoint: ${endpoint}`);
+  console.log(`   - Metoda: ${options.method || 'GET'}`);
+  console.log(`   - Pełny URL: ${API_BASE_URL}${endpoint}`);
+  console.log(`   - Czy token istnieje: ${!!getToken()}`);
+
   const url = `${API_BASE_URL}${endpoint}`;
   const method = options.method || 'GET';
   const startTime = Date.now();
@@ -54,13 +61,18 @@ async function apiRequest(endpoint, options = {}) {
   }
   
   try {
+    console.log(`📤 [DIAGNOSTYKA] Wysyłanie żądania do: ${url}`);
     const response = await fetch(url, config);
     const duration = Date.now() - startTime;
+    
+    console.log(`📥 [DIAGNOSTYKA] Odpowiedź:`);
+    console.log(`   - Status: ${response.status} ${response.statusText}`);
+    console.log(`   - URL: ${response.url}`);
+    console.log(`   - Czas: ${duration}ms`);
     
     if (response.status === 401) {
       setToken(null);
       logApi(endpoint, method, 401, { duration });
-      // Opcjonalnie: przekieruj na login
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
@@ -74,21 +86,21 @@ async function apiRequest(endpoint, options = {}) {
       } catch {
         errorData = { error: response.statusText };
       }
+      console.error(`❌ [DIAGNOSTYKA] Błąd odpowiedzi:`, errorData);
       logApi(endpoint, method, response.status, { duration, error: errorData });
       throw new Error(errorData.error || errorData.message || `Błąd ${response.status}: ${response.statusText}`);
     }
     
-    // Dla odpowiedzi 204 No Content
     if (response.status === 204) {
       logApi(endpoint, method, response.status, { duration, success: true });
       return null;
     }
     
     const data = await response.json();
+    console.log(`✅ [DIAGNOSTYKA] Sukces! Dane:`, data);
     logApi(endpoint, method, response.status, { duration, success: true });
     return data;
   } catch (error) {
-    // Rozróżnij błędy sieciowe od innych
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
       logApi(endpoint, method, 'NETWORK_ERROR', { message: 'Brak połączenia z serwerem' });
       throw new Error('Brak połączenia z serwerem. Sprawdź swoje połączenie internetowe.');
