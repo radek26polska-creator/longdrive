@@ -51,7 +51,7 @@ const LoginPage = () => {
             />
           </div>
           {/* ========================= */}
-          <CardTitle className="text-2xl text-white">🚛 LongDrive - TEST AKTUALIZACJI2 🚛</CardTitle>
+          <CardTitle className="text-2xl text-white">🚛 LongDrive - TEST AKTUALIZACJI_2222 🚛</CardTitle>
           <CardDescription className="text-slate-400">
             Wprowadź email i hasło, aby się zalogować
           </CardDescription>
