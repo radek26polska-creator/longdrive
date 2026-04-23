@@ -4,7 +4,7 @@ services:
     name: longdrive-backend
     runtime: node
     buildCommand: cd server && npm install
-    startCommand: node server.cjs
+    startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
