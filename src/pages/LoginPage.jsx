@@ -47,12 +47,20 @@ const LoginPage = () => {
             <img 
               src="/logo.png" 
               alt="LongDrive Logo" 
-              className="h-40 w-auto object-contain"
+              className="h-32 w-auto object-contain"
             />
           </div>
           {/* ========================= */}
-          <CardTitle className="text-2xl text-white">🚛 LongDrive - Aplikacja do tworzenia dokumentów kierowcy (atomatcznie bez wypełniania dokumentów w tradycyny sposób)  🚛</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle className="text-2xl text-white">
+            <span className="block text-base font-normal text-slate-300 leading-relaxed">
+              Aplikacja służy do automatyzacji tworzenia dokumentów kierowcy,
+              eliminując ręczne wypełnianie papierowych formularzy.
+            </span>
+            <span className="block text-sm text-slate-400 mt-2 font-normal">
+              Wszystkie dokumenty generowane są automatycznie z danych wprowadzonych do systemu.
+            </span>
+          </CardTitle>
+          <CardDescription className="text-slate-400 mt-4">
             Wprowadź email i hasło, aby się zalogować
           </CardDescription>
         </CardHeader>
