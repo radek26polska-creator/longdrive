@@ -1,8 +1,8 @@
 // src/api/apiClient.js
 import { logApi } from '@/lib/errorHandler';
 
-// ✅ DLA PRODUKCJI NA RENDERZE
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://longdrive-2.onrender.com/api';
+// ✅ DLA PRODUKCJI NA RENDERZE – POPRAWIONY ADRES BACKENDU
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://longdrive-backend.onrender.com/api';
 
 const getToken = () => localStorage.getItem('token');
 const setToken = (token) => {
