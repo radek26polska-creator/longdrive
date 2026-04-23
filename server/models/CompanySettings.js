@@ -33,8 +33,8 @@ class CompanySettings {
             `INSERT INTO company_settings (
               id, name, address, zipCode, city, nip, regon, 
               tripNumberPrefix, tripNumberNext, phone, email, 
-              website, logo, cardPrefix, cardCounter
-            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              website, logo, cardPrefix, cardCounter, createdAt, updatedAt
+            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
             [
               defaultSettings.name, defaultSettings.address, defaultSettings.zipCode, 
               defaultSettings.city, defaultSettings.nip, defaultSettings.regon,
@@ -60,6 +60,9 @@ class CompanySettings {
   }
 
   static async update(data) {
+    // Najpierw upewnij się, że ustawienia istnieją
+    await this.get().catch(() => null);
+    
     return new Promise((resolve, reject) => {
       const fields = [];
       const values = [];
@@ -79,12 +82,10 @@ class CompanySettings {
       
       if (fields.length === 0) {
         console.log('⚠️ Brak pól do aktualizacji');
-        return resolve(null);
+        return this.get().then(resolve).catch(reject);
       }
       
-      // Dodajemy aktualizację timestamp
       fields.push('updatedAt = CURRENT_TIMESTAMP');
-      // UWAGA: NIE dodajemy kolejnej wartości dla updatedAt, bo to jest funkcja SQL, nie parametr
       
       const sql = `UPDATE company_settings SET ${fields.join(', ')} WHERE id = 1`;
       console.log('📝 SQL:', sql);
@@ -96,7 +97,8 @@ class CompanySettings {
           return reject(err);
         }
         console.log(`✅ Zaktualizowano ${this.changes} wierszy`);
-        resolve({ id: 1, ...data });
+        // 🔧 KLUCZOWA ZMIANA: pobierz świeże dane z bazy i zwróć je
+        CompanySettings.get().then(resolve).catch(reject);
       });
     });
   }
