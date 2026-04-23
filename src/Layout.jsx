@@ -16,12 +16,14 @@ import {
   ChevronRight,
   Fuel,
   Calculator,
-  Map
+  Map,
+  Home
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppSettings } from "@/lib/ThemeContext";
 import { useAuth } from "@/lib/AuthContext";
+import { useMediaQuery } from "react-responsive";
 
 // Mapowanie stron na ścieżki URL
 const pageToPath = {
@@ -54,6 +56,15 @@ const allNavItems = [
   { name: "Ustawienia", icon: Settings, page: "Settings", moduleKey: null },
 ];
 
+// Bottom navigation (5 najważniejszych ikon na telefon)
+const bottomNavItems = [
+  { name: "Strona główna", icon: Home, page: "Dashboard" },
+  { name: "Pojazdy", icon: Car, page: "Vehicles" },
+  { name: "Podróże", icon: Route, page: "Trips" },
+  { name: "Mapa", icon: Map, page: "MapPage" },
+  { name: "Ustawienia", icon: Settings, page: "Settings" },
+];
+
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modulesSettings, setModulesSettings] = useState({});
@@ -61,8 +72,9 @@ export default function Layout({ children, currentPageName }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useMediaQuery({ maxWidth: 768 });
 
-  // Wczytaj ustawienia modułów z localStorage przy każdym renderze
+  // Wczytaj ustawienia modułów z localStorage
   useEffect(() => {
     const loadModules = () => {
       const saved = localStorage.getItem("modules_settings");
@@ -73,7 +85,6 @@ export default function Layout({ children, currentPageName }) {
       }
     };
     loadModules();
-    // Nasłuchuj na zmiany (np. po zapisie ustawień)
     window.addEventListener("storage", loadModules);
     window.addEventListener("modulesSettingsChanged", loadModules);
     return () => {
@@ -82,16 +93,16 @@ export default function Layout({ children, currentPageName }) {
     };
   }, []);
 
-  // Filtruj pozycje menu wg ustawień modułów
   const navItems = allNavItems.filter((item) => {
-    if (!item.moduleKey) return true; // zawsze widoczne
+    if (!item.moduleKey) return true;
     const moduleValue = modulesSettings[item.moduleKey];
-    return moduleValue !== false; // domyślnie widoczne, ukryte tylko gdy false
+    return moduleValue !== false;
   });
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+    if (isMobile) setSidebarOpen(false);
   };
 
   const isActive = (page) => {
@@ -101,13 +112,12 @@ export default function Layout({ children, currentPageName }) {
            location.pathname.toLowerCase().startsWith(`/${page.toLowerCase()}/`);
   };
 
-  // 🔧 POPRAWA: zmieniono 'path' na 'page'
   const getPageUrl = (page) => {
     return pageToPath[page] || `/${page.toLowerCase()}`;
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20 md:pb-0">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/5">
         <div className="flex items-center justify-between px-4 h-16">
@@ -121,24 +131,24 @@ export default function Layout({ children, currentPageName }) {
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-theme-white-secondary hover:text-theme-white"
+            className="text-theme-white-secondary hover:text-theme-white min-w-[44px] min-h-[44px]"
           >
             {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </Button>
         </div>
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar (desktop + mobile overlay) */}
       <AnimatePresence>
-        {(sidebarOpen || true) && (
+        {(sidebarOpen || !isMobile) && (
           <motion.aside
             initial={{ x: -280 }}
-            animate={{ x: sidebarOpen ? 0 : window.innerWidth >= 1024 ? 0 : -280 }}
+            animate={{ x: sidebarOpen ? 0 : isMobile ? -280 : 0 }}
             exit={{ x: -280 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className={`fixed top-0 left-0 z-40 h-full w-72 sidebar ${
-              sidebarOpen ? "block" : "hidden lg:block"
-            }`}
+              isMobile && !sidebarOpen ? "hidden" : "block"
+            } lg:block`}
           >
             <div className="flex flex-col h-full p-6">
               {/* Logo */}
@@ -155,7 +165,7 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               </div>
 
-              {/* 🔧 POPRAWA: Ukryty pasek przewijania w menu */}
+              {/* Menu nawigacyjne */}
               <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-none">
                 {navItems.map((item) => {
                   const Icon = item.icon;
@@ -164,7 +174,7 @@ export default function Layout({ children, currentPageName }) {
                     <Link
                       key={item.page}
                       to={getPageUrl(item.page)}
-                      onClick={() => setSidebarOpen(false)}
+                      onClick={() => isMobile && setSidebarOpen(false)}
                     >
                       <motion.div
                         whileHover={{ x: 4 }}
@@ -176,9 +186,7 @@ export default function Layout({ children, currentPageName }) {
                       >
                         <Icon className="w-5 h-5 flex-shrink-0" />
                         <span className="font-medium text-sm">{item.name}</span>
-                        {active && (
-                          <ChevronRight className="w-4 h-4 ml-auto opacity-70" />
-                        )}
+                        {active && <ChevronRight className="w-4 h-4 ml-auto opacity-70" />}
                       </motion.div>
                     </Link>
                   );
@@ -223,18 +231,52 @@ export default function Layout({ children, currentPageName }) {
       </AnimatePresence>
 
       {/* Mobile Overlay */}
-      {sidebarOpen && (
+      {isMobile && sidebarOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm"
         />
       )}
 
-      {/* Main Content */}
-      <main className="lg:ml-72 min-h-screen pt-16 lg:pt-0">
+      {/* Bottom Navigation (tylko mobile) */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-xl border-t border-white/10">
+          <div className="flex justify-around items-center py-2">
+            {bottomNavItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.page);
+              return (
+                <Link
+                  key={item.page}
+                  to={getPageUrl(item.page)}
+                  className="flex flex-col items-center justify-center min-w-[64px] py-2"
+                >
+                  <Icon
+                    className={`w-6 h-6 transition-all ${
+                      active
+                        ? "text-primary drop-shadow-lg"
+                        : "text-theme-white-secondary group-hover:text-theme-white"
+                    }`}
+                  />
+                  <span
+                    className={`text-xs mt-1 transition-all ${
+                      active ? "text-primary font-medium" : "text-theme-white-secondary"
+                    }`}
+                  >
+                    {item.name}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Main Content - z dolnym paddingiem dla mobile bottom nav */}
+      <main className={`lg:ml-72 min-h-screen pt-16 lg:pt-0 ${isMobile ? "pb-20" : ""}`}>
         <div className="p-4 lg:p-8">{children}</div>
       </main>
     </div>
