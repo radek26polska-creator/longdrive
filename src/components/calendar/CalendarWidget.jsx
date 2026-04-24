@@ -6,70 +6,100 @@ import {
   Calendar as CalendarIcon,
   Plus,
   X,
-  Clock,
-  MapPin,
   Car,
   Wrench,
   Fuel,
+  AlertTriangle,
+  FileText,
+  Trash2,
+  Edit
 } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, startOfWeek, endOfWeek, isToday } from "date-fns";
 import { pl } from "date-fns/locale";
+import { toast } from "sonner";
 
-const weekDays = ["PN", "WT", "ŚR", "CZ", "PT", "SB", "ND"];
+// STAXX: Angielskie nazwy dni
+const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-const getEventIcon = (type) => {
-  switch (type) {
-    case "trip":
-      return Car;
-    case "service":
-      return Wrench;
-    case "refueling":
-      return Fuel;
-    default:
-      return CalendarIcon;
-  }
+// Typy wydarzeń z ikonami i kolorami
+const eventTypes = {
+  inspection: { label: "Przegląd", icon: Wrench, color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30", bg: "bg-yellow-500/10" },
+  insurance: { label: "Ubezpieczenie", icon: FileText, color: "bg-blue-500/20 text-blue-400 border-blue-500/30", bg: "bg-blue-500/10" },
+  service: { label: "Serwis", icon: Wrench, color: "bg-orange-500/20 text-orange-400 border-orange-500/30", bg: "bg-orange-500/10" },
+  refueling: { label: "Tankowanie", icon: Fuel, color: "bg-green-500/20 text-green-400 border-green-500/30", bg: "bg-green-500/10" },
+  trip: { label: "Przejazd", icon: Car, color: "bg-purple-500/20 text-purple-400 border-purple-500/30", bg: "bg-purple-500/10" },
+  other: { label: "Inne", icon: CalendarIcon, color: "bg-slate-500/20 text-slate-400 border-slate-500/30", bg: "bg-slate-500/10" },
 };
 
-const getEventColor = (type) => {
-  switch (type) {
-    case "trip":
-      return "text-blue-400 bg-blue-500/10 border-blue-500/20";
-    case "service":
-      return "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
-    case "refueling":
-      return "text-green-400 bg-green-500/10 border-green-500/20";
-    default:
-      return "text-slate-400 bg-slate-500/10 border-slate-500/20";
-  }
-};
+// Klucz do localStorage
+const STORAGE_KEY = "calendar_events";
 
-export default function CalendarWidget({ trips = [], services = [], refuelings = [], vehicles = [], onDateSelect, onAddEvent }) {
+export default function CalendarWidget({ trips = [], services = [], refuelings = [], vehicles = [] }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
-  const [newEventText, setNewEventText] = useState("");
-  const [newEventType, setNewEventType] = useState("other");
+  const [editingEvent, setEditingEvent] = useState(null);
+  
+  // Stan dla nowego wydarzenia
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    type: "other",
+    description: "",
+    vehicleId: "",
+    cost: "",
+  });
 
-  // Połącz wszystkie wydarzenia
+  // Wczytaj zapisane wydarzenia z localStorage
+  const [customEvents, setCustomEvents] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  });
+
+  // Zapisz wydarzenia do localStorage
+  const saveCustomEvents = (events) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+    setCustomEvents(events);
+  };
+
+  // Połącz wszystkie wydarzenia (z API + z localStorage)
   const allEvents = useMemo(() => {
     const events = [];
 
+    // Wydarzenia z trips
     trips.forEach((trip) => {
       const date = trip.startDate || trip.startTime;
       if (date) {
         events.push({
           id: `trip-${trip.id}`,
           date: new Date(date),
-          title: `${trip.startLocation || "Start"} → ${trip.endLocation || "Cel"}`,
+          title: `Przejazd: ${trip.startLocation || "Start"} → ${trip.endLocation || "Cel"}`,
           type: "trip",
           data: trip,
+          isCustom: false,
         });
       }
     });
 
+    // Wydarzenia z services
     services.forEach((service) => {
       if (service.date) {
         events.push({
@@ -78,24 +108,38 @@ export default function CalendarWidget({ trips = [], services = [], refuelings =
           title: service.name || "Serwis",
           type: "service",
           data: service,
+          isCustom: false,
         });
       }
     });
 
+    // Wydarzenia z refuelings
     refuelings.forEach((refuel) => {
       if (refuel.date) {
         events.push({
           id: `refuel-${refuel.id}`,
           date: new Date(refuel.date),
-          title: `${refuel.liters || 0} L - ${refuel.cost || 0} zł`,
+          title: `Tankowanie: ${refuel.liters || 0} L`,
           type: "refueling",
           data: refuel,
+          isCustom: false,
+        });
+      }
+    });
+
+    // Wydarzenia z localStorage (customowe)
+    customEvents.forEach((event) => {
+      if (event.date) {
+        events.push({
+          ...event,
+          date: new Date(event.date),
+          isCustom: true,
         });
       }
     });
 
     return events;
-  }, [trips, services, refuelings]);
+  }, [trips, services, refuelings, customEvents]);
 
   // Grupowanie wydarzeń po dniu
   const eventsByDate = useMemo(() => {
@@ -112,8 +156,8 @@ export default function CalendarWidget({ trips = [], services = [], refuelings =
 
   // Dni w miesiącu
   const days = useMemo(() => {
-    const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 });
-    const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 });
+    const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 0 }); // Niedziela jako pierwszy dzień
+    const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 0 });
     return eachDayOfInterval({ start, end });
   }, [currentMonth]);
 
@@ -129,23 +173,95 @@ export default function CalendarWidget({ trips = [], services = [], refuelings =
 
   const handleDateClick = (date) => {
     setSelectedDate(date);
-    if (onDateSelect) onDateSelect(date);
   };
 
   const handleAddEvent = () => {
-    if (!newEventText.trim()) return;
-    if (onAddEvent && selectedDate) {
-      onAddEvent(selectedDate, { title: newEventText, type: newEventType });
+    if (!selectedDate) {
+      toast.error("Najpierw wybierz dzień");
+      return;
     }
-    setNewEventText("");
+    setEditingEvent(null);
+    setNewEvent({
+      title: "",
+      type: "other",
+      description: "",
+      vehicleId: "",
+      cost: "",
+    });
+    setShowEventModal(true);
+  };
+
+  const handleEditEvent = (event) => {
+    setEditingEvent(event);
+    setNewEvent({
+      title: event.title || "",
+      type: event.type || "other",
+      description: event.description || "",
+      vehicleId: event.vehicleId || "",
+      cost: event.cost || "",
+    });
+    setShowEventModal(true);
+  };
+
+  const handleSaveEvent = () => {
+    if (!newEvent.title.trim()) {
+      toast.error("Podaj tytuł wydarzenia");
+      return;
+    }
+
+    const eventData = {
+      id: editingEvent?.id || Date.now().toString(),
+      date: selectedDate.toISOString(),
+      title: newEvent.title,
+      type: newEvent.type,
+      description: newEvent.description,
+      vehicleId: newEvent.vehicleId || null,
+      cost: newEvent.cost || null,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (editingEvent) {
+      // Aktualizacja istniejącego wydarzenia
+      const updated = customEvents.map((e) => 
+        e.id === editingEvent.id ? eventData : e
+      );
+      saveCustomEvents(updated);
+      toast.success("Wydarzenie zaktualizowane");
+    } else {
+      // Dodanie nowego wydarzenia
+      saveCustomEvents([...customEvents, eventData]);
+      toast.success("Wydarzenie dodane");
+    }
+
+    setShowEventModal(false);
+    setNewEvent({
+      title: "",
+      type: "other",
+      description: "",
+      vehicleId: "",
+      cost: "",
+    });
+  };
+
+  const handleDeleteEvent = (eventId) => {
+    const updated = customEvents.filter((e) => e.id !== eventId);
+    saveCustomEvents(updated);
+    toast.success("Wydarzenie usunięte");
     setShowEventModal(false);
   };
 
   const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
+  const eventTypeInfo = (type) => eventTypes[type] || eventTypes.other;
 
   const getVehicleName = (vehicleId) => {
+    if (!vehicleId) return null;
     const vehicle = vehicles.find((v) => v.id == vehicleId);
-    return vehicle ? `${vehicle.make || ""} ${vehicle.model || ""}`.trim() || vehicle.name || "Pojazd" : "Nieznany";
+    return vehicle ? `${vehicle.make || ""} ${vehicle.model || ""}`.trim() || vehicle.name : null;
+  };
+
+  // Formatowanie daty na display
+  const formatDate = (date) => {
+    return format(date, "dd MMMM yyyy", { locale: pl });
   };
 
   return (
@@ -161,8 +277,8 @@ export default function CalendarWidget({ trips = [], services = [], refuelings =
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <h3 className="text-theme-white font-semibold text-lg">
-            {format(currentMonth, "LLLL yyyy", { locale: pl })}
+          <h3 className="text-white font-semibold text-lg">
+            {format(currentMonth, "MMMM yyyy", { locale: pl })}
           </h3>
           <Button
             variant="ghost"
@@ -174,15 +290,21 @@ export default function CalendarWidget({ trips = [], services = [], refuelings =
           </Button>
         </div>
 
-        {/* Kalendarz - siatka dni według STAXX */}
+        {/* STAXX: Nagłówek "Date" */}
+        <div className="mb-2">
+          <p className="text-slate-400 text-xs uppercase tracking-wider">Date</p>
+        </div>
+
+        {/* Kalendarz - siatka 7 kolumn */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {weekDays.map((day) => (
-            <div key={day} className="text-center text-xs text-slate-400 font-normal py-2">
+            <div key={day} className="text-center text-xs text-slate-400 font-medium py-2">
               {day}
             </div>
           ))}
         </div>
 
+        {/* Dni miesiąca */}
         <div className="grid grid-cols-7 gap-1">
           {days.map((day, idx) => {
             const isCurrentMonth = isSameMonth(day, currentMonth);
@@ -195,15 +317,19 @@ export default function CalendarWidget({ trips = [], services = [], refuelings =
                 key={idx}
                 onClick={() => handleDateClick(day)}
                 className={`
-                  text-center py-2 text-sm rounded-lg transition-all
+                  text-center py-2 text-sm rounded-lg transition-all relative
                   ${isCurrentMonth ? "text-white" : "text-slate-600"}
                   ${isSelected ? "bg-gradient-primary text-white shadow-lg" : ""}
-                  ${hasEvent && !isSelected ? "border-b-2 border-indigo-500" : ""}
-                  ${isTodayDate && !isSelected ? "bg-indigo-500/20 text-indigo-300" : ""}
                   ${!isSelected && !isTodayDate ? "hover:bg-indigo-500/20" : ""}
                 `}
               >
                 {format(day, "d")}
+                {hasEvent && !isSelected && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                )}
+                {isTodayDate && !isSelected && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                )}
               </button>
             );
           })}
@@ -215,55 +341,111 @@ export default function CalendarWidget({ trips = [], services = [], refuelings =
             size="sm"
             variant="outline"
             className="w-full text-xs gap-2"
-            onClick={() => setShowEventModal(true)}
-            disabled={!selectedDate}
+            onClick={handleAddEvent}
           >
             <Plus className="w-3 h-3" />
-            {selectedDate ? `Dodaj wydarzenie na ${format(selectedDate, "dd MMM", { locale: pl })}` : "Najpierw wybierz dzień"}
+            {selectedDate ? `Dodaj wydarzenie na ${formatDate(selectedDate)}` : "Najpierw wybierz dzień"}
           </Button>
         </div>
       </GlassCard>
 
       {/* Lista wydarzeń pod kalendarzem */}
-      {selectedDate && selectedDateEvents.length > 0 && (
+      {selectedDate && (
         <GlassCard className="p-4">
-          <h4 className="text-theme-white font-semibold text-sm mb-3 flex items-center gap-2">
+          <h4 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
             <CalendarIcon className="w-4 h-4 text-primary" />
-            Wydarzenia - {format(selectedDate, "dd MMMM yyyy", { locale: pl })}
+            Wydarzenia - {formatDate(selectedDate)}
           </h4>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {selectedDateEvents.map((event, idx) => {
-              const Icon = getEventIcon(event.type);
-              const colorClass = getEventColor(event.type);
-              return (
-                <div
-                  key={idx}
-                  className={`flex items-start gap-3 p-3 rounded-xl border ${colorClass}`}
-                >
-                  <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-4 h-4" />
+          
+          {selectedDateEvents.length === 0 ? (
+            <div className="text-center py-6">
+              <CalendarIcon className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+              <p className="text-slate-400 text-sm">Brak wydarzeń w tym dniu</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 text-xs text-indigo-400"
+                onClick={handleAddEvent}
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Dodaj wydarzenie
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {selectedDateEvents.map((event, idx) => {
+                const typeInfo = eventTypeInfo(event.type);
+                const Icon = typeInfo.icon;
+                const isCustom = event.isCustom;
+                
+                return (
+                  <div
+                    key={idx}
+                    className={`flex items-start gap-3 p-3 rounded-xl border ${typeInfo.color}`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg ${typeInfo.bg} flex items-center justify-center flex-shrink-0`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-white text-sm font-medium">{event.title}</p>
+                        <Badge className="text-xs bg-slate-700/50">
+                          {typeInfo.label}
+                        </Badge>
+                        {isCustom && (
+                          <Badge className="text-xs bg-indigo-500/20 text-indigo-400">
+                            Własne
+                          </Badge>
+                        )}
+                      </div>
+                      {event.description && (
+                        <p className="text-slate-400 text-xs mt-1">{event.description}</p>
+                      )}
+                      {event.vehicleId && getVehicleName(event.vehicleId) && (
+                        <p className="text-slate-500 text-xs mt-1">
+                          Pojazd: {getVehicleName(event.vehicleId)}
+                        </p>
+                      )}
+                      {event.cost && (
+                        <p className="text-slate-500 text-xs mt-1">Koszt: {event.cost} zł</p>
+                      )}
+                      {event.data?.vehicleId && !event.isCustom && (
+                        <p className="text-slate-500 text-xs mt-1">
+                          Pojazd: {getVehicleName(event.data.vehicleId)}
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* Przyciski akcji tylko dla własnych wydarzeń */}
+                    {isCustom && (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-7 h-7 text-slate-400 hover:text-yellow-400"
+                          onClick={() => handleEditEvent(event)}
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-7 h-7 text-slate-400 hover:text-red-400"
+                          onClick={() => handleDeleteEvent(event.id)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-theme-white text-sm font-medium">{event.title}</p>
-                    <p className="text-theme-white-muted text-xs mt-0.5">
-                      {event.type === "trip" && getVehicleName(event.data?.vehicleId)}
-                      {event.type === "service" && `Koszt: ${event.data?.cost || 0} zł`}
-                      {event.type === "refueling" && `${event.data?.liters || 0} L, ${event.data?.cost || 0} zł`}
-                    </p>
-                  </div>
-                  <Badge className="text-xs bg-slate-700/50">
-                    {event.type === "trip" && "Przejazd"}
-                    {event.type === "service" && "Serwis"}
-                    {event.type === "refueling" && "Tankowanie"}
-                  </Badge>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </GlassCard>
       )}
 
-      {/* Modal dodawania wydarzenia */}
+      {/* Modal dodawania/edycji wydarzenia */}
       <AnimatePresence>
         {showEventModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
@@ -274,7 +456,9 @@ export default function CalendarWidget({ trips = [], services = [], refuelings =
               className="bg-slate-800 rounded-xl max-w-md w-full border border-slate-700 shadow-xl"
             >
               <div className="flex items-center justify-between p-4 border-b border-slate-700">
-                <h3 className="text-theme-white font-semibold">Dodaj wydarzenie</h3>
+                <h3 className="text-white font-semibold">
+                  {editingEvent ? "Edytuj wydarzenie" : "Dodaj wydarzenie"}
+                </h3>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -284,37 +468,89 @@ export default function CalendarWidget({ trips = [], services = [], refuelings =
                   <X className="w-4 h-4" />
                 </Button>
               </div>
+              
               <div className="p-4 space-y-4">
                 <div>
-                  <label className="text-theme-white-secondary text-sm block mb-1">Data</label>
-                  <p className="text-theme-white font-medium">
-                    {selectedDate && format(selectedDate, "dd MMMM yyyy", { locale: pl })}
+                  <label className="text-slate-400 text-sm block mb-1">Data</label>
+                  <p className="text-white font-medium">
+                    {selectedDate && formatDate(selectedDate)}
                   </p>
                 </div>
+
                 <div>
-                  <label className="text-theme-white-secondary text-sm block mb-1">Typ wydarzenia</label>
-                  <select
-                    value={newEventType}
-                    onChange={(e) => setNewEventType(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-theme-white"
-                  >
-                    <option value="other">Inne</option>
-                    <option value="trip">Przejazd</option>
-                    <option value="service">Serwis</option>
-                    <option value="refueling">Tankowanie</option>
-                  </select>
+                  <Label className="text-slate-400 text-sm block mb-1">Typ wydarzenia</Label>
+                  <Select value={newEvent.type} onValueChange={(val) => setNewEvent({...newEvent, type: val})}>
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      {Object.entries(eventTypes).map(([key, val]) => (
+                        <SelectItem key={key} value={key} className="text-white">
+                          <div className="flex items-center gap-2">
+                            <val.icon className="w-3 h-3" />
+                            {val.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+
                 <div>
-                  <label className="text-theme-white-secondary text-sm block mb-1">Opis</label>
-                  <input
+                  <Label className="text-slate-400 text-sm block mb-1">Tytuł *</Label>
+                  <Input
                     type="text"
-                    value={newEventText}
-                    onChange={(e) => setNewEventText(e.target.value)}
-                    placeholder="np. Spotkanie z klientem"
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-theme-white"
-                    autoFocus
+                    value={newEvent.title}
+                    onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+                    placeholder="np. Przegląd techniczny"
+                    className="bg-slate-700 border-slate-600 text-white"
                   />
                 </div>
+
+                <div>
+                  <Label className="text-slate-400 text-sm block mb-1">Opis (opcjonalnie)</Label>
+                  <Input
+                    type="text"
+                    value={newEvent.description}
+                    onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+                    placeholder="Dodatkowe informacje"
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+				<div>
+  <Label className="text-slate-400 text-sm block mb-1">Pojazd (opcjonalnie)</Label>
+  <Select 
+    value={newEvent.vehicleId || "none"} 
+    onValueChange={(val) => setNewEvent({...newEvent, vehicleId: val === "none" ? "" : val})}
+  >
+    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+      <SelectValue placeholder="Wybierz pojazd" />
+    </SelectTrigger>
+    <SelectContent className="bg-slate-800 border-slate-700">
+      <SelectItem value="none" className="text-white">Brak</SelectItem>
+      {vehicles.map((v) => (
+        <SelectItem key={v.id} value={String(v.id)} className="text-white">
+          {v.make} {v.model} ({v.registrationNumber})
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
+
+
+                <div>
+                  <Label className="text-slate-400 text-sm block mb-1">Koszt (zł, opcjonalnie)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={newEvent.cost}
+                    onChange={(e) => setNewEvent({...newEvent, cost: e.target.value})}
+                    placeholder="0.00"
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+
                 <div className="flex gap-3 pt-3">
                   <Button
                     variant="outline"
@@ -325,9 +561,9 @@ export default function CalendarWidget({ trips = [], services = [], refuelings =
                   </Button>
                   <Button
                     className="flex-1 bg-gradient-primary"
-                    onClick={handleAddEvent}
+                    onClick={handleSaveEvent}
                   >
-                    Dodaj
+                    {editingEvent ? "Zapisz zmiany" : "Dodaj"}
                   </Button>
                 </div>
               </div>
