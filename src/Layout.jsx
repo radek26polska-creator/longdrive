@@ -293,11 +293,13 @@ export default function Layout({ children }) {
         </div>
       </div>
 
-      {/* Główna treść - POPRAWIONE (usunięte podwójne przewijanie) */}
+      {/* Główna treść - POPRAWIONE dla desktop (obsługa szerokich treści) */}
       <main className="lg:ml-72 min-h-screen">
         <div className="pt-14 lg:pt-0">
-          <div className="p-4 lg:p-6">
-            {children}
+          <div className="p-4 lg:p-6 overflow-x-auto">
+            <div className="min-w-max lg:min-w-0 w-full">
+              {children}
+            </div>
           </div>
         </div>
       </main>
