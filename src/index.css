@@ -853,3 +853,80 @@ main::-webkit-scrollbar {
   overflow-x: auto;
   width: 100%;
 }
+/* ===== POPRAWKI DLA MODUŁU MAPY NA MOBILNYCH ===== */
+
+@media (max-width: 768px) {
+  /* Zakładki w Mapie - mniejsze i lepiej rozmieszczone */
+  .map-tabs,
+  [role="tablist"],
+  .flex.border-b.border-slate-700,
+  .flex.gap-2.mb-4 {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    justify-content: stretch !important;
+  }
+  
+  .map-tabs button,
+  [role="tablist"] button,
+  .flex.border-b.border-slate-700 button,
+  .flex.gap-2.mb-4 button {
+    flex: 1 !important;
+    min-width: 0 !important;
+    padding: 8px 4px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  /* Jeśli są trzy zakładki - każda ma 33% szerokości */
+  .map-tabs button,
+  [role="tablist"] button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+  }
+  
+  /* Mniejsze ikony w zakładkach */
+  .map-tabs button svg,
+  [role="tablist"] button svg {
+    width: 14px !important;
+    height: 14px !important;
+    margin-right: 4px !important;
+  }
+  
+  /* Kontener mapy - odpowiednia wysokość */
+  .map-container,
+  .leaflet-container {
+    height: 300px !important;
+    min-height: 250px !important;
+    border-radius: 12px !important;
+  }
+  
+  /* Karty z trasami */
+  .saved-routes-list,
+  .route-planner {
+    max-height: 300px !important;
+    overflow-y: auto !important;
+  }
+  
+  /* Przyciski w formularzach mapy */
+  .route-form button,
+  .map-actions button {
+    width: 100% !important;
+    margin-top: 8px !important;
+  }
+  
+  /* Pola formularza w Mapie */
+  .route-form input,
+  .route-form select {
+    font-size: 14px !important;
+    padding: 10px !important;
+  }
+  
+  /* Legenda mapy - mniejsza */
+  .map-legend {
+    font-size: 10px !important;
+    padding: 6px 8px !important;
+  }
+}
