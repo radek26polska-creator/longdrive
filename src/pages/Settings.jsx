@@ -731,7 +731,7 @@ const saveLocationAndMapSettings = () => {
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Panel zakładek */}
-        <div className="lg:w-56 flex-shrink-0">
+        <div className="w-full lg:w-56 flex-shrink-0">
           <GlassCard className="p-2">
             <nav className="space-y-1">
               {tabs.map((tab) => {

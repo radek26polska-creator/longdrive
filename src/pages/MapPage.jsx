@@ -462,7 +462,7 @@ export default function MapPage() {
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Panel boczny */}
-        <div className={`${showSidebar ? "lg:w-96" : "lg:w-12"} transition-all duration-300 flex-shrink-0`}>
+        <div className={`${showSidebar ? "lg:w-96 w-full" : "lg:w-12 hidden lg:block"} transition-all duration-300 flex-shrink-0`}>
           <GlassCard className="p-0 overflow-hidden">
             <div className="flex items-center justify-between p-3 border-b border-slate-700">
               {showSidebar ? (
@@ -485,10 +485,16 @@ export default function MapPage() {
             {showSidebar && (
               <div className="p-3 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="w-full bg-slate-800/50 border border-slate-700 p-1">
-                    <TabsTrigger value="live" className="flex-1 data-[state=active]:bg-gradient-primary text-xs">Na żywo</TabsTrigger>
-                    <TabsTrigger value="tracked" className="flex-1 data-[state=active]:bg-gradient-primary text-xs">Zapisane Trasy</TabsTrigger>
-                    <TabsTrigger value="planner" className="flex-1 data-[state=active]:bg-gradient-primary text-xs">Planowanie Trasy</TabsTrigger>
+                  <TabsList className="w-full bg-slate-800/50 border border-slate-700 p-1 flex-wrap gap-1">
+                    <TabsTrigger value="live" className="flex-1 data-[state=active]:bg-gradient-primary text-[11px] sm:text-xs py-1.5 px-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                      Na żywo
+                    </TabsTrigger>
+                    <TabsTrigger value="tracked" className="flex-1 data-[state=active]:bg-gradient-primary text-[11px] sm:text-xs py-1.5 px-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                      Zapisane Trasy
+                    </TabsTrigger>
+                    <TabsTrigger value="planner" className="flex-1 data-[state=active]:bg-gradient-primary text-[11px] sm:text-xs py-1.5 px-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                      Planowanie Trasy
+                    </TabsTrigger>
                   </TabsList>
 
                   {/* Zakładka: Na żywo */}
@@ -794,7 +800,7 @@ export default function MapPage() {
               autoCenter={autoCenter}
               routeColor="#3b82f6"
               userLocation={userLocation}
-              className="w-full"
+              className="w-full overflow-hidden" // 🔧 DODANE: overflow-hidden
               height="600px"
             />
           </GlassCard>
