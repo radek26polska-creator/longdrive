@@ -508,3 +508,89 @@ nav *::-webkit-scrollbar {
 #root::-webkit-scrollbar {
   display: none;
 }
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-overflow-scrolling: touch; /* Płynne przewijanie na iOS */
+}
+
+/* Kontener głównej treści - pozwala na przewijanie */
+main {
+  display: block;
+  position: relative;
+  width: 100%;
+}
+
+/* Zapewnij przewijanie dla wszystkich kontenerów z dużą zawartością */
+.overflow-auto-safe {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Dla tabeli w podróżach i innych modułach */
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+/* Poprawka dla kart i formularzy na mobile */
+@media (max-width: 768px) {
+  /* Zwiększ obszar dotykowy dla przycisków */
+  button, 
+  [role="button"],
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Popraw przewijanie dla długich list */
+  .overflow-y-auto-mobile {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Zapewnij, że karty i modale nie wychodzą poza ekran */
+  .card, 
+  .modal-content,
+  .dialog-content {
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  }
+  
+  /* Poprawka dla inputów - zapobiega zoomowi na iOS */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Dla elementów z overflow: auto, które mogą być w środku */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Poprawka dla przewijania w modalach i drawerach */
+.drawer-content,
+.modal-body,
+.dialog-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(100vh - 120px);
+}
+
+/* Zapewnij, że długie teksty nie wychodzą poza kontener */
+.break-words-mobile {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
