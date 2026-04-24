@@ -614,3 +614,59 @@ main {
   flex: 1;
   min-width: 120px;
 }
+/* ===== POPRAWKA DLA FORMULARZY NA MOBILNYCH - PRZEWIJANIE PIONOWE ===== */
+
+/* Dla wszystkich modali/drawerów z formularzami */
+.modal-content,
+.drawer-content,
+.dialog-content,
+[role="dialog"],
+[role="dialog"] > div:first-child {
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Dla formularzy wewnątrz modali */
+form {
+  overflow-y: visible !important;
+}
+
+/* Dla kontenerów formularzy które mogą być wysokie */
+.form-container,
+.trip-form-container,
+.vehicle-form-container,
+.driver-form-container {
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 20px !important;
+}
+
+/* Dla wszystkich elementów z klasą modal lub dialog */
+.modal,
+.dialog,
+.drawer {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Zapewnij, że body nie blokuje przewijania gdy modal jest otwarty */
+body.modal-open {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+}
+
+/* Przycisk na dole formularza powinien być zawsze widoczny po przewinięciu */
+form button[type="submit"],
+form .submit-button {
+  margin-bottom: 20px;
+}
+
+/* Dodatkowe przewijanie dla długich list w formularzach */
+select[size],
+textarea {
+  max-height: 200px;
+  overflow-y: auto;
+}
