@@ -155,16 +155,18 @@ export default function Layout({ children }) {
                   </button>
                 </div>
 
+                {/* Logo dla desktop - nowy wygląd STAXX */}
                 <div className="hidden lg:flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
                     <Car className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h1 className="font-bold text-white text-lg">LongDrive</h1>
-                    <p className="text-xs text-white/60">Zarządzanie Flotą</p>
+                    <h1 className="font-bold text-white text-xl tracking-tight">LongDrive</h1>
+                    <p className="text-xs text-slate-400">Zarządzanie Flotą</p>
                   </div>
                 </div>
 
+                {/* Menu nawigacyjne - nowy wygląd STAXX */}
                 <nav className="flex-1 overflow-y-auto pb-4 space-y-1 scrollbar-none">
                   {navItems.map((item) => {
                     const Icon = item.icon;
@@ -178,45 +180,46 @@ export default function Layout({ children }) {
                       >
                         <div
                           className={`
-                            flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-                            active:scale-98
+                            flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200
+                            active:scale-98 group
                             ${active
-                              ? "bg-gradient-primary text-white shadow-lg shadow-primary/25"
-                              : "text-white/70 hover:text-white hover:bg-white/10"
+                              ? "bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-white border border-indigo-500/30 shadow-lg shadow-indigo-500/10"
+                              : "text-slate-400 hover:text-white hover:bg-white/5"
                             }
                           `}
                         >
-                          <Icon className="w-5 h-5 flex-shrink-0" />
+                          <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${active ? "text-indigo-400" : "group-hover:text-indigo-400"}`} />
                           <span className="font-medium text-sm">{item.name}</span>
-                          {active && <ChevronRight className="w-4 h-4 ml-auto opacity-70" />}
+                          {active && <ChevronRight className="w-4 h-4 ml-auto opacity-70 text-indigo-400" />}
                         </div>
                       </Link>
                     );
                   })}
                 </nav>
 
+                {/* Stopka z użytkownikiem - nowy wygląd STAXX */}
                 {user && (
                   <div className="pt-4 mt-2 border-t border-white/10">
-                    <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/5 mb-2">
-                      <Avatar className="w-9 h-9 border border-primary/30">
-                        <AvatarFallback className="bg-gradient-primary text-white text-sm">
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 mb-2">
+                      <Avatar className="w-9 h-9 border-2 border-indigo-500/50">
+                        <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white text-sm font-bold">
                           {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">
+                        <p className="text-sm font-semibold text-white truncate">
                           {user.name || "Użytkownik"}
                         </p>
-                        <p className="text-xs text-white/50 truncate">
+                        <p className="text-xs text-slate-400 truncate">
                           {user.email}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:text-red-400 hover:bg-red-500/10 transition-colors active:scale-98"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 group"
                     >
-                      <LogOut className="w-4 h-4" />
+                      <LogOut className="w-4 h-4 group-hover:text-red-400 transition-colors" />
                       <span className="text-sm font-medium">Wyloguj się</span>
                     </button>
                   </div>
@@ -227,19 +230,21 @@ export default function Layout({ children }) {
         )}
       </AnimatePresence>
 
-      {/* Sidebar dla desktop */}
+      {/* Sidebar dla desktop - nowy wygląd STAXX */}
       <div className="hidden lg:block fixed top-0 left-0 h-full w-72 bg-slate-900 shadow-2xl z-0">
         <div className="flex flex-col h-full p-4">
+          {/* Logo - nowy wygląd STAXX */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
               <Car className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="font-bold text-white text-lg">LongDrive</h1>
-              <p className="text-xs text-white/60">Zarządzanie Flotą</p>
+              <h1 className="font-bold text-white text-xl tracking-tight">LongDrive</h1>
+              <p className="text-xs text-slate-400">Zarządzanie Flotą</p>
             </div>
           </div>
 
+          {/* Menu nawigacyjne - nowy wygląd STAXX */}
           <nav className="flex-1 overflow-y-auto pb-4 space-y-1 scrollbar-none">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -248,44 +253,45 @@ export default function Layout({ children }) {
                 <Link key={item.page} to={getPageUrl(item.page)} className="block">
                   <div
                     className={`
-                      flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                      flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group
                       ${active
-                        ? "bg-gradient-primary text-white shadow-lg shadow-primary/25"
-                        : "text-white/70 hover:text-white hover:bg-white/10"
+                        ? "bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-white border border-indigo-500/30 shadow-lg shadow-indigo-500/10"
+                        : "text-slate-400 hover:text-white hover:bg-white/5"
                       }
                     `}
                   >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <Icon className={`w-5 h-5 flex-shrink-0 transition-colors ${active ? "text-indigo-400" : "group-hover:text-indigo-400"}`} />
                     <span className="font-medium text-sm">{item.name}</span>
-                    {active && <ChevronRight className="w-4 h-4 ml-auto opacity-70" />}
+                    {active && <ChevronRight className="w-4 h-4 ml-auto opacity-70 text-indigo-400" />}
                   </div>
                 </Link>
               );
             })}
           </nav>
 
+          {/* Stopka z użytkownikiem - nowy wygląd STAXX */}
           {user && (
             <div className="pt-4 mt-2 border-t border-white/10">
-              <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/5 mb-2">
-                <Avatar className="w-9 h-9 border border-primary/30">
-                  <AvatarFallback className="bg-gradient-primary text-white text-sm">
+              <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 mb-2">
+                <Avatar className="w-9 h-9 border-2 border-indigo-500/50">
+                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white text-sm font-bold">
                     {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
+                  <p className="text-sm font-semibold text-white truncate">
                     {user.name || "Użytkownik"}
                   </p>
-                  <p className="text-xs text-white/50 truncate">
+                  <p className="text-xs text-slate-400 truncate">
                     {user.email}
                   </p>
                 </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 group"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-4 h-4 group-hover:text-red-400 transition-colors" />
                 <span className="text-sm font-medium">Wyloguj się</span>
               </button>
             </div>

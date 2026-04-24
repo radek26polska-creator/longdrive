@@ -286,3 +286,111 @@ body {
 .staxx-mentor-exp {
   @apply text-xs text-indigo-400;
 }
+
+/* ===== DODATKOWE STYLE STAXX (uzupełnienie) ===== */
+
+/* Przyciski */
+.btn-staxx-primary {
+  @apply bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-medium py-2 px-4 rounded-xl transition-all duration-200 shadow-lg shadow-indigo-500/25;
+}
+
+.btn-staxx-secondary {
+  @apply bg-slate-700/50 hover:bg-slate-700 text-slate-200 font-medium py-2 px-4 rounded-xl transition-all duration-200 border border-slate-600;
+}
+
+/* Dashboard */
+.staxx-welcome {
+  @apply text-theme-white text-2xl font-bold;
+}
+
+.staxx-subtitle {
+  @apply text-slate-400 text-sm;
+}
+
+.staxx-stats-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+}
+
+.staxx-two-columns {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+}
+
+/* Karty statystyk */
+.staxx-stat-card {
+  @apply bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-white/5 p-5 shadow-xl hover:shadow-indigo-500/10 transition-all duration-300;
+}
+
+.staxx-stat-icon {
+  @apply w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center;
+}
+
+.staxx-stat-value {
+  @apply text-3xl font-bold text-white;
+}
+
+.staxx-stat-trend-up {
+  @apply flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400;
+}
+
+.staxx-stat-trend-down {
+  @apply flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400;
+}
+
+/* Kalendarz - dodatkowe */
+.staxx-calendar-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.staxx-calendar-month {
+  @apply text-theme-white font-semibold text-lg;
+}
+
+.staxx-calendar-nav {
+  @apply flex gap-2;
+}
+
+.staxx-calendar-nav-button {
+  @apply w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors;
+}
+
+/* Lista mentorów */
+.staxx-mentors-list {
+  @apply space-y-2 max-h-96 overflow-y-auto;
+}
+
+/* Eventy w kalendarzu */
+.staxx-event-item {
+  @apply flex items-start gap-3 p-3 rounded-xl border;
+}
+
+.staxx-event-icon {
+  @apply w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center;
+}
+
+.staxx-event-title {
+  @apply text-theme-white text-sm font-medium;
+}
+
+.staxx-event-badge {
+  @apply text-xs px-2 py-0.5 rounded-full bg-slate-700/50;
+}
+
+/* Responsywność dla STAXX */
+@media (max-width: 768px) {
+  .staxx-stats-grid {
+    @apply grid-cols-2;
+  }
+  
+  .staxx-two-columns {
+    @apply grid-cols-1;
+  }
+  
+  .staxx-stat-value {
+    @apply text-2xl;
+  }
+  
+  .staxx-calendar th,
+  .staxx-calendar td {
+    @apply text-xs py-1;
+  }
+}
