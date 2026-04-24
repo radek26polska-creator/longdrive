@@ -271,3 +271,145 @@ select[size], textarea { max-height: 200px; overflow-y: auto; }
   .route-form input, .route-form select { font-size: 14px !important; padding: 10px !important; }
   .map-legend { font-size: 10px !important; padding: 6px 8px !important; }
 }
+/* ===== ZACIŚNIĘCIE APLIKACJI NA MOBILNYCH ===== */
+
+/* Główny kontener - zapobiega wychodzeniu poza ekran */
+@media (max-width: 768px) {
+  /* Główna aplikacja - nie może być szersza niż ekran */
+  #root,
+  .min-h-screen,
+  main,
+  .lg\:ml-72 {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Wszystkie kontenery - zawijają treść */
+  .w-full,
+  .container,
+  .p-4,
+  .p-6,
+  .px-4,
+  .px-6 {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Karty i elementy - mniejsze paddings */
+  .glass-card,
+  .card,
+  [class*="rounded"] {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  
+  /* Tabele i siatki - przewijanie poziome zamiast wychodzenia */
+  table,
+  .data-table,
+  .table-container {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* Gridy - na 1 kolumnę zamiast wielu */
+  .grid {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  .grid > * {
+    width: 100% !important;
+    margin-bottom: 12px !important;
+  }
+  
+  /* Flexboxy - zawijanie */
+  .flex {
+    flex-wrap: wrap !important;
+  }
+  
+  /* Flex row na kolumnę na mobile */
+  .flex-row,
+  .lg\:flex-row {
+    flex-direction: column !important;
+  }
+  
+  /* Odpowiednie marginesy */
+  .gap-4,
+  .gap-6 {
+    gap: 12px !important;
+  }
+  
+  /* Mniejszy font dla lepszego dopasowania */
+  body,
+  p,
+  span,
+  button,
+  a {
+    font-size: 14px !important;
+  }
+  
+  /* Nagłówki mniejsze */
+  h1, .text-3xl, .text-2xl, .text-xl {
+    font-size: 1.25rem !important;
+  }
+  
+  h2 {
+    font-size: 1.1rem !important;
+  }
+  
+  /* Inputy i selecty - pełna szerokość */
+  input,
+  select,
+  textarea,
+  .input,
+  .select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Przyciski - odpowiednia szerokość */
+  button {
+    white-space: nowrap !important;
+  }
+  
+  /* Grupy przycisków - zawijanie */
+  .flex.gap-2,
+  .button-group {
+    flex-wrap: wrap !important;
+  }
+  
+  .flex.gap-2 button,
+  .button-group button {
+    flex: 1 1 auto !important;
+    min-width: calc(50% - 8px) !important;
+  }
+  
+  /* Karty z danymi - pełna szerokość */
+  .grid-cols-1,
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Statystyki na mobile */
+  .stats-grid {
+    flex-direction: column !important;
+  }
+  
+  /* Odstępy */
+  .p-4 {
+    padding: 12px !important;
+  }
+  
+  .p-6 {
+    padding: 16px !important;
+  }
+  
+  .m-4 {
+    margin: 12px !important;
+  }
+}
