@@ -99,9 +99,9 @@ export default function Layout({ children }) {
   const getPageUrl = (page) => pageToPath[page] || `/${page.toLowerCase()}`;
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden">
       {/* Header mobilny */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/10">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
         <div className="flex items-center justify-between px-4 h-14">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
@@ -138,8 +138,8 @@ export default function Layout({ children }) {
               transition={{ type: "tween", duration: 0.2 }}
               className="fixed top-0 left-0 z-50 h-full w-72 bg-slate-900 shadow-2xl lg:static lg:translate-x-0 lg:z-0 lg:shadow-none"
             >
-              <div className="flex flex-col h-full p-4 overflow-hidden">
-                <div className="flex items-center justify-between mb-6 lg:hidden flex-shrink-0">
+              <div className="flex flex-col h-full p-4">
+                <div className="flex items-center justify-between mb-6 lg:hidden">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
                       <Car className="w-4 h-4 text-white" />
@@ -155,7 +155,7 @@ export default function Layout({ children }) {
                   </button>
                 </div>
 
-                <div className="hidden lg:flex items-center gap-3 mb-8 flex-shrink-0">
+                <div className="hidden lg:flex items-center gap-3 mb-8">
                   <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
                     <Car className="w-5 h-5 text-white" />
                   </div>
@@ -165,7 +165,7 @@ export default function Layout({ children }) {
                   </div>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto pb-4 space-y-1 scrollbar-none min-h-0">
+                <nav className="flex-1 overflow-y-auto pb-4 space-y-1 scrollbar-none">
                   {navItems.map((item) => {
                     const Icon = item.icon;
                     const active = isActive(item.page);
@@ -196,9 +196,9 @@ export default function Layout({ children }) {
                 </nav>
 
                 {user && (
-                  <div className="pt-4 mt-2 border-t border-white/10 flex-shrink-0">
+                  <div className="pt-4 mt-2 border-t border-white/10">
                     <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/5 mb-2">
-                      <Avatar className="w-9 h-9 border border-primary/30 flex-shrink-0">
+                      <Avatar className="w-9 h-9 border border-primary/30">
                         <AvatarFallback className="bg-gradient-primary text-white text-sm">
                           {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
                         </AvatarFallback>
@@ -216,7 +216,7 @@ export default function Layout({ children }) {
                       onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:text-red-400 hover:bg-red-500/10 transition-colors active:scale-98"
                     >
-                      <LogOut className="w-4 h-4 flex-shrink-0" />
+                      <LogOut className="w-4 h-4" />
                       <span className="text-sm font-medium">Wyloguj się</span>
                     </button>
                   </div>
@@ -229,8 +229,8 @@ export default function Layout({ children }) {
 
       {/* Sidebar dla desktop */}
       <div className="hidden lg:block fixed top-0 left-0 h-full w-72 bg-slate-900 shadow-2xl z-0">
-        <div className="flex flex-col h-full p-4 overflow-hidden">
-          <div className="flex items-center gap-3 mb-8 flex-shrink-0">
+        <div className="flex flex-col h-full p-4">
+          <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
               <Car className="w-5 h-5 text-white" />
             </div>
@@ -240,7 +240,7 @@ export default function Layout({ children }) {
             </div>
           </div>
 
-          <nav className="flex-1 overflow-y-auto pb-4 space-y-1 scrollbar-none min-h-0">
+          <nav className="flex-1 overflow-y-auto pb-4 space-y-1 scrollbar-none">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.page);
@@ -265,9 +265,9 @@ export default function Layout({ children }) {
           </nav>
 
           {user && (
-            <div className="pt-4 mt-2 border-t border-white/10 flex-shrink-0">
+            <div className="pt-4 mt-2 border-t border-white/10">
               <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/5 mb-2">
-                <Avatar className="w-9 h-9 border border-primary/30 flex-shrink-0">
+                <Avatar className="w-9 h-9 border border-primary/30">
                   <AvatarFallback className="bg-gradient-primary text-white text-sm">
                     {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
                   </AvatarFallback>
@@ -285,7 +285,7 @@ export default function Layout({ children }) {
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:text-red-400 hover:bg-red-500/10 transition-colors"
               >
-                <LogOut className="w-4 h-4 flex-shrink-0" />
+                <LogOut className="w-4 h-4" />
                 <span className="text-sm font-medium">Wyloguj się</span>
               </button>
             </div>
@@ -293,13 +293,11 @@ export default function Layout({ children }) {
         </div>
       </div>
 
-      {/* Główna treść - POPRAWIONE dla desktop (obsługa szerokich treści) */}
-      <main className="lg:ml-72 min-h-screen">
-        <div className="pt-14 lg:pt-0">
-          <div className="p-4 lg:p-6 overflow-x-auto">
-            <div className="min-w-max lg:min-w-0 w-full">
-              {children}
-            </div>
+      {/* Główna treść – uproszczona */}
+      <main className="lg:ml-72 min-h-screen w-full overflow-x-hidden">
+        <div className="pt-14 lg:pt-0 w-full">
+          <div className="p-3 lg:p-6 w-full">
+            {children}
           </div>
         </div>
       </main>
