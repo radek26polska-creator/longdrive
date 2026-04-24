@@ -55,6 +55,7 @@
   }
 
   body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
     @apply text-foreground transition-colors duration-300;
   }
 }
@@ -170,10 +171,11 @@
 
 /* ===== KAFELKI ===== */
 .glass-card {
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(30, 41, 59, 0.6);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 /* ===== KARTA DROGOWA ===== */
@@ -219,7 +221,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Ukrycie pasków przewijania - tylko wizualne, przewijanie działa */
+/* Ukrycie pasków przewijania */
 .scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -227,170 +229,37 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
-
-/* ===== STYLE STAXX (nowy wygląd) ===== */
-.staxx-card {
-  @apply bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6 shadow-xl;
+/* NAPRAWA UCIĘTEJ PRAWEJ STRONY */
+main, .lg\:ml-72 {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
 }
 
-.staxx-stat-number {
-  @apply text-3xl font-bold text-white;
+.w-full {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+/* ===== ZMNIEJSZENIE WSZYSTKICH FORMULARZY ===== */
+.dialog-content,
+[role="dialog"] > div,
+.max-w-md,
+.max-w-lg,
+.max-w-xl,
+.max-w-2xl {
+  max-width: 90% !important;
+  width: 400px !important;
+  margin: 0 auto !important;
 }
 
-.staxx-stat-label {
-  @apply text-sm text-slate-400;
-}
-
-.staxx-section-title {
-  @apply text-lg font-semibold text-white mb-4 flex items-center gap-2;
-}
-
-/* Kalendarz STAXX */
-.staxx-calendar {
-  @apply w-full border-collapse;
-}
-
-.staxx-calendar th {
-  @apply text-xs text-slate-400 font-normal py-2;
-}
-
-.staxx-calendar td {
-  @apply text-center py-2 text-sm text-white cursor-pointer hover:bg-indigo-500/20 rounded-lg transition-colors;
-}
-
-.staxx-calendar td.selected {
-  @apply bg-gradient-primary text-white;
-}
-
-.staxx-calendar td.has-event {
-  @apply border-b-2 border-indigo-500;
-}
-
-/* Karty kierowców (mentorzy) */
-.staxx-mentor-card {
-  @apply flex items-center gap-3 p-3 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-all cursor-pointer;
-}
-
-.staxx-mentor-avatar {
-  @apply w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold;
-}
-
-.staxx-mentor-name {
-  @apply text-white font-medium text-sm;
-}
-
-.staxx-mentor-title {
-  @apply text-xs text-slate-400;
-}
-
-.staxx-mentor-exp {
-  @apply text-xs text-indigo-400;
-}
-
-/* ===== DODATKOWE STYLE STAXX (uzupełnienie) ===== */
-
-/* Przyciski */
-.btn-staxx-primary {
-  @apply bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-medium py-2 px-4 rounded-xl transition-all duration-200 shadow-lg shadow-indigo-500/25;
-}
-
-.btn-staxx-secondary {
-  @apply bg-slate-700/50 hover:bg-slate-700 text-slate-200 font-medium py-2 px-4 rounded-xl transition-all duration-200 border border-slate-600;
-}
-
-/* Dashboard */
-.staxx-welcome {
-  @apply text-theme-white text-2xl font-bold;
-}
-
-.staxx-subtitle {
-  @apply text-slate-400 text-sm;
-}
-
-.staxx-stats-grid {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
-}
-
-.staxx-two-columns {
-  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
-}
-
-/* Karty statystyk */
-.staxx-stat-card {
-  @apply bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-white/5 p-5 shadow-xl hover:shadow-indigo-500/10 transition-all duration-300;
-}
-
-.staxx-stat-icon {
-  @apply w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center;
-}
-
-.staxx-stat-value {
-  @apply text-3xl font-bold text-white;
-}
-
-.staxx-stat-trend-up {
-  @apply flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400;
-}
-
-.staxx-stat-trend-down {
-  @apply flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400;
-}
-
-/* Kalendarz - dodatkowe */
-.staxx-calendar-header {
-  @apply flex items-center justify-between mb-4;
-}
-
-.staxx-calendar-month {
-  @apply text-theme-white font-semibold text-lg;
-}
-
-.staxx-calendar-nav {
-  @apply flex gap-2;
-}
-
-.staxx-calendar-nav-button {
-  @apply w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors;
-}
-
-/* Lista mentorów */
-.staxx-mentors-list {
-  @apply space-y-2 max-h-96 overflow-y-auto;
-}
-
-/* Eventy w kalendarzu */
-.staxx-event-item {
-  @apply flex items-start gap-3 p-3 rounded-xl border;
-}
-
-.staxx-event-icon {
-  @apply w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center;
-}
-
-.staxx-event-title {
-  @apply text-theme-white text-sm font-medium;
-}
-
-.staxx-event-badge {
-  @apply text-xs px-2 py-0.5 rounded-full bg-slate-700/50;
-}
-
-/* Responsywność dla STAXX */
-@media (max-width: 768px) {
-  .staxx-stats-grid {
-    @apply grid-cols-2;
-  }
-  
-  .staxx-two-columns {
-    @apply grid-cols-1;
-  }
-  
-  .staxx-stat-value {
-    @apply text-2xl;
-  }
-  
-  .staxx-calendar th,
-  .staxx-calendar td {
-    @apply text-xs py-1;
+/* Dla bardzo małych ekranów */
+@media (max-width: 640px) {
+  .dialog-content,
+  [role="dialog"] > div,
+  .max-w-md,
+  .max-w-lg,
+  .max-w-xl,
+  .max-w-2xl {
+    width: 95% !important;
+    max-width: 95% !important;
   }
 }
