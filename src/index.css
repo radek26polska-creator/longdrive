@@ -670,3 +670,46 @@ textarea {
   max-height: 200px;
   overflow-y: auto;
 }
+/* ===== UKRYCIE PASKÓW PRZEWIJANIA WSZĘDZIE ===== */
+
+/* Ukryj pasek przewijania dla całej aplikacji - działa na wszystkich urządzeniach */
+html, body, #root, .app-container, main {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar,
+main::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+}
+
+/* Ukryj pasek dla wszystkich elementów z przewijaniem */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Specjalnie dla dialogów i modali */
+.dialog-content,
+.modal-content,
+.drawer-content,
+[role="dialog"],
+[role="dialog"] > div {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.dialog-content::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar,
+.drawer-content::-webkit-scrollbar,
+[role="dialog"]::-webkit-scrollbar {
+  display: none !important;
+}
