@@ -7,9 +7,8 @@ import {
   Fuel, Wrench, TrendingUp, Activity, Plus, ArrowRight,
   Car, UserCheck, AlertTriangle, CheckCircle, Clock,
   Battery, Thermometer, Gauge, Route, Navigation, Eye,
-  BarChart3
+  BarChart3, Award, Target, Zap, Shield, Coffee
 } from "lucide-react";
-import StatCard from "@/components/ui/StatCard";
 import GlassCard from "@/components/ui/GlassCard";
 import PageHeader from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import WeatherWidget from "@/components/weather/WeatherWidget";
 import CalendarWidget from "@/components/calendar/CalendarWidget";
+import StatCardSTAXX from "@/components/ui/StatCardSTAXX";
+import MentorCard from "@/components/ui/MentorCard";
 import api from "@/api/apiClient";
 import { useAppSettings } from "@/lib/ThemeContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -142,6 +143,7 @@ export default function Dashboard() {
     const totalMileage = vehicles.reduce((sum, v) => sum + (v.mileage || 0), 0);
     const totalServiceCost = services.reduce((sum, s) => sum + (s.cost || 0), 0);
     const totalFuelCost = refuelings.reduce((sum, r) => sum + (r.cost || 0), 0);
+    const avgFuelConsumption = vehicles.reduce((sum, v) => sum + (v.fuelConsumption || 7.5), 0) / (vehicles.length || 1);
 
     return {
       availableVehicles,
@@ -153,6 +155,7 @@ export default function Dashboard() {
       totalServiceCost,
       totalFuelCost,
       totalTrips: trips.length,
+      avgFuelConsumption,
     };
   }, [vehicles, trips, services, refuelings]);
 
@@ -218,7 +221,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500" />
       </div>
     );
   }
@@ -228,6 +231,9 @@ export default function Dashboard() {
     ? { city: companySettings.city }
     : null;
 
+  // Aktywni kierowcy (do listy mentorów)
+  const activeDrivers = drivers.filter(d => d.status === 'active').slice(0, 6);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -236,192 +242,157 @@ export default function Dashboard() {
         icon={LayoutDashboard}
       />
 
-      {/* Karty statystyk */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
+      {/* Karty statystyk - nowy wygląd STAXX */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCardSTAXX
           title="Pojazdy"
           value={vehicles.length}
+          subtitle={`${stats.availableVehicles} dostępnych`}
           icon={Truck}
-          trend={stats.availableVehicles}
-          trendLabel="dostępnych"
-          color="blue"
+          trend="up"
+          trendValue="+2"
           onClick={() => navigate("/vehicles")}
         />
-        <StatCard
+        <StatCardSTAXX
           title="Kierowcy"
           value={drivers.length}
+          subtitle={`${drivers.filter(d => d.status === 'active').length} aktywnych`}
           icon={Users}
-          trend={drivers.filter((d) => d.status === "active").length}
-          trendLabel="aktywnych"
-          color="green"
+          trend="up"
+          trendValue="+1"
           onClick={() => navigate("/drivers")}
         />
-        <StatCard
+        <StatCardSTAXX
           title="Aktywne trasy"
           value={stats.activeTrips}
+          subtitle={`${stats.completedTrips} zakończonych`}
           icon={Route}
-          trend={stats.completedTrips}
-          trendLabel="zakończonych"
-          color="purple"
+          trend={stats.activeTrips > 0 ? "up" : "down"}
+          trendValue={stats.activeTrips > 0 ? "+" + stats.activeTrips : "0"}
           onClick={() => navigate("/trips")}
         />
-        <StatCard
+        <StatCardSTAXX
           title="Przejechane km"
           value={`${(stats.totalMileage / 1000).toFixed(0)}k`}
+          subtitle={`${stats.totalTrips} tras łącznie`}
           icon={Gauge}
-          trend={stats.totalTrips}
-          trendLabel="tras łącznie"
-          color="orange"
+          trend="up"
+          trendValue="+12%"
           onClick={() => navigate("/trips")}
         />
       </div>
 
-      {/* Alerty i szybkie akcje */}
-      {(lowFuelVehicles.length > 0 || activeTripsList.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {lowFuelVehicles.length > 0 && (
-            <GlassCard className="p-4 border border-red-500/20">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-5 h-5 text-red-400" />
-                <h3 className="text-theme-white font-semibold">
-                  Niski poziom paliwa ({lowFuelVehicles.length})
-                </h3>
-              </div>
-              <div className="space-y-2">
-                {lowFuelVehicles.slice(0, 3).map((v) => (
-                  <div key={v.id} className="flex items-center justify-between text-sm">
-                    <span className="text-theme-white-secondary">
-                      {v.name || v.make} — {v.licensePlate}
-                    </span>
-                    <Badge variant="destructive" className="text-xs">
-                      {v.fuelLevel || 0} L
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3 w-full text-xs"
-                onClick={() => navigate("/refueling")}
-              >
-                Zarejestruj tankowanie
-                <ArrowRight className="w-3 h-3 ml-1" />
-              </Button>
-            </GlassCard>
-          )}
-          {activeTripsList.length > 0 && (
-            <GlassCard className="p-4 border border-blue-500/20">
-              <div className="flex items-center gap-2 mb-3">
-                <Navigation className="w-5 h-5 text-blue-400" />
-                <h3 className="text-theme-white font-semibold">
-                  Aktywne trasy ({activeTripsList.length})
-                </h3>
-              </div>
-              <div className="space-y-2">
-                {activeTripsList.slice(0, 3).map((t) => (
-                  <div key={t.id} className="flex items-center justify-between text-sm">
-                    <span className="text-theme-white-secondary">
-                      {getVehicleName(t.vehicleId)}
-                    </span>
-                    <Badge className="text-xs bg-blue-500/20 text-blue-400">
-                      W trakcie
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3 w-full text-xs"
-                onClick={() => navigate("/trips")}
-              >
-                Zobacz wszystkie trasy
-                <ArrowRight className="w-3 h-3 ml-1" />
-              </Button>
-            </GlassCard>
-          )}
+      {/* Dwie kolumny: Kalendarz + Statystyki boczne */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Lewa kolumna - Kalendarz */}
+        <div className="lg:col-span-2">
+          <CalendarWidget
+            trips={trips}
+            services={services}
+            refuelings={refuelings}
+            vehicles={vehicles}
+          />
         </div>
-      )}
 
-      {/* Widgety: Pogoda + Ceny paliw */}
-      {(modulesSettings.weather !== false || modulesSettings.fuelPrices !== false) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {modulesSettings.weather !== false && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+        {/* Prawa kolumna - Statystyki boczne (jak w STAXX) */}
+        <div className="space-y-4">
+          <GlassCard variant="stats" className="p-4">
+            <h3 className="text-theme-white font-semibold text-sm mb-4 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-indigo-400" />
+              Statystyki kosztów
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-2 rounded-lg bg-slate-800/30">
+                <span className="text-slate-400 text-sm">Serwisy</span>
+                <span className="text-white font-bold">{stats.totalServiceCost.toFixed(2)} zł</span>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded-lg bg-slate-800/30">
+                <span className="text-slate-400 text-sm">Tankowania</span>
+                <span className="text-white font-bold">{stats.totalFuelCost.toFixed(2)} zł</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+                <span className="text-white font-semibold text-sm">Łącznie</span>
+                <span className="text-indigo-400 font-bold">{(stats.totalServiceCost + stats.totalFuelCost).toFixed(2)} zł</span>
+              </div>
+            </div>
+          </GlassCard>
+
+          <GlassCard variant="stats" className="p-4">
+            <h3 className="text-theme-white font-semibold text-sm mb-4 flex items-center gap-2">
+              <Fuel className="w-4 h-4 text-green-400" />
+              Średnie spalanie
+            </h3>
+            <div className="text-center py-2">
+              <p className="text-3xl font-bold text-white">{stats.avgFuelConsumption.toFixed(1)}</p>
+              <p className="text-slate-400 text-sm">L/100km</p>
+            </div>
+            <Progress 
+              value={(stats.avgFuelConsumption / 15) * 100} 
+              className="h-2 bg-slate-700 mt-2"
+            />
+            <p className="text-xs text-slate-500 text-center mt-2">Norma flotowa: 7.5 L/100km</p>
+          </GlassCard>
+
+          <GlassCard variant="stats" className="p-4">
+            <h3 className="text-theme-white font-semibold text-sm mb-4 flex items-center gap-2">
+              <Award className="w-4 h-4 text-yellow-400" />
+              Oszczędności paliwa
+            </h3>
+            <div className="text-center py-2">
+              <p className="text-3xl font-bold text-green-400">
+                {services.reduce((sum, s) => sum + (s.fuelSavings || 0), 0).toFixed(1)} L
+              </p>
+              <p className="text-slate-400 text-sm">zaoszczędzonego paliwa</p>
+            </div>
+          </GlassCard>
+        </div>
+      </div>
+
+      {/* Lista kierowców (mentorzy) */}
+      <GlassCard variant="mentor" className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-theme-white font-semibold flex items-center gap-2">
+            <UserCheck className="w-4 h-4 text-primary" />
+            Nasi kierowcy
+          </h3>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs text-indigo-400 hover:text-indigo-300"
+            onClick={() => navigate("/drivers")}
+          >
+            Zobacz wszystkich
+            <ArrowRight className="w-3 h-3 ml-1" />
+          </Button>
+        </div>
+        
+        {activeDrivers.length === 0 ? (
+          <div className="text-center py-8">
+            <Users className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+            <p className="text-slate-400">Brak aktywnych kierowców</p>
+            <Button
+              className="mt-3 bg-gradient-primary text-sm"
+              onClick={() => navigate("/drivers")}
             >
-              <WeatherWidget
-                location={weatherLocation}
-                apiKey={apiSettings.openWeatherApiKey || null}
-                showForecast={true}
-                autoRefresh={true}
+              <Plus className="w-4 h-4 mr-2" />
+              Dodaj kierowcę
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {activeDrivers.map((driver, idx) => (
+              <MentorCard
+                key={driver.id}
+                driver={driver}
+                delay={idx * 0.05}
+                onClick={() => navigate(`/drivers/${driver.id}`)}
               />
-            </motion.div>
-          )}
-          {modulesSettings.fuelPrices !== false && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-            >
-              <GlassCard className="p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <Fuel className="w-5 h-5 text-green-400" />
-                  <h3 className="text-theme-white font-semibold">Ceny paliw</h3>
-                  <Badge className="text-xs bg-green-500/20 text-green-400 ml-auto">
-                    Live
-                  </Badge>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    { name: "Pb95", color: "text-green-400", price: "5.89", unit: "zł/L" },
-                    { name: "Pb98", color: "text-blue-400", price: "6.29", unit: "zł/L" },
-                    { name: "ON", color: "text-yellow-400", price: "5.99", unit: "zł/L" },
-                    { name: "LPG", color: "text-orange-400", price: "2.99", unit: "zł/L" },
-                  ].map((fuel) => (
-                    <div
-                      key={fuel.name}
-                      className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50"
-                    >
-                      <span className={`font-semibold ${fuel.color}`}>
-                        {fuel.name}
-                      </span>
-                      <span className="text-theme-white font-bold">
-                        {fuel.price}{" "}
-                        <span className="text-xs text-theme-white-muted">
-                          {fuel.unit}
-                        </span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-theme-white-muted mt-3 text-center">
-                  * Ceny orientacyjne — skonfiguruj klucz CollectAPI w ustawieniach
-                </p>
-              </GlassCard>
-            </motion.div>
-          )}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </GlassCard>
 
-      {/* Kalendarz */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <CalendarWidget
-          trips={trips}
-          services={services}
-          refuelings={refuelings}
-          vehicles={vehicles}
-        />
-      </motion.div>
-
-      {/* Zakładki z danymi */}
+      {/* Zakładki z danymi (pozostawiamy oryginalne, ale zaktualizowane) */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full bg-slate-800/50 border border-slate-700 p-1 flex flex-wrap gap-1 h-auto">
           {[
@@ -434,7 +405,7 @@ export default function Dashboard() {
             <TabsTrigger
               key={id}
               value={id}
-              className="flex-1 data-[state=active]:bg-gradient-primary flex items-center gap-1.5 text-xs"
+              className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 flex items-center gap-1.5 text-xs"
             >
               <Icon className="w-3.5 h-3.5" />
               {label}
@@ -444,86 +415,37 @@ export default function Dashboard() {
 
         {/* PRZEGLĄD */}
         <TabsContent value="overview" className="mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Statystyki kosztów */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Ostatnie trasy */}
             <GlassCard className="p-4">
               <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                Koszty
+                <Route className="w-4 h-4 text-primary" />
+                Ostatnie trasy
               </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-theme-white-secondary text-sm">Serwisy</span>
-                  <span className="text-theme-white font-semibold">
-                    {stats.totalServiceCost.toFixed(2)} zł
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-theme-white-secondary text-sm">Tankowania</span>
-                  <span className="text-theme-white font-semibold">
-                    {stats.totalFuelCost.toFixed(2)} zł
-                  </span>
-                </div>
-                <div className="flex justify-between items-center border-t border-slate-700 pt-2">
-                  <span className="text-theme-white font-semibold text-sm">Łącznie</span>
-                  <span className="text-primary font-bold">
-                    {(stats.totalServiceCost + stats.totalFuelCost).toFixed(2)} zł
-                  </span>
-                </div>
-              </div>
-            </GlassCard>
-
-            {/* Stan floty */}
-            <GlassCard className="p-4">
-              <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
-                <Car className="w-4 h-4 text-blue-400" />
-                Stan floty
-              </h3>
-              <div className="space-y-2">
-                {[
-                  { label: "Dostępne", count: stats.availableVehicles, color: "bg-green-400" },
-                  { label: "W użyciu", count: stats.inUseVehicles, color: "bg-blue-400" },
-                  { label: "W serwisie", count: stats.maintenanceVehicles, color: "bg-yellow-400" },
-                ].map(({ label, count, color }) => (
-                  <div key={label} className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${color}`} />
-                    <span className="text-theme-white-secondary text-sm flex-1">{label}</span>
-                    <span className="text-theme-white font-semibold">{count}</span>
-                  </div>
-                ))}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-3 w-full text-xs"
-                onClick={() => navigate("/vehicles")}
-              >
-                Zarządzaj flotą <ArrowRight className="w-3 h-3 ml-1" />
-              </Button>
-            </GlassCard>
-
-            {/* Nadchodzące serwisy */}
-            <GlassCard className="p-4">
-              <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
-                <Wrench className="w-4 h-4 text-yellow-400" />
-                Nadchodzące serwisy
-              </h3>
-              {upcomingServices.length === 0 ? (
+              {recentTrips.length === 0 ? (
                 <div className="text-center py-4">
-                  <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                  <p className="text-theme-white-secondary text-sm">Brak zaplanowanych serwisów</p>
+                  <Route className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                  <p className="text-slate-400 text-sm">Brak zarejestrowanych tras</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {upcomingServices.map((s) => (
-                    <div key={s.id} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700">
-                      <p className="text-theme-white text-sm font-medium">
-                        {serviceTypeLabels[s.serviceType] || s.name || "Serwis"}
-                      </p>
-                      <p className="text-theme-white-muted text-xs">
-                        {getVehicleName(s.vehicleId)} •{" "}
-                        {s.date ? format(new Date(s.date), "dd MMM yyyy", { locale: pl }) : "---"}
-                      </p>
+                  {recentTrips.slice(0, 4).map((trip) => (
+                    <div
+                      key={trip.id}
+                      className="flex items-center justify-between p-2 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/trips/${trip.id}`)}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-theme-white text-sm font-medium truncate">
+                          {trip.startLocation || "Start"} → {trip.endLocation || "Cel"}
+                        </p>
+                        <p className="text-slate-400 text-xs">
+                          {getVehicleName(trip.vehicleId)} • {getDriverName(trip.driverId)}
+                        </p>
+                      </div>
+                      <Badge className={`text-xs ${tripStatusColors[trip.status] || "bg-slate-500/20 text-slate-400"}`}>
+                        {tripStatusLabels[trip.status] || trip.status}
+                      </Badge>
                     </div>
                   ))}
                 </div>
@@ -532,11 +454,73 @@ export default function Dashboard() {
                 variant="ghost"
                 size="sm"
                 className="mt-3 w-full text-xs"
-                onClick={() => navigate("/services")}
+                onClick={() => navigate("/trips")}
               >
-                Wszystkie serwisy <ArrowRight className="w-3 h-3 ml-1" />
+                Wszystkie trasy <ArrowRight className="w-3 h-3 ml-1" />
               </Button>
             </GlassCard>
+
+            {/* Nadchodzące serwisy i tankowania */}
+            <div className="space-y-4">
+              <GlassCard className="p-4">
+                <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                  <Wrench className="w-4 h-4 text-yellow-400" />
+                  Nadchodzące serwisy
+                </h3>
+                {upcomingServices.length === 0 ? (
+                  <div className="text-center py-4">
+                    <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                    <p className="text-slate-400 text-sm">Brak zaplanowanych serwisów</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {upcomingServices.map((s) => (
+                      <div key={s.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-800/30">
+                        <div>
+                          <p className="text-theme-white text-sm font-medium">
+                            {serviceTypeLabels[s.serviceType] || s.name || "Serwis"}
+                          </p>
+                          <p className="text-slate-400 text-xs">{getVehicleName(s.vehicleId)}</p>
+                        </div>
+                        <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">
+                          {s.date ? format(new Date(s.date), "dd MMM", { locale: pl }) : "---"}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </GlassCard>
+
+              <GlassCard className="p-4">
+                <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                  <Fuel className="w-4 h-4 text-green-400" />
+                  Ostatnie tankowania
+                </h3>
+                {recentRefuelings.length === 0 ? (
+                  <div className="text-center py-4">
+                    <Fuel className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                    <p className="text-slate-400 text-sm">Brak tankowań</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {recentRefuelings.map((r) => (
+                      <div key={r.id} className="flex justify-between items-center p-2 rounded-lg bg-slate-800/30">
+                        <div>
+                          <p className="text-theme-white text-sm font-medium">{getVehicleName(r.vehicleId)}</p>
+                          <p className="text-slate-400 text-xs">
+                            {r.date ? format(new Date(r.date), "dd MMM yyyy", { locale: pl }) : "---"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-white font-bold text-sm">{r.liters || 0} L</p>
+                          {r.cost && <p className="text-slate-400 text-xs">{r.cost} zł</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </GlassCard>
+            </div>
           </div>
         </TabsContent>
 
@@ -546,7 +530,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-theme-white font-semibold flex items-center gap-2">
                 <Route className="w-4 h-4 text-primary" />
-                Ostatnie trasy
+                Historia tras
               </h3>
               <Button size="sm" variant="outline" onClick={() => navigate("/trips")}>
                 <Plus className="w-4 h-4 mr-1" /> Nowa trasa
@@ -717,7 +701,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {vehicles.map((vehicle) => {
+                {vehicles.slice(0, 6).map((vehicle) => {
                   const fuelPercent = vehicle.tankCapacity
                     ? ((vehicle.fuelLevel || 0) / vehicle.tankCapacity) * 100
                     : 0;
@@ -767,6 +751,17 @@ export default function Dashboard() {
                   );
                 })}
               </div>
+            )}
+            {vehicles.length > 6 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-3 w-full text-xs"
+                onClick={() => navigate("/vehicles")}
+              >
+                Zobacz wszystkie pojazdy ({vehicles.length})
+                <ArrowRight className="w-3 h-3 ml-1" />
+              </Button>
             )}
           </GlassCard>
         </TabsContent>
