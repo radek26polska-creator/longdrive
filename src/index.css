@@ -713,3 +713,108 @@ main::-webkit-scrollbar {
 [role="dialog"]::-webkit-scrollbar {
   display: none !important;
 }
+/* ===== POPRAWA DOTYKU I PORUSZANIA NA MOBILNYCH ===== */
+
+@media (max-width: 768px) {
+  /* Większe przestrzenie dotykowe dla linków i przycisków w nawigacji */
+  nav a,
+  nav button,
+  .sidebar a,
+  .sidebar button {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
+  }
+  
+  /* Lepsze rozstawienie elementów w kartach */
+  .glass-card {
+    padding: 16px !important;
+  }
+  
+  /* Większe przyciski akcji */
+  .action-buttons-container button,
+  .flex.gap-2 button {
+    min-height: 48px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  
+  /* Lepsze odstępy między elementami listy */
+  .space-y-4 > * + * {
+    margin-top: 16px !important;
+  }
+  
+  /* Płynniejsze przewijanie */
+  * {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Lepsze pola formularza na mobile */
+  input, select, textarea, button {
+    font-size: 16px !important;
+    border-radius: 12px !important;
+  }
+  
+  /* Większe headery */
+  .text-3xl {
+    font-size: 1.5rem !important;
+  }
+  
+  /* Lepsze odstępy w nagłówku */
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  
+  /* Przyciski w nagłówku na pełną szerokość */
+  .page-header .flex.gap-2 {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .page-header .flex.gap-2 button {
+    flex: 1 !important;
+  }
+  
+  /* Karty filtrow na mobile */
+  .glass-card .flex.flex-col.lg\:flex-row {
+    flex-direction: column !important;
+  }
+  
+  .glass-card .flex.flex-col.lg\:flex-row > * {
+    width: 100% !important;
+  }
+  
+  /* Poprawa wyświetlania kart z przejazdami */
+  .glass-card .flex.flex-col.lg\:flex-row.lg\:items-start {
+    flex-direction: column !important;
+  }
+  
+  /* Lepsze badge i znaczniki */
+  .badge, .inline-flex.items-center.gap-1 {
+    flex-wrap: wrap !important;
+  }
+}
+/* ===== KARTA DROGOWA NA MOBILNYCH ===== */
+
+@media (max-width: 768px) {
+  #karta-drogowa-print,
+  #polecenie-wyjazdu-print {
+    font-size: 10px !important;
+  }
+  
+  #karta-drogowa-print table,
+  #polecenie-wyjazdu-print table {
+    font-size: 8px !important;
+  }
+  
+  #karta-drogowa-print td,
+  #karta-drogowa-print th,
+  #polecenie-wyjazdu-print td,
+  #polecenie-wyjazdu-print th {
+    padding: 4px 2px !important;
+  }
+}
