@@ -818,3 +818,38 @@ main::-webkit-scrollbar {
     padding: 4px 2px !important;
   }
 }
+/* ===== POPRAWKA DLA SZEROKICH TREŚCI NA DESKTOP ===== */
+
+/* Zapewnij, że szerokie elementy (jak kalendarz) mają miejsce na przewijanie */
+@media (min-width: 1024px) {
+  .overflow-x-auto {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Kontener treści nie powinien być sztywniejszy niż viewport */
+  .lg\:ml-72 {
+    width: calc(100% - 18rem);
+  }
+  
+  /* Dla bardzo szerokich elementów - pozwól na przewijanie */
+  .w-full.overflow-x-auto {
+    max-width: 100%;
+  }
+}
+
+/* Dla kalendarza i innych szerokich komponentów */
+.calendar-container,
+.fc,
+.fc-media-screen,
+.react-calendar {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Tabelki i siatki - przewijanie poziome */
+.table-wrapper,
+.data-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
