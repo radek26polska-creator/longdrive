@@ -1027,7 +1027,7 @@ export default function Trips() {
 
       {/* Start Trip Dialog */}
       <Dialog open={isStartDialogOpen} onOpenChange={setIsStartDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white">
+        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <Play className="w-5 h-5 text-emerald-400" />
@@ -1207,8 +1207,7 @@ export default function Trips() {
 
       {/* End Trip Dialog */}
       <Dialog open={isEndDialogOpen} onOpenChange={setIsEndDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
+<DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md max-h-[90vh] overflow-y-auto">          <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <StopCircle className="w-5 h-5 text-red-400" />
               Zakończ trasę
