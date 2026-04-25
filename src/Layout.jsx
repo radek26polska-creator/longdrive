@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppSettings } from "@/lib/ThemeContext";
 import { useAuth } from "@/lib/AuthContext";
 
+// Mapowanie stron na ścieżki URL
 const pageToPath = {
   Dashboard: "/",
   Vehicles: "/vehicles",
@@ -38,6 +39,7 @@ const pageToPath = {
   Settings: "/settings",
 };
 
+// Wszystkie pozycje menu z powiązaniem do klucza modułu
 const allNavItems = [
   { name: "Strona główna", icon: LayoutDashboard, page: "Dashboard", moduleKey: null },
   { name: "Pojazdy", icon: Car, page: "Vehicles", moduleKey: null },
@@ -52,13 +54,15 @@ const allNavItems = [
   { name: "Ustawienia", icon: Settings, page: "Settings", moduleKey: null },
 ];
 
-export default function Layout({ children }) {
+export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modulesSettings, setModulesSettings] = useState({});
+  const { settings } = useAppSettings();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Wczytaj ustawienia modułów z localStorage przy każdym renderze
   useEffect(() => {
     const loadModules = () => {
       const saved = localStorage.getItem("modules_settings");
@@ -69,6 +73,7 @@ export default function Layout({ children }) {
       }
     };
     loadModules();
+    // Nasłuchuj na zmiany (np. po zapisie ustawień)
     window.addEventListener("storage", loadModules);
     window.addEventListener("modulesSettingsChanged", loadModules);
     return () => {
@@ -77,216 +82,161 @@ export default function Layout({ children }) {
     };
   }, []);
 
+  // Filtruj pozycje menu wg ustawień modułów
   const navItems = allNavItems.filter((item) => {
-    if (!item.moduleKey) return true;
+    if (!item.moduleKey) return true; // zawsze widoczne
     const moduleValue = modulesSettings[item.moduleKey];
-    return moduleValue !== false;
+    return moduleValue !== false; // domyślnie widoczne, ukryte tylko gdy false
   });
 
   const handleLogout = () => {
     logout();
     navigate("/login");
-    setSidebarOpen(false);
   };
 
   const isActive = (page) => {
     if (page === "Dashboard") return location.pathname === "/";
     if (page === "TripDetail") return location.pathname.startsWith("/trips/");
-    return location.pathname.toLowerCase() === `/${page.toLowerCase()}/`;
+    return location.pathname.toLowerCase() === `/${page.toLowerCase()}` ||
+           location.pathname.toLowerCase().startsWith(`/${page.toLowerCase()}/`);
   };
 
-  const getPageUrl = (page) => pageToPath[page] || `/${page.toLowerCase()}`;
+  // 🔧 POPRAWA: zmieniono 'path' na 'page'
+  const getPageUrl = (page) => {
+    return pageToPath[page] || `/${page.toLowerCase()}`;
+  };
 
   return (
-    <div className="flex min-h-screen w-full">
-      {/* Sidebar – zawsze widoczny na desktop */}
-      <div className="hidden lg:block fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-white/10 z-20">
-        <div className="flex flex-col h-full p-4">
-          <div className="flex items-center gap-3 mb-8">
+    <div className="min-h-screen">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/5">
+        <div className="flex items-center justify-between px-4 h-16">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
               <Car className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h1 className="font-bold text-white text-lg">LongDrive</h1>
-              <p className="text-xs text-white/60">Zarządzanie Flotą</p>
-            </div>
+            <span className="font-bold text-theme-white text-lg">LongDrive</span>
           </div>
-
-          <nav className="flex-1 overflow-y-auto pb-4 space-y-1 scrollbar-none">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.page);
-              return (
-                <Link key={item.page} to={getPageUrl(item.page)} className="block">
-                  <div
-                    className={`
-                      flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200
-                      ${active
-                        ? "bg-gradient-primary text-white shadow-lg shadow-primary/25"
-                        : "text-white/70 hover:text-white hover:bg-white/10"
-                      }
-                    `}
-                  >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
-                    <span className="font-medium text-sm">{item.name}</span>
-                    {active && <ChevronRight className="w-4 h-4 ml-auto opacity-70" />}
-                  </div>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {user && (
-            <div className="pt-4 mt-2 border-t border-white/10">
-              <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/5 mb-2">
-                <Avatar className="w-9 h-9 border border-primary/30">
-                  <AvatarFallback className="bg-gradient-primary text-white text-sm">
-                    {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
-                    {user.name || "Użytkownik"}
-                  </p>
-                  <p className="text-xs text-white/50 truncate">
-                    {user.email}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white/70 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">Wyloguj się</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Header mobilny */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/10">
-        <div className="flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <Car className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-white text-base">LongDrive</span>
-          </div>
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 -mr-2 rounded-lg active:bg-white/10 transition-colors min-w-[44px] min-h-[44px]"
-            aria-label="Otwórz menu"
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-theme-white-secondary hover:text-theme-white"
           >
-            <Menu className="w-6 h-6 text-white" />
-          </button>
+            {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </Button>
         </div>
       </div>
 
-      {/* Mobilny sidebar – overlay */}
+      {/* Sidebar */}
       <AnimatePresence>
-        {sidebarOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSidebarOpen(false)}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-            />
-            <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "tween", duration: 0.2 }}
-              className="fixed top-0 left-0 z-50 h-full w-64 bg-slate-900 shadow-2xl lg:hidden"
-            >
-              <div className="flex flex-col h-full p-4">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                      <Car className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="font-bold text-white text-base">LongDrive</span>
-                  </div>
-                  <button
-                    onClick={() => setSidebarOpen(false)}
-                    className="p-2 -mr-2 rounded-lg active:bg-white/10 transition-colors min-w-[44px] min-h-[44px]"
-                  >
-                    <X className="w-5 h-5 text-white" />
-                  </button>
+        {(sidebarOpen || true) && (
+          <motion.aside
+            initial={{ x: -280 }}
+            animate={{ x: sidebarOpen ? 0 : window.innerWidth >= 1024 ? 0 : -280 }}
+            exit={{ x: -280 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className={`fixed top-0 left-0 z-40 h-full w-72 sidebar ${
+              sidebarOpen ? "block" : "hidden lg:block"
+            }`}
+          >
+            <div className="flex flex-col h-full p-6">
+              {/* Logo */}
+              <div className="flex items-center gap-3 mb-10">
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-lg"
+                >
+                  <Car className="w-6 h-6 text-white" />
+                </motion.div>
+                <div>
+                  <h1 className="font-bold text-theme-white text-xl tracking-tight">LongDrive</h1>
+                  <p className="text-xs text-theme-white-secondary">Zarządzanie Flotą</p>
                 </div>
-
-                <nav className="flex-1 overflow-y-auto pb-4 space-y-1 scrollbar-none">
-                  {navItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.page);
-                    return (
-                      <Link
-                        key={item.page}
-                        to={getPageUrl(item.page)}
-                        onClick={() => setSidebarOpen(false)}
-                        className="block"
-                      >
-                        <div
-                          className={`
-                            flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200
-                            ${active
-                              ? "bg-gradient-primary text-white shadow-lg shadow-primary/25"
-                              : "text-white/70 hover:text-white hover:bg-white/10"
-                            }
-                          `}
-                        >
-                          <Icon className="w-5 h-5 flex-shrink-0" />
-                          <span className="font-medium text-sm">{item.name}</span>
-                          {active && <ChevronRight className="w-4 h-4 ml-auto opacity-70" />}
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </nav>
-
-                {user && (
-                  <div className="pt-4 mt-2 border-t border-white/10">
-                    <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/5 mb-2">
-                      <Avatar className="w-9 h-9 border border-primary/30">
-                        <AvatarFallback className="bg-gradient-primary text-white text-sm">
-                          {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">
-                          {user.name || "Użytkownik"}
-                        </p>
-                        <p className="text-xs text-white/50 truncate">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white/70 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span className="text-sm font-medium">Wyloguj się</span>
-                    </button>
-                  </div>
-                )}
               </div>
-            </motion.aside>
-          </>
+
+              {/* 🔧 POPRAWA: Ukryty pasek przewijania w menu */}
+              <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-none">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.page);
+                  return (
+                    <Link
+                      key={item.page}
+                      to={getPageUrl(item.page)}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <motion.div
+                        whileHover={{ x: 4 }}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer ${
+                          active
+                            ? "bg-gradient-primary text-white shadow-lg shadow-primary/25"
+                            : "text-theme-white-secondary hover:text-theme-white hover:bg-white/5"
+                        }`}
+                      >
+                        <Icon className="w-5 h-5 flex-shrink-0" />
+                        <span className="font-medium text-sm">{item.name}</span>
+                        {active && (
+                          <ChevronRight className="w-4 h-4 ml-auto opacity-70" />
+                        )}
+                      </motion.div>
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {/* User section */}
+              {user && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 pt-6 border-t border-white/10"
+                >
+                  <div className="flex items-center gap-3 mb-4 px-2">
+                    <Avatar className="w-10 h-10 border-2 border-primary/50">
+                      <AvatarFallback className="bg-gradient-primary text-white font-semibold">
+                        {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-theme-white truncate">
+                        {user.name || "Użytkownik"}
+                      </p>
+                      <p className="text-xs text-theme-white-secondary truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-theme-white-secondary hover:text-red-400 hover:bg-red-500/10"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Wyloguj się
+                  </Button>
+                </motion.div>
+              )}
+            </div>
+          </motion.aside>
         )}
       </AnimatePresence>
 
-      {/* GŁÓWNA TREŚĆ – NAPRAWIONA, NIE UCIEKA */}
-      <div className="flex-1 w-full lg:ml-64">
-        <div className="pt-14 lg:pt-0">
-          <div className="p-4 lg:p-6 max-w-full overflow-x-hidden">
-            {children}
-          </div>
-        </div>
-      </div>
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setSidebarOpen(false)}
+          className="lg:hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm"
+        />
+      )}
+
+      {/* Main Content */}
+      <main className="lg:ml-72 min-h-screen pt-16 lg:pt-0">
+        <div className="p-4 lg:p-8">{children}</div>
+      </main>
     </div>
   );
 }
