@@ -7,6 +7,10 @@ const defaultSettings = {
   requireKeyForTrip: false,
   animationType: 'fade',
   animationSpeed: 0.3,
+  menuOpacity: 0.5,
+  cardOpacity: 0.5,
+  cardColor: 'slate',
+  customBackground: null,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -18,7 +22,7 @@ const themeClasses = [
   'theme-pink', 'theme-lime', 'theme-sky'
 ];
 
-// Klasy tła
+// Klasy tła - DODANE 5 NOWYCH (STAXX)
 const bgClasses = [
   'bg-app-gradient1', 'bg-app-gradient2', 'bg-app-gradient3', 'bg-app-gradient4',
   'bg-app-gradient5', 'bg-app-gradient6', 'bg-app-gradient7', 'bg-app-gradient8',
@@ -27,7 +31,9 @@ const bgClasses = [
   'bg-app-solid1', 'bg-app-solid2', 'bg-app-solid3', 'bg-app-solid4',
   'bg-app-solid5', 'bg-app-solid6', 'bg-app-solid7', 'bg-app-solid8',
   'bg-app-solid9', 'bg-app-solid10', 'bg-app-solid11', 'bg-app-solid12',
-  'bg-app-solid13', 'bg-app-solid14', 'bg-app-solid15'
+  'bg-app-solid13', 'bg-app-solid14', 'bg-app-solid15',
+  // NOWE TŁA (STAXX)
+  'bg-app-staxx1', 'bg-app-staxx2', 'bg-app-staxx3', 'bg-app-staxx4', 'bg-app-staxx5'
 ];
 
 // Klasy kolorów tekstu
@@ -45,11 +51,21 @@ const textColorClasses = [
   'text-theme-sky', 'text-theme-sky-secondary', 'text-theme-sky-muted'
 ];
 
+// Klasy kolorów dla kafelków (GlassCard i StatCard)
+const cardColorClasses = [
+  'card-slate', 'card-blue', 'card-purple', 'card-green',
+  'card-amber', 'card-rose', 'card-cyan', 'card-orange',
+  'card-pink', 'card-lime', 'card-sky'
+];
+
 const AppSettingsContext = createContext();
 
 export const AppSettingsProvider = ({ children }) => {
   const [settings, setSettings] = useState(defaultSettings);
   const [loading, setLoading] = useState(true);
+  const [customBackground, setCustomBackground] = useState(null);
+  const [menuOpacity, setMenuOpacity] = useState(0.5);
+  const [cardOpacity, setCardOpacity] = useState(0.5);
 
   const loadSettings = async () => {
     try {
@@ -60,6 +76,16 @@ export const AppSettingsProvider = ({ children }) => {
       } else {
         setSettings(defaultSettings);
       }
+      
+      // Wczytaj przezroczystości
+      const savedMenuOpacity = localStorage.getItem('menu_opacity');
+      if (savedMenuOpacity) setMenuOpacity(parseFloat(savedMenuOpacity));
+      const savedCardOpacity = localStorage.getItem('card_opacity');
+      if (savedCardOpacity) setCardOpacity(parseFloat(savedCardOpacity));
+      
+      // Wczytaj własne tło
+      const savedBg = localStorage.getItem('custom_background');
+      if (savedBg) setCustomBackground(savedBg);
     } catch (error) {
       console.error('Błąd ładowania ustawień:', error);
       setSettings(defaultSettings);
@@ -71,6 +97,25 @@ export const AppSettingsProvider = ({ children }) => {
   const saveSettings = async (newSettings) => {
     setSettings(newSettings);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+  };
+
+  const saveMenuOpacity = (value) => {
+    setMenuOpacity(value);
+    localStorage.setItem('menu_opacity', value);
+  };
+
+  const saveCardOpacity = (value) => {
+    setCardOpacity(value);
+    localStorage.setItem('card_opacity', value);
+  };
+
+  const saveCustomBackground = (url) => {
+    setCustomBackground(url);
+    if (url) {
+      localStorage.setItem('custom_background', url);
+    } else {
+      localStorage.removeItem('custom_background');
+    }
   };
 
   // Nakładanie klasy motywu na <html> (dla zmiennych CSS gradientów)
@@ -102,12 +147,32 @@ export const AppSettingsProvider = ({ children }) => {
     }
   }, [settings.textColor]);
 
+  // Nakładanie klasy koloru kafelków na <html>
+  useEffect(() => {
+    const root = document.documentElement;
+    if (root) {
+      root.classList.remove(...cardColorClasses);
+      root.classList.add(`card-${settings.cardColor || 'slate'}`);
+    }
+  }, [settings.cardColor]);
+
   useEffect(() => {
     loadSettings();
   }, []);
 
   return (
-    <AppSettingsContext.Provider value={{ settings, saveSettings, loading }}>
+    <AppSettingsContext.Provider value={{ 
+      settings, 
+      saveSettings, 
+      loading,
+      menuOpacity,
+      cardOpacity,
+      saveMenuOpacity,
+      saveCardOpacity,
+      customBackground,
+      saveCustomBackground,
+      cardColor: settings.cardColor
+    }}>
       {children}
     </AppSettingsContext.Provider>
   );
