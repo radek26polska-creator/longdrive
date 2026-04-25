@@ -449,3 +449,29 @@ body {
     padding: 12px 16px;
   }
 }
+/* ===== NOWE TŁA (STAXX) ===== */
+.bg-app-staxx1 {
+  background: linear-gradient(135deg, #2d1b4e 0%, #1a1a2e 50%, #16213e 100%);
+}
+.bg-app-staxx2 {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 50%, #fad0c4 100%);
+}
+.bg-app-staxx3 {
+  background: linear-gradient(135deg, #134e5e 0%, #71b280 50%, #134e5e 100%);
+}
+.bg-app-staxx4 {
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+}
+.bg-app-staxx5 {
+  background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 50%, #ff7e5f 100%);
+}
+
+/* ===== DYNAMICZNA PRZEZROCZYSTOŚĆ DLA SIDEBARU ===== */
+.sidebar-transparent {
+  transition: background-color 0.3s ease;
+}
+
+/* ===== DYNAMICZNA PRZEZROCZYSTOŚĆ DLA KAFELKÓW ===== */
+.glass-card-transparent {
+  transition: background-color 0.3s ease;
+}

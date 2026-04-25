@@ -57,7 +57,7 @@ const allNavItems = [
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modulesSettings, setModulesSettings] = useState({});
-  const { settings } = useAppSettings();
+  const { settings, menuOpacity, customBackground } = useAppSettings();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -73,7 +73,6 @@ export default function Layout({ children, currentPageName }) {
       }
     };
     loadModules();
-    // Nasłuchuj na zmiany (np. po zapisie ustawień)
     window.addEventListener("storage", loadModules);
     window.addEventListener("modulesSettingsChanged", loadModules);
     return () => {
@@ -84,9 +83,9 @@ export default function Layout({ children, currentPageName }) {
 
   // Filtruj pozycje menu wg ustawień modułów
   const navItems = allNavItems.filter((item) => {
-    if (!item.moduleKey) return true; // zawsze widoczne
+    if (!item.moduleKey) return true;
     const moduleValue = modulesSettings[item.moduleKey];
-    return moduleValue !== false; // domyślnie widoczne, ukryte tylko gdy false
+    return moduleValue !== false;
   });
 
   const handleLogout = () => {
@@ -101,13 +100,20 @@ export default function Layout({ children, currentPageName }) {
            location.pathname.toLowerCase().startsWith(`/${page.toLowerCase()}/`);
   };
 
-  // 🔧 POPRAWA: zmieniono 'path' na 'page'
   const getPageUrl = (page) => {
     return pageToPath[page] || `/${page.toLowerCase()}`;
   };
 
+  // Oblicz kolor tła sidebaru z przezroczystością
+  const sidebarBgColor = `rgba(15, 23, 42, ${menuOpacity})`;
+  
+  // Oblicz tło głównego kontenera (własne lub gradient)
+  const mainBgStyle = customBackground 
+    ? { backgroundImage: `url(${customBackground})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }
+    : {};
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={mainBgStyle}>
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-white/5">
         <div className="flex items-center justify-between px-4 h-16">
@@ -136,9 +142,10 @@ export default function Layout({ children, currentPageName }) {
             animate={{ x: sidebarOpen ? 0 : window.innerWidth >= 1024 ? 0 : -280 }}
             exit={{ x: -280 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className={`fixed top-0 left-0 z-40 h-full w-72 sidebar ${
+            className={`fixed top-0 left-0 z-40 h-full w-72 sidebar-transparent ${
               sidebarOpen ? "block" : "hidden lg:block"
             }`}
+            style={{ backgroundColor: sidebarBgColor, backdropFilter: 'blur(16px)', borderRight: '1px solid rgba(255,255,255,0.05)' }}
           >
             <div className="flex flex-col h-full p-6">
               {/* Logo */}
@@ -155,7 +162,7 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               </div>
 
-              {/* 🔧 POPRAWA: Ukryty pasek przewijania w menu */}
+              {/* Menu */}
               <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-none">
                 {navItems.map((item) => {
                   const Icon = item.icon;
