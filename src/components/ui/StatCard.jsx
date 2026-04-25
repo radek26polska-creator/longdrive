@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useAppSettings } from "@/lib/ThemeContext";
 
 export default function StatCard({ 
   title, 
@@ -9,22 +10,49 @@ export default function StatCard({
   trend, 
   trendUp = true,
   gradient = "from-indigo-500 to-purple-500",
-  delay = 0 
+  delay = 0,
+  onClick 
 }) {
+  const { cardOpacity, settings } = useAppSettings();
+  
+  // Pobierz kolor główny z motywu (dla tła kafelka)
+  const primaryColor = getComputedStyle(document.documentElement)
+    .getPropertyValue('--primary-color')
+    .trim() || '#6366f1';
+  
+  // Tło kafelka z przezroczystością i delikatnym odcieniem koloru motywu
+  // Używamy rgba z domieszką koloru głównego
+  const bgColor = `rgba(30, 41, 59, ${cardOpacity})`;
+  
+  // Kolor akcentu dla przycisków i elementów wewnątrz kafelka
+  const accentColor = primaryColor;
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="relative group"
+      className="relative group cursor-pointer"
+      onClick={onClick}
     >
       <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"
-        style={{ backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))` }} 
+        style={{ 
+          backgroundImage: `linear-gradient(to right, ${accentColor}20, ${accentColor}40)`
+        }} 
       />
-      <div className="relative bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-white/5 p-6 overflow-hidden">
-        {/* Background Glow */}
-        <div className={`absolute -top-12 -right-12 w-32 h-32 bg-gradient-to-br ${gradient} rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity`} />
+      <div 
+        className="relative backdrop-blur-xl rounded-2xl border border-white/5 p-6 overflow-hidden transition-all duration-300"
+        style={{ 
+          backgroundColor: bgColor,
+          borderColor: `${accentColor}30`
+        }}
+      >
+        {/* Background Glow z kolorem motywu */}
+        <div 
+          className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity`}
+          style={{ background: `radial-gradient(circle, ${accentColor}80, transparent)` }}
+        />
         
         <div className="relative">
           <div className="flex items-start justify-between mb-4">

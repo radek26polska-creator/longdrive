@@ -1,15 +1,36 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useAppSettings } from "@/lib/ThemeContext";
 
 export default function GlassCard({ 
   children, 
   className = "",
   animate = true,
   delay = 0,
-  hover = true
+  hover = true,
+  customOpacity = null 
 }) {
+  const { cardOpacity, settings } = useAppSettings();
+  const opacity = customOpacity !== null ? customOpacity : cardOpacity;
+  
+  // Pobierz kolor główny z motywu
+  const primaryColor = typeof window !== 'undefined' 
+    ? getComputedStyle(document.documentElement)
+        .getPropertyValue('--primary-color')
+        .trim() || '#6366f1'
+    : '#6366f1';
+  
+  // Tło kafelka z przezroczystością i delikatnym odcieniem koloru motywu
+  const bgColor = `rgba(30, 41, 59, ${opacity})`;
+  
   const content = (
-    <div className={`bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-white/5 ${className}`}>
+    <div 
+      className={`backdrop-blur-xl rounded-2xl border border-white/5 shadow-xl transition-all duration-300 ${className}`}
+      style={{ 
+        backgroundColor: bgColor,
+        borderColor: `${primaryColor}30`
+      }}
+    >
       {children}
     </div>
   );
