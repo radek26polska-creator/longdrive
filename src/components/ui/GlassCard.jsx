@@ -6,29 +6,10 @@ export default function GlassCard({
   className = "",
   animate = true,
   delay = 0,
-  hover = true,
-  variant = "default" // default, stats, mentor, calendar
+  hover = true
 }) {
-  // Mapowanie wariantów na dodatkowe klasy
-  const variantClasses = {
-    default: "",
-    stats: "p-4 hover:shadow-indigo-500/10",
-    mentor: "p-3 hover:shadow-indigo-500/5",
-    calendar: "p-4",
-  };
-
   const content = (
-    <div className={`
-      bg-slate-800/50 
-      backdrop-blur-xl 
-      rounded-2xl 
-      border border-white/5 
-      shadow-xl 
-      transition-all 
-      duration-300
-      ${variantClasses[variant] || variantClasses.default}
-      ${className}
-    `}>
+    <div className={`bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-white/5 ${className}`}>
       {children}
     </div>
   );

@@ -9,8 +9,8 @@ const TabsList = React.forwardRef(({ className, ...props }, ref) => (
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
-      "flex-wrap sm:flex-nowrap", // 🔧 DODANE: zawijanie na mobile
+      "inline-flex h-auto items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
+      "flex-wrap sm:flex-nowrap",
       className
     )}
     {...props} />
@@ -21,9 +21,10 @@ const TabsTrigger = React.forwardRef(({ className, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
-      "flex-1 sm:flex-initial", // 🔧 DODANE: elastyczna szerokość na mobile
-      "whitespace-nowrap overflow-hidden text-ellipsis", // 🔧 DODANE: przycinanie długich tekstów
+      "inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
+      "flex-1 sm:flex-initial",
+      "whitespace-nowrap overflow-hidden text-ellipsis",
+      "min-h-[44px] sm:min-h-0",
       className
     )}
     {...props} />
