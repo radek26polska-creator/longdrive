@@ -57,6 +57,7 @@ import {
   History,
   Crosshair,
   Route,
+  LayoutDashboard,
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import GlassCard from "@/components/ui/GlassCard";
@@ -95,7 +96,7 @@ const themes = [
 
 // Konfiguracja teł
 const backgrounds = [
-  { id: "gradient1", name: "Ciemny gradient", class: "bg-app-gradient1" },
+ { id: "gradient1", name: "Ciemny gradient", class: "bg-app-gradient1" },
   { id: "gradient2", name: "Granatowy gradient", class: "bg-app-gradient2" },
   { id: "gradient3", name: "Fioletowy gradient", class: "bg-app-gradient3" },
   { id: "gradient4", name: "Zielony gradient", class: "bg-app-gradient4" },
@@ -116,6 +117,12 @@ const backgrounds = [
   { id: "solid4", name: "Ciemnoniebieski", class: "bg-app-solid4" },
   { id: "solid5", name: "Grafitowy", class: "bg-app-solid5" },
   { id: "solid6", name: "Antracytowy", class: "bg-app-solid6" },
+  // ===== NOWE TŁA STAXX =====
+  { id: "staxx1", name: "Fioletowa mgła", class: "bg-app-staxx1" },
+  { id: "staxx2", name: "Słoneczny poranek", class: "bg-app-staxx2" },
+  { id: "staxx3", name: "Leśny spokój", class: "bg-app-staxx3" },
+  { id: "staxx4", name: "Kosmiczna podróż", class: "bg-app-staxx4" },
+  { id: "staxx5", name: "Zachód słońca", class: "bg-app-staxx5" },
 ];
 
 // Animacja pełnoekranowa zapisu
@@ -235,13 +242,16 @@ export default function SettingsPage() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   const [localSettings, setLocalSettings] = useState({
-    theme: "dark",
-    backgroundColor: "bg-app-gradient1",
-    textColor: "white",
-    requireKeyForTrip: false,
-    animationType: "fade",
-    animationSpeed: 0.3,
-  });
+  theme: "dark",
+  backgroundColor: "bg-app-gradient1",
+  textColor: "white",
+  requireKeyForTrip: false,
+  animationType: "fade",
+  animationSpeed: 0.3,
+});
+  const [menuOpacity, setMenuOpacity] = useState(0.5);
+  const [cardOpacity, setCardOpacity] = useState(0.5);
+  const [customBackground, setCustomBackground] = useState(null);
 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState("company");
@@ -357,6 +367,12 @@ export default function SettingsPage() {
     if (savedDebug) {
       setDebugEnabled(savedDebug === "true");
     }
+    const savedMenuOpacity = localStorage.getItem("menu_opacity");
+    if (savedMenuOpacity) setMenuOpacity(parseFloat(savedMenuOpacity));
+    const savedCardOpacity = localStorage.getItem("card_opacity");
+    if (savedCardOpacity) setCardOpacity(parseFloat(savedCardOpacity));
+    const savedBg = localStorage.getItem("custom_background");
+    if (savedBg) setCustomBackground(savedBg);
   }, []);
 
   // Inicjalizacja danych firmy
@@ -470,7 +486,7 @@ export default function SettingsPage() {
     triggerSaveAnimation();
   };
 
-  const handleSave = async () => {
+    const handleSave = async () => {
     try {
       if (activeTab === "company") {
         saveCompanyMutation.mutate(companyData);
@@ -486,6 +502,12 @@ export default function SettingsPage() {
         saveApiSettings();
       } else if (activeTab === "appearance") {
         await saveSettings({ ...localSettings });
+        // Zapisz przezroczystości i własne tło
+        localStorage.setItem("menu_opacity", menuOpacity);
+        localStorage.setItem("card_opacity", cardOpacity);
+        if (customBackground) {
+          localStorage.setItem("custom_background", customBackground);
+        }
         triggerSaveAnimation();
       } else if (activeTab === "animations") {
         await saveSettings({ ...localSettings });
@@ -1727,7 +1749,156 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
-              </div>
+                              {/* ===== NOWE SEKCJE ===== */}
+                {/* Kolor kafelków */}
+<div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+    <Palette className="w-4 h-4 text-primary" />
+    Kolor kafelków
+  </h3>
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+    {[
+      { id: "slate", name: "Szary", color: "bg-slate-600" },
+      { id: "blue", name: "Niebieski", color: "bg-blue-600" },
+      { id: "purple", name: "Fioletowy", color: "bg-purple-600" },
+      { id: "green", name: "Zielony", color: "bg-green-600" },
+      { id: "amber", name: "Złoty", color: "bg-amber-600" },
+      { id: "rose", name: "Różowy", color: "bg-rose-600" },
+      { id: "cyan", name: "Cyjan", color: "bg-cyan-600" },
+      { id: "orange", name: "Pomarańczowy", color: "bg-orange-600" },
+      { id: "pink", name: "Jasnoróżowy", color: "bg-pink-600" },
+      { id: "lime", name: "Jasnozielony", color: "bg-lime-600" },
+      { id: "sky", name: "Niebieski (jasny)", color: "bg-sky-600" },
+    ].map((color) => (
+      <button
+        key={color.id}
+        onClick={() => {
+          setLocalSettings({ ...localSettings, cardColor: color.id });
+        }}
+        className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
+          localSettings.cardColor === color.id
+            ? "border-primary ring-2 ring-primary/50"
+            : "border-slate-600 hover:border-slate-400"
+        }`}
+      >
+        <div className={`w-5 h-5 rounded-full ${color.color}`} />
+        <span className="text-theme-white text-xs">{color.name}</span>
+      </button>
+    ))}
+  </div>
+  <p className="text-xs text-slate-500 mt-3">
+    Wybierz kolor tła dla kafelków (GlassCard i StatCard)
+  </p>
+</div>
+                {/* Własne tło z obrazka */}
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Image className="w-4 h-4 text-primary" />
+                    Własne tło (obrazek)
+                  </h3>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="custom-bg-input"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const url = URL.createObjectURL(file);
+                        setCustomBackground(url);
+                        localStorage.setItem("custom_background", url);
+                        toast.success("Tło zostało zmienione!");
+                        setTimeout(() => window.location.reload(), 500);
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mb-2"
+                    onClick={() => document.getElementById("custom-bg-input").click()}
+                  >
+                    <Image className="w-4 h-4 mr-2" />
+                    Wybierz obrazek z komputera
+                  </Button>
+                  {customBackground && (
+                    <div className="mt-3">
+                      <div className="w-full h-20 rounded-lg bg-cover bg-center mb-2" style={{ backgroundImage: `url(${customBackground})` }} />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => {
+                          setCustomBackground(null);
+                          localStorage.removeItem("custom_background");
+                          toast.success("Tło zostało usunięte");
+                          setTimeout(() => window.location.reload(), 500);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Usuń własne tło
+                      </Button>
+                    </div>
+                  )}
+                  <p className="text-xs text-slate-500 mt-2">
+                    Wybierz obrazek JPG, PNG lub GIF. Dla najlepszego efektu użyj ciemnego obrazka.
+                  </p>
+                </div>
+
+                {/* Przezroczystość menu bocznego */}
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-primary" />
+                    Przezroczystość menu bocznego
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[menuOpacity]}
+                      onValueChange={([val]) => {
+                        setMenuOpacity(val);
+                        localStorage.setItem("menu_opacity", val);
+                      }}
+                      min={0.1}
+                      max={1}
+                      step={0.01}
+                      className="flex-1"
+                    />
+                    <span className="text-theme-white text-sm w-12">
+                      {Math.round(menuOpacity * 100)}%
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Im wyższa wartość, tym bardziej nieprzezroczyste menu.
+                  </p>
+                </div>
+
+                {/* Przezroczystość kafelków */}
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4 text-primary" />
+                    Przezroczystość kafelków (GlassCard)
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[cardOpacity]}
+                      onValueChange={([val]) => {
+                        setCardOpacity(val);
+                        localStorage.setItem("card_opacity", val);
+                      }}
+                      min={0.1}
+                      max={1}
+                      step={0.01}
+                      className="flex-1"
+                    />
+                    <span className="text-theme-white text-sm w-12">
+                      {Math.round(cardOpacity * 100)}%
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Reguluje przezroczystość wszystkich kafelków w aplikacji.
+                  </p>
+                </div>
+			  </div>
             </GlassCard>
           )}
 
