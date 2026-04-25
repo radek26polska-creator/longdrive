@@ -286,21 +286,23 @@ export default function TripDetail() {
         return; 
       }
       
+      //       // 🔧 KONFIGURACJA html2canvas Z onclone
       const canvas = await html2canvas(element, { 
         scale: 3, 
         useCORS: true, 
         backgroundColor: '#ffffff',
         logging: false,
+        // 🔧 DODANA FUNKCJA onclone - edytuje KLON przed renderowaniem
         onclone: (clonedDoc) => {
           const clonedElement = clonedDoc.getElementById('karta-drogowa-print') || 
                                 clonedDoc.getElementById('polecenie-wyjazdu-print');
           if (clonedElement) {
             const cells = clonedElement.querySelectorAll('td, th');
             cells.forEach(cell => {
-              cell.style.paddingTop = '5px';
-              cell.style.paddingBottom = '8px';
-              cell.style.verticalAlign = 'middle';
-              cell.style.lineHeight = '1.5';
+              cell.style.paddingTop = '5px';       // Więcej miejsca nad tekstem
+              cell.style.paddingBottom = '8px';    // Więcej miejsca pod tekstem
+              cell.style.verticalAlign = 'middle'; // Wyśrodkuj pionowo
+              cell.style.lineHeight = '1.5';       // Większa wysokość linii
             });
           }
         }
@@ -322,6 +324,7 @@ export default function TripDetail() {
         yPosition = (ph - imgHeight) / 2;
       }
 
+      // 🔧 PRZESUŃ WYŻEJ O 12mm
       yPosition = Math.max(0, yPosition - 12);
 
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, yPosition, imgWidth, imgHeight, undefined, 'FAST');
@@ -353,6 +356,7 @@ export default function TripDetail() {
         return; 
       }
       
+      // 🔧 KONFIGURACJA html2canvas Z onclone dla obu elementów
       const canvases = await Promise.all([
         html2canvas(kartaElement, { 
           scale: 3, 
@@ -405,14 +409,15 @@ export default function TripDetail() {
         }
         
         const imgWidth = pw;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+		const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        let yPosition = 0;
-        if (imgHeight < ph) {
-          yPosition = (ph - imgHeight) / 2;
-        }
+		let yPosition = 0;
+		if (imgHeight < ph) {
+		yPosition = (ph - imgHeight) / 2;  // ✅ Najpierw wyśrodkuj
+}
 
-        yPosition = Math.max(0, yPosition - 12);
+		// 🔧 POTEM przesuń wyżej (odejmij wartość)
+		yPosition = Math.max(0, yPosition - 12);  // ✅ Przesuń o 12mm w górę
         
         pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, yPosition, imgWidth, imgHeight, undefined, 'FAST');
       };
@@ -431,6 +436,7 @@ export default function TripDetail() {
     }
   };
 
+  // 🔧 FUNKCJA DRUKOWANIA
   const handlePrint = () => {
     window.print();
   };
@@ -523,6 +529,7 @@ export default function TripDetail() {
                   {isGeneratingPdf && pdfFormat === 'A5' ? 'Generowanie...' : 'Pobierz PDF (A5)'}
                 </button>
                 
+                {/* 🔧 PRZYCISK DRUKOWANIA */}
                 <button
                   onClick={handlePrint}
                   className="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center"
@@ -552,6 +559,7 @@ export default function TripDetail() {
                   {isGeneratingPdf && pdfFormat === 'A5' ? 'Generowanie...' : 'Pobierz oba dokumenty PDF (A5)'}
                 </button>
                 
+                {/* 🔧 PRZYCISK DRUKOWANIA */}
                 <button
                   onClick={handlePrint}
                   className="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center"
@@ -588,7 +596,6 @@ export default function TripDetail() {
                   <StopCircle className="w-5 h-5 text-emerald-400" />
                   Zakończ przejazd
                 </h3>
-                {/* 🔧 POPRAWA: max-h-[400px] → max-h-[60vh] */}
                 <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                   <div className="bg-slate-800/50 rounded-lg p-3 mb-2">
                     <p className="text-slate-400 text-sm">Dane rozpoczęcia (zapamiętane):</p>
@@ -780,7 +787,6 @@ export default function TripDetail() {
                 ))}
               </div>
             ) : isEditing ? (
-              /* 🔧 POPRAWA: max-h-[500px] → max-h-[60vh] */
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                 <h4 className="font-semibold text-white border-b border-slate-600 pb-1">Dane wyjazdu</h4>
                 <div>
