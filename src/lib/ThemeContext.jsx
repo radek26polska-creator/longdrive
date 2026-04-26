@@ -11,6 +11,9 @@ const defaultSettings = {
   cardOpacity: 0.5,
   cardColor: 'slate',
   customBackground: null,
+  // NOWE USTAWIENIA KOLORÓW TŁA
+  menuBackgroundColor: '#0f172a',     // domyślnie ciemny granat
+  cardBackgroundColor: '#1e293b',    // domyślnie jaśniejszy granat
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -32,7 +35,6 @@ const bgClasses = [
   'bg-app-solid5', 'bg-app-solid6', 'bg-app-solid7', 'bg-app-solid8',
   'bg-app-solid9', 'bg-app-solid10', 'bg-app-solid11', 'bg-app-solid12',
   'bg-app-solid13', 'bg-app-solid14', 'bg-app-solid15',
-  // NOWE TŁA (STAXX)
   'bg-app-staxx1', 'bg-app-staxx2', 'bg-app-staxx3', 'bg-app-staxx4', 'bg-app-staxx5'
 ];
 
@@ -66,6 +68,10 @@ export const AppSettingsProvider = ({ children }) => {
   const [customBackground, setCustomBackground] = useState(null);
   const [menuOpacity, setMenuOpacity] = useState(0.5);
   const [cardOpacity, setCardOpacity] = useState(0.5);
+  
+  // NOWE STATE DLA KOLORÓW TŁA
+  const [menuBackgroundColor, setMenuBackgroundColor] = useState('#0f172a');
+  const [cardBackgroundColor, setCardBackgroundColor] = useState('#1e293b');
 
   const loadSettings = async () => {
     try {
@@ -73,6 +79,9 @@ export const AppSettingsProvider = ({ children }) => {
       if (saved) {
         const parsed = JSON.parse(saved);
         setSettings({ ...defaultSettings, ...parsed });
+        // Wczytaj kolory tła z ustawień
+        if (parsed.menuBackgroundColor) setMenuBackgroundColor(parsed.menuBackgroundColor);
+        if (parsed.cardBackgroundColor) setCardBackgroundColor(parsed.cardBackgroundColor);
       } else {
         setSettings(defaultSettings);
       }
@@ -86,6 +95,12 @@ export const AppSettingsProvider = ({ children }) => {
       // Wczytaj własne tło
       const savedBg = localStorage.getItem('custom_background');
       if (savedBg) setCustomBackground(savedBg);
+      
+      // Wczytaj kolory tła z localStorage (bezpośrednio dla zgodności)
+      const savedMenuBg = localStorage.getItem('menu_background_color');
+      if (savedMenuBg) setMenuBackgroundColor(savedMenuBg);
+      const savedCardBg = localStorage.getItem('card_background_color');
+      if (savedCardBg) setCardBackgroundColor(savedCardBg);
     } catch (error) {
       console.error('Błąd ładowania ustawień:', error);
       setSettings(defaultSettings);
@@ -116,6 +131,25 @@ export const AppSettingsProvider = ({ children }) => {
     } else {
       localStorage.removeItem('custom_background');
     }
+  };
+
+  // NOWE FUNKCJE ZAPISU KOLORÓW TŁA
+  const saveMenuBackgroundColor = (color) => {
+    setMenuBackgroundColor(color);
+    localStorage.setItem('menu_background_color', color);
+    // Zapisz również w settings dla spójności
+    const updatedSettings = { ...settings, menuBackgroundColor: color };
+    setSettings(updatedSettings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSettings));
+  };
+
+  const saveCardBackgroundColor = (color) => {
+    setCardBackgroundColor(color);
+    localStorage.setItem('card_background_color', color);
+    // Zapisz również w settings dla spójności
+    const updatedSettings = { ...settings, cardBackgroundColor: color };
+    setSettings(updatedSettings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSettings));
   };
 
   // Nakładanie klasy motywu na <html> (dla zmiennych CSS gradientów)
@@ -171,7 +205,12 @@ export const AppSettingsProvider = ({ children }) => {
       saveCardOpacity,
       customBackground,
       saveCustomBackground,
-      cardColor: settings.cardColor
+      cardColor: settings.cardColor,
+      // NOWE WARTOŚCI DLA KOLORÓW TŁA
+      menuBackgroundColor,
+      cardBackgroundColor,
+      saveMenuBackgroundColor,
+      saveCardBackgroundColor,
     }}>
       {children}
     </AppSettingsContext.Provider>
