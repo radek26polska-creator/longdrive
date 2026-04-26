@@ -44,6 +44,8 @@ export const useTrackedTrips = () => {
         createdAt: new Date().toISOString(),
       };
       
+      console.log('💾 Zapisuję trasę:', newTrip);
+      
       setTrackedTrips(prev => {
         const updated = [newTrip, ...prev];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
