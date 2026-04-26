@@ -475,3 +475,15 @@ body {
 .glass-card-transparent {
   transition: background-color 0.3s ease;
 }
+/* ===== DYNAMICZNE KOLORY TŁA DLA MENU I KAFELKÓW ===== */
+/* Klasy pomocnicze dla dynamicznych kolorów - ustawiane inline przez style, więc nie potrzebujemy klas CSS */
+/* Pozostawiamy jako znacznik dla przyszłych rozszerzeń */
+
+/* Dodatkowe style dla color pickerów w ustawieniach */
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 0.5rem;
+}

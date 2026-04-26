@@ -57,7 +57,7 @@ const allNavItems = [
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modulesSettings, setModulesSettings] = useState({});
-  const { settings, menuOpacity, customBackground } = useAppSettings();
+  const { settings, menuOpacity, customBackground, menuBackgroundColor } = useAppSettings();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -104,8 +104,17 @@ export default function Layout({ children, currentPageName }) {
     return pageToPath[page] || `/${page.toLowerCase()}`;
   };
 
-  // Oblicz kolor tła sidebaru z przezroczystością
-  const sidebarBgColor = `rgba(15, 23, 42, ${menuOpacity})`;
+  // Konwersja koloru hex na rgba z przezroczystością
+  const hexToRgba = (hex, alpha) => {
+    if (!hex || hex === '#') return `rgba(15, 23, 42, ${alpha})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+  
+  // UŻYJ ZAPISANEGO KOLORU TŁA MENU z dynamiczną przezroczystością
+  const sidebarBgColor = hexToRgba(menuBackgroundColor || '#0f172a', menuOpacity);
   
   // Oblicz tło głównego kontenera (własne lub gradient)
   const mainBgStyle = customBackground 
