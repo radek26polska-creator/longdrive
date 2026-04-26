@@ -251,6 +251,8 @@ export default function SettingsPage() {
 });
   const [menuOpacity, setMenuOpacity] = useState(0.5);
   const [cardOpacity, setCardOpacity] = useState(0.5);
+  const [menuBackgroundColor, setMenuBackgroundColor] = useState('#0f172a');
+  const [cardBackgroundColor, setCardBackgroundColor] = useState('#1e293b');
   const [customBackground, setCustomBackground] = useState(null);
 
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -373,6 +375,10 @@ export default function SettingsPage() {
     if (savedCardOpacity) setCardOpacity(parseFloat(savedCardOpacity));
     const savedBg = localStorage.getItem("custom_background");
     if (savedBg) setCustomBackground(savedBg);
+	    const savedMenuBg = localStorage.getItem('menu_background_color');
+    if (savedMenuBg) setMenuBackgroundColor(savedMenuBg);
+    const savedCardBg = localStorage.getItem('card_background_color');
+    if (savedCardBg) setCardBackgroundColor(savedCardBg);
   }, []);
 
   // Inicjalizacja danych firmy
@@ -1750,44 +1756,44 @@ export default function SettingsPage() {
                   </div>
                 </div>
                               {/* ===== NOWE SEKCJE ===== */}
-                {/* Kolor kafelków */}
+{/* Kolor obwódki kafelków - color picker */}
 <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
   <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
     <Palette className="w-4 h-4 text-primary" />
-    Kolor kafelków
+    Kolor obwódki kafelków
   </h3>
-  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-    {[
-      { id: "slate", name: "Szary", color: "bg-slate-600" },
-      { id: "blue", name: "Niebieski", color: "bg-blue-600" },
-      { id: "purple", name: "Fioletowy", color: "bg-purple-600" },
-      { id: "green", name: "Zielony", color: "bg-green-600" },
-      { id: "amber", name: "Złoty", color: "bg-amber-600" },
-      { id: "rose", name: "Różowy", color: "bg-rose-600" },
-      { id: "cyan", name: "Cyjan", color: "bg-cyan-600" },
-      { id: "orange", name: "Pomarańczowy", color: "bg-orange-600" },
-      { id: "pink", name: "Jasnoróżowy", color: "bg-pink-600" },
-      { id: "lime", name: "Jasnozielony", color: "bg-lime-600" },
-      { id: "sky", name: "Niebieski (jasny)", color: "bg-sky-600" },
-    ].map((color) => (
-      <button
-        key={color.id}
-        onClick={() => {
-          setLocalSettings({ ...localSettings, cardColor: color.id });
-        }}
-        className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
-          localSettings.cardColor === color.id
-            ? "border-primary ring-2 ring-primary/50"
-            : "border-slate-600 hover:border-slate-400"
-        }`}
-      >
-        <div className={`w-5 h-5 rounded-full ${color.color}`} />
-        <span className="text-theme-white text-xs">{color.name}</span>
-      </button>
-    ))}
+  <div className="flex items-center gap-4">
+    <input
+      type="color"
+      value={localSettings.cardColor ? (
+        localSettings.cardColor === 'slate' ? '#64748b' :
+        localSettings.cardColor === 'blue' ? '#2563eb' :
+        localSettings.cardColor === 'purple' ? '#7c3aed' :
+        localSettings.cardColor === 'green' ? '#059669' :
+        localSettings.cardColor === 'amber' ? '#d97706' :
+        localSettings.cardColor === 'rose' ? '#e11d48' :
+        localSettings.cardColor === 'cyan' ? '#0891b2' :
+        localSettings.cardColor === 'orange' ? '#ea580c' :
+        localSettings.cardColor === 'pink' ? '#db2777' :
+        localSettings.cardColor === 'lime' ? '#65a30d' :
+        localSettings.cardColor === 'sky' ? '#0284c7' : '#6366f1'
+      ) : '#6366f1'}
+      onChange={(e) => {
+        // Dla color pickera zapisujemy hex jako cardColor
+        setLocalSettings({ ...localSettings, cardColor: e.target.value });
+      }}
+      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+    />
+    <div 
+      className="flex-1 h-10 rounded-lg border border-slate-600"
+      style={{ backgroundColor: localSettings.cardColor || '#6366f1' }}
+    />
+    <span className="text-theme-white text-sm font-mono">
+      {localSettings.cardColor || '#6366f1'}
+    </span>
   </div>
-  <p className="text-xs text-slate-500 mt-3">
-    Wybierz kolor tła dla kafelków (GlassCard i StatCard)
+  <p className="text-xs text-slate-500 mt-2">
+    Wybierz dowolny kolor obwódki dla kafelków za pomocą palety kolorów.
   </p>
 </div>
                 {/* Własne tło z obrazka */}
@@ -1842,6 +1848,63 @@ export default function SettingsPage() {
                   )}
                   <p className="text-xs text-slate-500 mt-2">
                     Wybierz obrazek JPG, PNG lub GIF. Dla najlepszego efektu użyj ciemnego obrazka.
+                  </p>
+                </div>
+                {/* ===== KOLOR TŁA MENU ===== */}
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Kolor tła menu bocznego
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      value={menuBackgroundColor}
+                      onChange={(e) => {
+                        setMenuBackgroundColor(e.target.value);
+                        localStorage.setItem('menu_background_color', e.target.value);
+                      }}
+                      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                    />
+                    <div 
+                      className="flex-1 h-10 rounded-lg border border-slate-600"
+                      style={{ backgroundColor: menuBackgroundColor }}
+                    />
+                    <span className="text-theme-white text-sm font-mono">
+                      {menuBackgroundColor}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Wybierz kolor tła dla menu bocznego.
+                  </p>
+                </div>
+
+                {/* ===== KOLOR TŁA KAFELKÓW ===== */}
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4 text-primary" />
+                    Kolor tła kafelków
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      value={cardBackgroundColor}
+                      onChange={(e) => {
+                        setCardBackgroundColor(e.target.value);
+                        localStorage.setItem('card_background_color', e.target.value);
+                      }}
+                      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                    />
+                    <div 
+                      className="flex-1 h-10 rounded-lg border border-slate-600"
+                      style={{ backgroundColor: cardBackgroundColor }}
+                    />
+                    <span className="text-theme-white text-sm font-mono">
+                      {cardBackgroundColor}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Wybierz kolor tła dla kafelków (GlassCard, StatCard).
                   </p>
                 </div>
 
