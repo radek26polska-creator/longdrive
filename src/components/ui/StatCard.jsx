@@ -13,16 +13,24 @@ export default function StatCard({
   delay = 0,
   onClick 
 }) {
-  const { cardOpacity, settings } = useAppSettings();
+  const { cardOpacity, cardBackgroundColor, settings } = useAppSettings();
   
   // Pobierz kolor główny z motywu (dla tła kafelka)
   const primaryColor = getComputedStyle(document.documentElement)
     .getPropertyValue('--primary-color')
     .trim() || '#6366f1';
   
-  // Tło kafelka z przezroczystością i delikatnym odcieniem koloru motywu
-  // Używamy rgba z domieszką koloru głównego
-  const bgColor = `rgba(30, 41, 59, ${cardOpacity})`;
+  // Konwersja hex na rgba
+  const hexToRgba = (hex, alpha) => {
+    if (!hex || hex === '#') return `rgba(30, 41, 59, ${alpha})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+  
+  // UŻYJ ZAPISANEGO KOLORU TŁA KAFELKA
+  const bgColor = hexToRgba(cardBackgroundColor || '#1e293b', cardOpacity);
   
   // Kolor akcentu dla przycisków i elementów wewnątrz kafelka
   const accentColor = primaryColor;
