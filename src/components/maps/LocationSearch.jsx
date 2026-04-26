@@ -1,7 +1,7 @@
 // src/components/maps/LocationSearch.jsx - WERSJA ULEPSZONA
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, X, Loader2, Navigation, Building2, Home, Car } from 'lucide-react';
+import { Search, MapPin, X, Loader2, Navigation, Building2, Home, Car, Clock } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

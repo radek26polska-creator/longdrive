@@ -1,4 +1,4 @@
-// src/components/maps/MapView.jsx - WERSJA Z forwardRef I ROUTINGIEM
+// src/components/maps/MapView.jsx - WERSJA Z OBSŁUGĄ ZAPISANYCH TRAS
 import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Navigation, Maximize2, Minimize2, ZoomIn, ZoomOut, Crosshair } from 'lucide-react';
@@ -223,22 +223,63 @@ const MapView = forwardRef(({
     }
   }, [map, userLocation, autoCenter]);
 
-  // Obsługa trip/trackedTrip
+  // Obsługa trip/trackedTrip - rysowanie trasy na mapie
   useEffect(() => {
     if (!map) return;
+    
+    // Wyczyść poprzednie warstwy trasy i markery
+    if (routeLayerRef.current) {
+      map.removeLayer(routeLayerRef.current);
+      routeLayerRef.current = null;
+    }
+    tripMarkersRef.current.forEach(m => {
+      if (map) map.removeLayer(m);
+    });
+    tripMarkersRef.current = [];
     
     const tripData = trackedTrip || trip;
     if (!tripData) return;
 
-    // Wyczyść poprzednie markery
-    tripMarkersRef.current.forEach(m => map.removeLayer(m));
-    tripMarkersRef.current = [];
+    // Sprawdź czy mamy punkty GPS (zapisana śledzona trasa)
+    if (tripData.points && tripData.points.length > 1) {
+      // Rysuj linię po punktach GPS
+      const latlngs = tripData.points.map(p => [p.lat, p.lng]);
+      routeLayerRef.current = L.polyline(latlngs, {
+        color: routeColor,
+        weight: 5,
+        opacity: 0.8,
+        smoothFactor: 1
+      }).addTo(map);
+      
+      // Dopasuj widok mapy do trasy
+      if (autoCenter) {
+        map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
+      }
+    } 
+    // Jeśli nie ma punktów ale są współrzędne start/meta
+    else if (tripData.startCoordinates && tripData.endCoordinates) {
+      const latlngs = [
+        [tripData.startCoordinates.lat, tripData.startCoordinates.lng],
+        [tripData.endCoordinates.lat, tripData.endCoordinates.lng]
+      ];
+      routeLayerRef.current = L.polyline(latlngs, {
+        color: routeColor,
+        weight: 4,
+        dashArray: '5, 10',
+        opacity: 0.7
+      }).addTo(map);
+      
+      if (autoCenter) {
+        map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
+      }
+    }
 
     // Dodaj marker startu
     if (tripData.startCoordinates) {
       const startMarker = L.marker([tripData.startCoordinates.lat, tripData.startCoordinates.lng], {
         icon: L.divIcon({
           html: `<div class="w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">S</div>`,
+          className: 'custom-marker-start',
           iconSize: [24, 24],
           iconAnchor: [12, 12]
         })
@@ -247,11 +288,12 @@ const MapView = forwardRef(({
       tripMarkersRef.current.push(startMarker);
     }
 
-    // Dodaj marker końca
+    // Dodaj marker mety
     if (tripData.endCoordinates) {
       const endMarker = L.marker([tripData.endCoordinates.lat, tripData.endCoordinates.lng], {
         icon: L.divIcon({
           html: `<div class="w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">M</div>`,
+          className: 'custom-marker-end',
           iconSize: [24, 24],
           iconAnchor: [12, 12]
         })
@@ -259,31 +301,7 @@ const MapView = forwardRef(({
       endMarker.bindPopup(`<b>Meta</b><br>${tripData.endLocation || ''}`);
       tripMarkersRef.current.push(endMarker);
     }
-
-    // Narysuj trasę jeśli są punkty
-    if (tripData.points && tripData.points.length > 1 && showRoute) {
-      const latlngs = tripData.points.map(p => [p.lat, p.lng]);
-      const route = L.polyline(latlngs, { color: routeColor, weight: 4 }).addTo(map);
-      tripMarkersRef.current.push(route);
-      
-      // Dopasuj widok
-      if (autoCenter) {
-        map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
-      }
-    } else if (tripData.startCoordinates && tripData.endCoordinates && showRoute) {
-      // Prosta linia między start a meta
-      const latlngs = [
-        [tripData.startCoordinates.lat, tripData.startCoordinates.lng],
-        [tripData.endCoordinates.lat, tripData.endCoordinates.lng]
-      ];
-      const route = L.polyline(latlngs, { color: routeColor, weight: 4, dashArray: '5, 10' }).addTo(map);
-      tripMarkersRef.current.push(route);
-      
-      if (autoCenter) {
-        map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
-      }
-    }
-  }, [map, trip, trackedTrip, showRoute, routeColor, autoCenter]);
+  }, [map, trip, trackedTrip, routeColor, autoCenter]);
 
   // Śledzenie GPS
   const startTracking = () => {
