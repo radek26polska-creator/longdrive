@@ -2,9 +2,9 @@ import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, Calendar as CalendarIcon,
-  Clock, MapPin, Truck, Wrench, Fuel, Circle, Shield, FileText,
-  Plus, X, Edit2, Trash2, AlertTriangle, CheckCircle, CalendarDays,
-  Bell, BellOff, Car
+  Clock, Wrench, Circle, Shield, FileText,
+  Plus, X, Edit2, Trash2, CheckCircle, CalendarDays,
+  Bell, Car
 } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, isSameDay, addMonths, subMonths, parseISO, isValid, differenceInDays } from "date-fns";
+import { format, isSameDay, addMonths, subMonths, isValid, differenceInDays } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
 
@@ -86,7 +86,9 @@ const CalendarWidget = ({
         const parsed = JSON.parse(saved);
         setCustomEvents(parsed);
         checkReminders(parsed);
-      } catch (e) {}
+      } catch {
+        // Ignore parse errors
+      }
     }
   }, []);
 
