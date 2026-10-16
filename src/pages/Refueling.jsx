@@ -11,6 +11,7 @@ import {
   DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -264,7 +265,7 @@ export default function Refueling() {
         subtitle="Rejestr tankowań i wpływ na stan paliwa"
         icon={Fuel}
         action={
-          <Button onClick={() => setIsAddModalOpen(true)} className="bg-gradient-to-r from-emerald-500 to-teal-500">
+          <Button onClick={() => setIsAddModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Dodaj tankowanie
           </Button>
@@ -272,26 +273,26 @@ export default function Refueling() {
       />
 
       {/* AKTUALNE CENY PALIW */}
-      <GlassCard className="p-4 mb-6">
+      <GlassCard className="p-5 mb-6" hover={false}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-[var(--radius-sm)] bg-[var(--primary-soft)] border border-[var(--border-color)] flex items-center justify-center">
+            <TrendingUp className="w-5 h-5 text-[var(--primary-light)]" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">Aktualne ceny paliw w Polsce</h3>
-            <p className="text-xs text-slate-400">Wybierz województwo i odśwież</p>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Aktualne ceny paliw w Polsce</h3>
+            <p className="text-xs text-[var(--text-muted)]">Wybierz województwo i odśwież</p>
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="flex-1">
             <Select value={selectedVoivodeship} onValueChange={setSelectedVoivodeship}>
-              <SelectTrigger className="bg-slate-800 border-slate-700 text-white h-9 text-sm">
+              <SelectTrigger className="h-9 text-sm">
                 <SelectValue placeholder="Wybierz województwo" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
+              <SelectContent>
                 {voivodeships.map(v => (
-                  <SelectItem key={v} value={v} className="text-slate-200 hover:bg-slate-700">
+                  <SelectItem key={v} value={v}>
                     {v}
                   </SelectItem>
                 ))}
@@ -302,7 +303,7 @@ export default function Refueling() {
             onClick={fetchFuelPrices}
             disabled={loadingPrices || !selectedVoivodeship}
             size="sm"
-            className="bg-green-600 hover:bg-green-700 h-9"
+            className="h-9"
           >
             <RefreshCw className={`w-3 h-3 mr-1 ${loadingPrices ? 'animate-spin' : ''}`} />
             {loadingPrices ? 'Pobieranie...' : 'Pobierz ceny'}
@@ -311,55 +312,55 @@ export default function Refueling() {
         
         {fuelPrices ? (
           <>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-slate-800 rounded-lg p-2 text-center">
-                <div className="text-lg font-bold text-yellow-400">{fuelPrices.pb95}</div>
-                <div className="text-[10px] text-slate-400">Benzyna Pb95</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="surface-raised rounded-[var(--radius-sm)] p-3 text-center">
+                <div className="text-lg font-bold text-[var(--text-primary)]">{fuelPrices.pb95} <span className="text-xs font-normal text-[var(--text-muted)]">zł/l</span></div>
+                <div className="text-[10px] text-[var(--text-muted)]">Benzyna Pb95</div>
               </div>
-              <div className="bg-slate-800 rounded-lg p-2 text-center">
-                <div className="text-lg font-bold text-orange-400">{fuelPrices.on}</div>
-                <div className="text-[10px] text-slate-400">Olej napędowy</div>
+              <div className="surface-raised rounded-[var(--radius-sm)] p-3 text-center">
+                <div className="text-lg font-bold text-[var(--text-primary)]">{fuelPrices.on} <span className="text-xs font-normal text-[var(--text-muted)]">zł/l</span></div>
+                <div className="text-[10px] text-[var(--text-muted)]">Olej napędowy</div>
               </div>
-              <div className="bg-slate-800 rounded-lg p-2 text-center">
-                <div className="text-lg font-bold text-blue-400">{fuelPrices.lpg}</div>
-                <div className="text-[10px] text-slate-400">Autogaz LPG</div>
+              <div className="surface-raised rounded-[var(--radius-sm)] p-3 text-center">
+                <div className="text-lg font-bold text-[var(--text-primary)]">{fuelPrices.lpg} <span className="text-xs font-normal text-[var(--text-muted)]">zł/l</span></div>
+                <div className="text-[10px] text-[var(--text-muted)]">Autogaz LPG</div>
               </div>
             </div>
             {lastUpdate && (
-              <div className="flex justify-between items-center mt-2 text-[10px] text-slate-500">
+              <div className="flex justify-between items-center mt-3 text-[10px] text-[var(--text-muted)]">
                 <span>Źródło: {dataSource || 'collectapi.com'}</span>
                 <span>Aktualizacja: {lastUpdate.toLocaleTimeString()}</span>
               </div>
             )}
           </>
         ) : (
-          <div className="text-center py-2 text-slate-500 text-xs">
+          <div className="text-center py-2 text-[var(--text-muted)] text-xs">
             {selectedVoivodeship ? 'Kliknij "Pobierz ceny" aby wyświetlić dane' : 'Wybierz województwo aby pobrać ceny'}
           </div>
         )}
       </GlassCard>
 
-      <GlassCard className="p-6">
+      <GlassCard className="p-0 overflow-hidden" hover={false}>
         {refuelsLoading ? (
           <div className="text-center py-12">Ładowanie...</div>
         ) : sortedRefuels.length === 0 ? (
-          <div className="text-center py-12">
-            <Fuel className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400">Brak tankowań w systemie</p>
+          <div className="text-center py-12 px-6">
+            <Fuel className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4 opacity-60" />
+            <p className="text-[var(--text-muted)]">Brak tankowań w systemie</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-sm text-slate-400 border-b border-slate-700">
-                  <th className="pb-3 font-medium">Data</th>
-                  <th className="pb-3 font-medium">Pojazd</th>
-                  <th className="pb-3 font-medium">Ilość (l)</th>
-                  <th className="pb-3 font-medium">Koszt</th>
-                  <th className="pb-3 font-medium">Przebieg</th>
-                  <th className="pb-3 font-medium">Faktura</th>
-                  <th className="pb-3 font-medium">Uwagi</th>
-                  <th className="pb-3 font-medium">Akcje</th>
+            <table className="w-full min-w-[900px]">
+              <thead className="surface-raised">
+                <tr className="text-left text-xs uppercase tracking-wide text-[var(--text-muted)] border-b border-[var(--border-color)]">
+                  <th className="px-5 py-3 font-medium">Data</th>
+                  <th className="px-5 py-3 font-medium">Pojazd</th>
+                  <th className="px-5 py-3 font-medium">Ilość (l)</th>
+                  <th className="px-5 py-3 font-medium">Koszt</th>
+                  <th className="px-5 py-3 font-medium">Przebieg</th>
+                  <th className="px-5 py-3 font-medium">Faktura</th>
+                  <th className="px-5 py-3 font-medium">Uwagi</th>
+                  <th className="px-5 py-3 font-medium">Akcje</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
@@ -371,24 +372,24 @@ export default function Refueling() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="border-b border-slate-700/50 hover:bg-slate-700/20"
+                      className="border-b border-[var(--border-color)] hover:bg-[var(--surface-hover)] transition-colors"
                     >
-                      <td className="py-3">{new Date(refuel.date).toLocaleDateString()}</td>
-                      <td className="py-3">
+                      <td className="px-5 py-3 text-[var(--text-secondary)]">{new Date(refuel.date).toLocaleDateString()}</td>
+                      <td className="px-5 py-3 text-[var(--text-primary)]">
                         {vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.registrationNumber})` : 'Nieznany'}
                       </td>
-                      <td className="py-3">{refuel.liters} l</td>
-                      <td className="py-3">{Number(refuel.cost).toFixed(2)} zł</td>
-                      <td className="py-3">{refuel.mileage ? refuel.mileage.toLocaleString() + ' km' : '-'}</td>
-                      <td className="py-3">{refuel.invoiceNumber || '-'}</td>
-                      <td className="py-3">{refuel.notes || '-'}</td>
-                      <td className="py-3">
+                      <td className="px-5 py-3 text-[var(--text-secondary)]">{refuel.liters} l</td>
+                      <td className="px-5 py-3 font-medium text-[var(--text-primary)]">{Number(refuel.cost).toFixed(2)} zł</td>
+                      <td className="px-5 py-3 text-[var(--text-secondary)]">{refuel.mileage ? refuel.mileage.toLocaleString() + ' km' : '-'}</td>
+                      <td className="px-5 py-3"><Badge variant="outline" className="normal-case tracking-normal">{refuel.invoiceNumber || 'Brak'}</Badge></td>
+                      <td className="px-5 py-3 text-[var(--text-muted)]">{refuel.notes || '-'}</td>
+                      <td className="px-5 py-3">
                         <div className="flex items-center gap-2">
                           <Button variant="ghost" size="sm" onClick={() => openEditModal(refuel)}>
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => deleteRefuel(refuel.id)}>
-                            <Trash2 className="w-4 h-4 text-rose-400" />
+                            <Trash2 className="w-4 h-4 text-[var(--danger)]" />
                           </Button>
                         </div>
                       </td>
@@ -408,10 +409,10 @@ export default function Refueling() {
           setSelectedVehicleId("");
         }
       }}>
-        <DialogContent className="bg-slate-800 text-white border-slate-700 max-w-2xl">
+        <DialogContent className="bg-[var(--surface)] text-[var(--text-primary)] border-[var(--border-color)] max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingRefuel ? 'Edytuj tankowanie' : 'Nowe tankowanie'}</DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-[var(--text-muted)]">
               Wprowadź dane tankowania. Po zapisaniu stan paliwa w pojeździe zostanie zaktualizowany.
             </DialogDescription>
           </DialogHeader>
@@ -424,10 +425,10 @@ export default function Refueling() {
                     value={selectedVehicleId}
                     onValueChange={(value) => setSelectedVehicleId(value)}
                   >
-                    <SelectTrigger className="bg-slate-700 border-slate-600">
+                    <SelectTrigger className="bg-[var(--popover-surface)] border-[var(--border-color)]">
                       <SelectValue placeholder="Wybierz pojazd" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-700 border-slate-600">
+                    <SelectContent>
                       {vehicles.map(vehicle => (
                         <SelectItem key={vehicle.id} value={String(vehicle.id)}>
                           {vehicle.make} {vehicle.model} ({vehicle.registrationNumber})
@@ -443,21 +444,21 @@ export default function Refueling() {
                     name="date"
                     defaultValue={editingRefuel?.date?.split('T')[0] || new Date().toISOString().split('T')[0]}
                     required
-                    className="bg-slate-700 border-slate-600"
+                    className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   />
                 </div>
               </div>
 
               {selectedVehicleId && (
-                <div className="bg-slate-700/50 p-3 rounded-lg text-sm space-y-1">
-                  <p className="text-slate-300">
-                    Aktualny stan paliwa: <span className="font-bold text-white">{selectedVehicleFuel.toFixed(2)} L</span>
+                <div className="surface-raised p-3 rounded-[var(--radius-sm)] text-sm space-y-1 border border-[var(--border-color)]">
+                  <p className="text-[var(--text-secondary)]">
+                    Aktualny stan paliwa: <span className="font-bold text-[var(--text-primary)]">{selectedVehicleFuel.toFixed(2)} L</span>
                     {selectedVehicleTankSize > 0 && (
                       <> / {selectedVehicleTankSize} L (do pełna: {(selectedVehicleTankSize - selectedVehicleFuel).toFixed(2)} L)</>
                     )}
                   </p>
-                  <p className="text-slate-300">
-                    Aktualny przebieg: <span className="font-bold text-white">
+                  <p className="text-[var(--text-secondary)]">
+                    Aktualny przebieg: <span className="font-bold text-[var(--text-primary)]">
                       {vehicles.find(v => v.id === Number(selectedVehicleId))?.mileage?.toLocaleString() || 0} km
                     </span>
                   </p>
@@ -473,7 +474,7 @@ export default function Refueling() {
                     name="liters"
                     defaultValue={editingRefuel?.liters}
                     required
-                    className="bg-slate-700 border-slate-600"
+                    className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   />
                 </div>
                 <div className="space-y-2">
@@ -484,7 +485,7 @@ export default function Refueling() {
                     name="cost"
                     defaultValue={editingRefuel?.cost}
                     required
-                    className="bg-slate-700 border-slate-600"
+                    className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   />
                 </div>
               </div>
@@ -496,7 +497,7 @@ export default function Refueling() {
                     type="number"
                     name="mileage"
                     defaultValue={editingRefuel?.mileage}
-                    className="bg-slate-700 border-slate-600"
+                    className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   />
                 </div>
                 <div className="space-y-2">
@@ -505,7 +506,7 @@ export default function Refueling() {
                     type="text"
                     name="invoiceNumber"
                     defaultValue={editingRefuel?.invoiceNumber}
-                    className="bg-slate-700 border-slate-600"
+                    className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   />
                 </div>
               </div>
@@ -515,7 +516,7 @@ export default function Refueling() {
                 <Textarea
                   name="notes"
                   defaultValue={editingRefuel?.notes}
-                  className="bg-slate-700 border-slate-600"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   rows={2}
                 />
               </div>
@@ -526,7 +527,7 @@ export default function Refueling() {
                   name="fullTank"
                   id="fullTank"
                   defaultChecked={editingRefuel?.fullTank}
-                  className="rounded border-slate-600 bg-slate-700"
+                  className="rounded border-[var(--border-color)] bg-[var(--popover-surface)] accent-[var(--primary)]"
                 />
                 <Label htmlFor="fullTank">Zatankowano do pełna</Label>
               </div>
@@ -561,7 +562,7 @@ export default function Refueling() {
                 savingText="Zapisywanie..."
                 successText={editingRefuel ? 'Zapisano!' : 'Dodano!'}
                 variant="default"
-                className="bg-gradient-to-r from-emerald-500 to-teal-500"
+                className="min-w-[140px]"
                 queryClient={queryClient}
                 invalidateQueries={[['refuels'], ['vehicles']]}
                 disabled={isSaving}
