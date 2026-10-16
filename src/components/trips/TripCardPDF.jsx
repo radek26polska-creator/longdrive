@@ -1,62 +1,8 @@
 import React from "react";
-import jsPDF from "jspdf";
 import { Button } from "@/components/ui/button";
 import { Download, Eye } from "lucide-react";
 import KartaDrogowa from "./KartaDrogowa";
-
-const MM_TO_PX = 96 / 25.4;
-
-const generatePDFFromKartaDrogowa = async (ref, format = 'A4') => {
-  if (!ref?.current) throw new Error('Brak elementu do konwersji');
-
-  const html2canvas = (await import('html2canvas')).default;
-
-  const isA5 = format === 'A5';
-  const pageW_mm = isA5 ? 148 : 210;
-  const pageH_mm = isA5 ? 210 : 297;
-
-  const pageW_px = Math.round(pageW_mm * MM_TO_PX);
-
-  const canvas = await html2canvas(ref.current, {
-    scale: 3,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: '#ffffff',
-    logging: false,
-    width: pageW_px,
-    windowWidth: pageW_px,
-  });
-
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: isA5 ? 'a5' : 'a4',
-    compress: true,
-  });
-
-  const imgW_mm = pageW_mm;
-  const imgH_mm = (canvas.height / canvas.width) * pageW_mm;
-  const finalH = Math.min(imgH_mm, pageH_mm);
-
-  // 🔧 POPRAWIONE: Wyśrodkowanie obrazu pionowo (tak jak w podglądzie)
-  let yOffset = 0;
-  if (imgH_mm < pageH_mm) {
-    yOffset = (pageH_mm - imgH_mm) / 2;
-  }
-
-  pdf.addImage(
-    canvas.toDataURL('image/png'),
-    'PNG',
-    0,
-    yOffset,
-    imgW_mm,
-    finalH,
-    undefined,
-    'FAST'
-  );
-
-  return pdf;
-};
+import { generatePdfFromElement } from "@/lib/documentPdf";
 
 export default function TripCardPDF({ trip, vehicle, driver, company, format = 'A4' }) {
   const [loading, setLoading] = React.useState(false);
@@ -64,14 +10,13 @@ export default function TripCardPDF({ trip, vehicle, driver, company, format = '
   const kartaRef = React.useRef(null);
 
   const isA5 = format === 'A5';
-  const wrapperWidthPx = Math.round((isA5 ? 148 : 210) * MM_TO_PX);
+  const wrapperWidthPx = Math.round((isA5 ? 148 : 210) * (96 / 25.4));
 
   const generatePDF = React.useCallback(async () => {
     setRendered(true);
-    // Dajemy czas na wyrenderowanie ukrytego komponentu
-    await new Promise((resolve) => setTimeout(resolve, 100));
     try {
-      const pdf = await generatePDFFromKartaDrogowa(kartaRef, format);
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const pdf = await generatePdfFromElement(kartaRef.current, format);
       return pdf;
     } finally {
       setRendered(false);
@@ -97,7 +42,16 @@ export default function TripCardPDF({ trip, vehicle, driver, company, format = '
     try {
       const pdf = await generatePDF();
       const url = URL.createObjectURL(pdf.output('blob'));
-      window.open(url, '_blank');
+      const previewWindow = window.open(url, '_blank');
+      if (!previewWindow) {
+        URL.revokeObjectURL(url);
+        throw new Error('Przeglądarka zablokowała okno podglądu PDF');
+      }
+      const cleanup = () => {
+        URL.revokeObjectURL(url);
+        previewWindow.removeEventListener('beforeunload', cleanup);
+      };
+      previewWindow.addEventListener('beforeunload', cleanup);
     } catch (err) {
       console.error('Błąd podglądu PDF:', err);
       alert('Nie udało się wygenerować podglądu. Sprawdź konsolę.');
@@ -108,21 +62,21 @@ export default function TripCardPDF({ trip, vehicle, driver, company, format = '
 
   return (
     <>
-      {/* Ukryty komponent renderowany tylko podczas generowania PDF */}
+      {/* Render pomocniczy pozostaje widoczny dla html2canvas, ale nie przechwytuje interakcji. */}
       {rendered && (
         <div
           aria-hidden="true"
           style={{
             position: 'fixed',
-            left: '-9999px',
-            top: '-9999px',
-            zIndex: -9999,
+            left: 0,
+            top: 0,
+            zIndex: -1,
             pointerEvents: 'none',
             background: 'white',
             width: `${wrapperWidthPx}px`,
             overflow: 'hidden',
-            opacity: 0,
-            visibility: 'hidden',
+            opacity: 1,
+            visibility: 'visible',
           }}
         >
           <KartaDrogowa
