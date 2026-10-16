@@ -39,8 +39,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
-      <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--canvas)] p-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           {/* ========== LOGO ========== */}
           <div className="flex justify-center mb-4">
@@ -51,20 +51,20 @@ const LoginPage = () => {
             />
           </div>
           {/* ========================= */}
-          <CardTitle className="text-2xl text-white">Logowanie</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle className="page-title text-2xl">Logowanie</CardTitle>
+          <CardDescription className="text-[var(--text-muted)]">
             Wprowadź email i hasło, aby się zalogować
           </CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
-            <Alert variant="destructive" className="mb-4 bg-red-500/10 border-red-500/50">
+            <Alert variant="destructive" className="mb-4">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-300">Email</Label>
+              <Label htmlFor="email" className="text-[var(--text-secondary)]">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -72,30 +72,28 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="twoj@email.com"
                 required
-                className="bg-slate-700 border-slate-600 text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-300">Hasło</Label>
+              <Label htmlFor="password" className="text-[var(--text-secondary)]">Hasło</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-slate-700 border-slate-600 text-white"
               />
             </div>
             <Button 
               type="submit" 
-              className="w-full bg-indigo-600 hover:bg-indigo-700"
+              className="w-full"
               disabled={loading}
             >
               {loading ? 'Logowanie...' : 'Zaloguj się'}
             </Button>
-            <div className="text-center text-sm text-slate-400">
+            <div className="text-center text-sm text-[var(--text-muted)]">
               Nie masz konta?{' '}
-              <Link to="/register" className="text-indigo-400 hover:text-indigo-300">
+              <Link to="/register" className="text-[var(--primary-light)] hover:text-[var(--primary-hover)]">
                 Zarejestruj się
               </Link>
             </div>
