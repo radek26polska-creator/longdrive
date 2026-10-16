@@ -7,10 +7,10 @@ import { BrowserRouter as Router, Route, Routes, useLocation, Navigate, Outlet }
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { AppSettingsProvider, useAppSettings } from '@/lib/ThemeContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
-import WeatherPage from '@/pages/WeatherPage';
+import WeatherPage from '@/pages/WeatherPage';  // 🔧 DODANY IMPORT
 import { useState, useEffect } from 'react';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -188,8 +188,7 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route element={<AnimatedPage />}>
-                    {/* 🔧 KLUCZOWA ZMIANA: przekierowanie na dashboard zamiast MainPage */}
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/" element={<MainPage />} />
                     <Route path="/dashboard" element={<Pages.Dashboard />} />
                     <Route path="/drivers" element={<Pages.Drivers />} />
                     <Route path="/keys" element={<Pages.Keys />} />
@@ -202,7 +201,7 @@ function App() {
                     <Route path="/calculators" element={<Pages.Calculators />} />
                     <Route path="/refueling" element={<Pages.Refueling />} />
                     <Route path="/map" element={<Pages.MapPage />} />
-                    <Route path="/weather" element={<WeatherPage />} />
+                    <Route path="/weather" element={<WeatherPage />} />  {/* 🔧 DODANY ROUTE */}
                     <Route path="*" element={<PageNotFound />} />
                   </Route>
                 </Route>
