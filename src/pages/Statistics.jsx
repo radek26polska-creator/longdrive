@@ -1,22 +1,17 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
   BarChart3,
   Car,
   Route,
-  Fuel,
   Wrench,
-  TrendingUp,
-  DollarSign,
   Gauge,
   Download,
   Filter,
   Calendar,
-  User,
-  PieChart
+  User
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import GlassCard from "@/components/ui/GlassCard";
@@ -24,6 +19,15 @@ import StatCard from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 import { toast } from "sonner";
 import {
   BarChart,
@@ -42,7 +46,7 @@ import {
 } from "recharts";
 import api from "@/api/apiClient";
 
-const COLORS = ['#6366f1', '#22d3ee', '#a855f7', '#f59e0b', '#10b981', '#ef4444'];
+const COLORS = ['var(--primary-color)', '#22d3ee', '#a855f7', '#f59e0b', '#10b981', '#ef4444'];
 
 export default function Statistics() {
   const [selectedVehicle, setSelectedVehicle] = useState("all");
@@ -271,7 +275,7 @@ export default function Statistics() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-[1600px] space-y-6">
       <PageHeader
         title="Statystyki"
         subtitle="Analiza i raporty floty"
@@ -279,22 +283,29 @@ export default function Statistics() {
         action={
           <Button
             onClick={exportStatistics}
-            className="bg-gradient-primary hover:opacity-90 text-white"
+            className="w-full sm:w-auto"
           >
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="h-4 w-4" />
             Eksportuj raport
           </Button>
         }
       />
 
       {/* Filtry */}
-      <GlassCard className="p-4" delay={0.1}>
-        <div className="flex flex-col sm:flex-row gap-4">
+      <GlassCard className="p-4 sm:p-5" delay={0.1} hover={false}>
+        <div className="mb-4 flex items-center gap-2">
+          <Filter className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Filtruj dane</h2>
+          <Badge variant="outline" className="ml-auto normal-case tracking-normal text-[var(--text-muted)]">
+            {dateRange === "all" ? "Cały okres" : dateRange === "month" ? "Ostatni miesiąc" : dateRange === "quarter" ? "Ostatni kwartał" : "Ostatni rok"}
+          </Badge>
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="flex-1">
-            <Label className="text-theme-white-secondary text-xs mb-1">Pojazd</Label>
+            <Label className="mb-1.5 block text-xs text-[var(--text-muted)]">Pojazd</Label>
             <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
-              <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                <Car className="w-4 h-4 mr-2 text-slate-400" />
+              <SelectTrigger>
+                <Car className="mr-2 h-4 w-4 text-[var(--text-muted)]" />
                 <SelectValue placeholder="Wszystkie pojazdy" />
               </SelectTrigger>
               <SelectContent>
@@ -308,10 +319,10 @@ export default function Statistics() {
             </Select>
           </div>
           <div className="flex-1">
-            <Label className="text-theme-white-secondary text-xs mb-1">Kierowca</Label>
+            <Label className="mb-1.5 block text-xs text-[var(--text-muted)]">Kierowca</Label>
             <Select value={selectedDriver} onValueChange={setSelectedDriver}>
-              <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                <User className="w-4 h-4 mr-2 text-slate-400" />
+              <SelectTrigger>
+                <User className="mr-2 h-4 w-4 text-[var(--text-muted)]" />
                 <SelectValue placeholder="Wszyscy kierowcy" />
               </SelectTrigger>
               <SelectContent>
@@ -323,10 +334,10 @@ export default function Statistics() {
             </Select>
           </div>
           <div className="flex-1">
-            <Label className="text-theme-white-secondary text-xs mb-1">Okres</Label>
+            <Label className="mb-1.5 block text-xs text-[var(--text-muted)]">Okres</Label>
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                <Calendar className="w-4 h-4 mr-2 text-slate-400" />
+              <SelectTrigger>
+                <Calendar className="mr-2 h-4 w-4 text-[var(--text-muted)]" />
                 <SelectValue placeholder="Cały okres" />
               </SelectTrigger>
               <SelectContent>
@@ -341,7 +352,7 @@ export default function Statistics() {
       </GlassCard>
 
       {/* Karty statystyk */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-5 xl:grid-cols-4">
         <StatCard
           title="Łączny przebieg"
           value={`${(totalMileage / 1000).toFixed(0)}k km`}
@@ -379,8 +390,8 @@ export default function Statistics() {
       {/* Wykresy */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Status pojazdów */}
-        <GlassCard className="p-6" delay={0.4}>
-          <h3 className="text-lg font-semibold text-white mb-6">Status pojazdów</h3>
+        <GlassCard className="p-5 sm:p-6" delay={0.4} hover={false}>
+          <h3 className="mb-6 text-base font-semibold text-[var(--text-primary)]">Status pojazdów</h3>
           {statusData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <RePieChart>
@@ -398,121 +409,89 @@ export default function Statistics() {
                   ))}
                 </Pie>
                 <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1e293b', 
-                    border: '1px solid #334155',
-                    borderRadius: '8px',
-                    color: '#f1f5f9'
-                  }}
+                  contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
                 />
                 <Legend 
-                  formatter={(value) => <span className="text-slate-300">{value}</span>}
+                  formatter={(value) => <span className="text-[var(--text-secondary)]">{value}</span>}
                 />
               </RePieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-slate-500">
+            <div className="flex h-64 items-center justify-center text-sm text-[var(--text-muted)]">
               Brak danych
             </div>
           )}
         </GlassCard>
 
         {/* Statystyki miesięczne */}
-        <GlassCard className="p-6" delay={0.5}>
-          <h3 className="text-lg font-semibold text-white mb-6">Dystans w czasie</h3>
+        <GlassCard className="p-5 sm:p-6" delay={0.5} hover={false}>
+          <h3 className="mb-6 text-base font-semibold text-[var(--text-primary)]">Dystans w czasie</h3>
           {monthlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-                <YAxis stroke="#94a3b8" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} />
+                <YAxis stroke="var(--text-muted)" fontSize={12} />
                 <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1e293b', 
-                    border: '1px solid #334155',
-                    borderRadius: '8px',
-                    color: '#f1f5f9'
-                  }}
+                  contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="distance" 
-                  stroke="#6366f1" 
+                  stroke="var(--primary-color)" 
                   strokeWidth={2}
-                  dot={{ fill: '#6366f1', strokeWidth: 2 }}
+                  dot={{ fill: 'var(--primary-color)', strokeWidth: 2 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-slate-500">
+            <div className="flex h-64 items-center justify-center text-sm text-[var(--text-muted)]">
               Brak danych
             </div>
           )}
         </GlassCard>
 
         {/* Koszty serwisów – teraz grupujemy po opisie */}
-        <GlassCard className="p-6" delay={0.6}>
-          <h3 className="text-lg font-semibold text-white mb-6">Koszty serwisów wg opisu</h3>
+        <GlassCard className="p-5 sm:p-6" delay={0.6} hover={false}>
+          <h3 className="mb-6 text-base font-semibold text-[var(--text-primary)]">Koszty serwisów wg opisu</h3>
           {serviceCostsData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={serviceCostsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} angle={-45} textAnchor="end" height={80} />
-                <YAxis stroke="#94a3b8" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} angle={-45} textAnchor="end" height={80} />
+                <YAxis stroke="var(--text-muted)" fontSize={12} />
                 <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1e293b', 
-                    border: '1px solid #334155',
-                    borderRadius: '8px',
-                    color: '#f1f5f9'
-                  }}
+                  contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
                   formatter={(value) => [`${value.toLocaleString()} PLN`, 'Koszt']}
                 />
-                <Bar dataKey="koszt" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
-                <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#a855f7" />
-                  </linearGradient>
-                </defs>
+                <Bar dataKey="koszt" fill="var(--primary-color)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-slate-500">
+            <div className="flex h-64 items-center justify-center text-sm text-[var(--text-muted)]">
               Brak danych o serwisach
             </div>
           )}
         </GlassCard>
 
         {/* Top pojazdy */}
-        <GlassCard className="p-6" delay={0.7}>
-          <h3 className="text-lg font-semibold text-white mb-6">Top 5 pojazdów wg przebiegu</h3>
+        <GlassCard className="p-5 sm:p-6" delay={0.7} hover={false}>
+          <h3 className="mb-6 text-base font-semibold text-[var(--text-primary)]">Top 5 pojazdów wg przebiegu</h3>
           {vehicleStats.slice(0, 5).length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={vehicleStats.slice(0, 5)} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis type="number" stroke="#94a3b8" fontSize={12} />
-                <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={11} width={120} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                <XAxis type="number" stroke="var(--text-muted)" fontSize={12} />
+                <YAxis dataKey="name" type="category" stroke="var(--text-muted)" fontSize={11} width={120} />
                 <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1e293b', 
-                    border: '1px solid #334155',
-                    borderRadius: '8px',
-                    color: '#f1f5f9'
-                  }}
+                  contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)' }}
                   formatter={(value) => [`${value.toLocaleString()} km`, 'Przebieg']}
                 />
-                <Bar dataKey="distance" fill="url(#barGradient2)" radius={[0, 4, 4, 0]} />
-                <defs>
-                  <linearGradient id="barGradient2" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#22d3ee" />
-                    <stop offset="100%" stopColor="#6366f1" />
-                  </linearGradient>
-                </defs>
+                <Bar dataKey="distance" fill="var(--primary-color)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-slate-500">
+            <div className="flex h-64 items-center justify-center text-sm text-[var(--text-muted)]">
               Brak danych o pojazdach
             </div>
           )}
@@ -521,30 +500,28 @@ export default function Statistics() {
 
       {/* Tabela statystyk kierowców */}
       {driverStats.length > 0 && (
-        <GlassCard className="p-6" delay={0.8}>
-          <h3 className="text-lg font-semibold text-white mb-6">Statystyki kierowców</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-700">
-                  <th className="text-left py-3 text-slate-400 font-medium">Kierowca</th>
-                  <th className="text-right py-3 text-slate-400 font-medium">Liczba tras</th>
-                  <th className="text-right py-3 text-slate-400 font-medium">Łączny dystans</th>
-                  <th className="text-right py-3 text-slate-400 font-medium">Średni dystans</th>
-                 </tr>
-              </thead>
-              <tbody>
+        <GlassCard className="p-5 sm:p-6" delay={0.8} hover={false}>
+          <h3 className="mb-6 text-base font-semibold text-[var(--text-primary)]">Statystyki kierowców</h3>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Kierowca</TableHead>
+                <TableHead className="text-right">Liczba tras</TableHead>
+                <TableHead className="text-right">Łączny dystans</TableHead>
+                <TableHead className="text-right">Średni dystans</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
                 {driverStats.map((driver, index) => (
-                  <tr key={driver.id} className="border-b border-slate-700/50">
-                    <td className="py-3 text-white">{driver.name}</td>
-                    <td className="py-3 text-slate-300 text-right">{driver.tripCount}</td>
-                    <td className="py-3 text-slate-300 text-right">{driver.distance.toLocaleString()} km</td>
-                    <td className="py-3 text-slate-300 text-right">{driver.avgDistance.toLocaleString()} km</td>
-                   </tr>
+                  <TableRow key={driver.id}>
+                    <TableCell className="font-medium text-[var(--text-primary)]">{driver.name}</TableCell>
+                    <TableCell className="text-right text-[var(--text-secondary)]">{driver.tripCount}</TableCell>
+                    <TableCell className="text-right text-[var(--text-secondary)]">{driver.distance.toLocaleString()} km</TableCell>
+                    <TableCell className="text-right text-[var(--text-secondary)]">{driver.avgDistance.toLocaleString()} km</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+            </TableBody>
+          </Table>
         </GlassCard>
       )}
     </div>
