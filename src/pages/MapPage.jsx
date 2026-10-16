@@ -1,41 +1,22 @@
 // src/pages/MapPage.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Map, Navigation, Maximize2, Minimize2, ZoomIn, ZoomOut,
-  Crosshair, Layers, Sun, Moon, Satellite, MapPin, Truck,
-  UserCheck, Calendar, Clock, X, Plus, Eye, EyeOff,
-  Mountain, Route, Activity, Compass, Search, Save,
-  Trash2, ExternalLink, ChevronRight, Star, StarOff,
-  AlertTriangle, CheckCircle, Loader2, FileText, Car,
-  Gauge, Power, PowerOff, Wifi, WifiOff, Edit, Play,
-  Upload
+  Map, Navigation, Maximize2, Minimize2,
+  Crosshair, Satellite, Clock, X, Plus, Eye,
+  Mountain, Route, Save,
+  Trash2, ChevronRight,
+  AlertTriangle, CheckCircle, Loader2, Car, Power, PowerOff, Wifi, WifiOff, Edit, Play
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import GlassCard from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import MapView from "@/components/maps/MapView";
-import GPSLiveTracker from "@/components/maps/GPSLiveTracker";
 import TrackedTripsList from "@/components/maps/TrackedTripsList";
 import TripDetailsModal from "@/components/maps/TripDetailsModal";
 import RoutePlanner from "@/components/maps/RoutePlanner";
@@ -43,8 +24,6 @@ import { useTrackedTrips } from "@/hooks/useTrackedTrips";
 import api from "@/api/apiClient";
 import { useAppSettings } from "@/lib/ThemeContext";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { pl } from "date-fns/locale";
 
 const SAVED_PLANNED_ROUTES_KEY = "saved_planned_routes";
 
@@ -60,8 +39,12 @@ const formatDuration = (seconds) => {
 export default function MapPage() {
   const { settings } = useAppSettings();
   const mapRef = useRef(null);
+  const watchIdRef = useRef(null);
+  const trackingActiveRef = useRef(false);
+  const trackingPointsRef = useRef([]);
+  const trackingDistanceRef = useRef(0);
+  const savedTrackingTripRef = useRef(null);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("live");
   const [fullscreen, setFullscreen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
@@ -76,25 +59,7 @@ export default function MapPage() {
   const [trackingPoints, setTrackingPoints] = useState([]);
   const [trackingStartTime, setTrackingStartTime] = useState(null);
   const [trackingDistance, setTrackingDistance] = useState(0);
-  const [liveRouteLayer, setLiveRouteLayer] = useState(null);
   const [showSavePanel, setShowSavePanel] = useState(false);
-
-  // Stany dla dialogu eksportu
-  const [showExportDialog, setShowExportDialog] = useState(false);
-  const [exportTripData, setExportTripData] = useState(null);
-  const [selectedExportVehicleId, setSelectedExportVehicleId] = useState('');
-  const [selectedExportDriverId, setSelectedExportDriverId] = useState('');
-  const [exportOrderedBy, setExportOrderedBy] = useState('');
-  const [exportPurpose, setExportPurpose] = useState('');
-  const [exportDepartureDate, setExportDepartureDate] = useState('');
-  const [exportDepartureTime, setExportDepartureTime] = useState('');
-  const [exportReturnDate, setExportReturnDate] = useState('');
-  const [exportReturnTime, setExportReturnTime] = useState('');
-  
-  // Dodatkowe dane pojazdu do podglądu
-  const [selectedVehicleInfo, setSelectedVehicleInfo] = useState(null);
-  const [calculatedEndOdometer, setCalculatedEndOdometer] = useState(0);
-  const [calculatedEndFuel, setCalculatedEndFuel] = useState(0);
 
   const { trackedTrips, saveTrackedTrip, deleteTrackedTrip } = useTrackedTrips();
 
@@ -132,7 +97,6 @@ export default function MapPage() {
     },
   });
 
-  const [showLiveTracking, setShowLiveTracking] = useState(false);
   const [showRouteMarkers, setShowRouteMarkers] = useState(true);
   const [autoCenter, setAutoCenter] = useState(true);
 
@@ -140,80 +104,16 @@ export default function MapPage() {
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState(null);
   const [hasAskedForPermission, setHasAskedForPermission] = useState(false);
+  const [trackingError, setTrackingError] = useState(null);
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ["vehicles"],
     queryFn: api.getVehicles,
   });
 
-  const { data: drivers = [] } = useQuery({
-    queryKey: ["drivers"],
-    queryFn: api.getDrivers,
-  });
-
   const { data: trips = [] } = useQuery({
     queryKey: ["trips"],
     queryFn: api.getTrips,
-  });
-
-  // Aktualizacja informacji o pojeździe po zmianie wyboru
-  useEffect(() => {
-    if (selectedExportVehicleId) {
-      const vehicle = vehicles.find(v => v.id === selectedExportVehicleId);
-      setSelectedVehicleInfo(vehicle || null);
-      if (vehicle && exportTripData) {
-        setCalculatedEndOdometer((vehicle.mileage || 0) + (exportTripData.distance || 0));
-        // Przewidywane zużycie paliwa (średnio 7.5L/100km)
-        const fuelConsumption = vehicle.fuelConsumption || 7.5;
-        const fuelUsed = ((exportTripData.distance || 0) / 100) * fuelConsumption;
-        setCalculatedEndFuel(Math.max(0, (vehicle.fuelLevel || 0) - fuelUsed));
-      }
-    }
-  }, [selectedExportVehicleId, vehicles, exportTripData]);
-
-  // Ustaw domyślne daty
-  useEffect(() => {
-    const now = new Date();
-    const nowISO = now.toISOString().split('T')[0];
-    const nowTime = now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
-    setExportDepartureDate(nowISO);
-    setExportDepartureTime(nowTime);
-    setExportReturnDate(nowISO);
-    setExportReturnTime(nowTime);
-  }, []);
-
-  // Mutacja do zapisu trasy przez API i aktualizacji pojazdu
-  const createTripMutation = useMutation({
-    mutationFn: async (tripData) => {
-      // Najpierw utwórz trasę
-      const newTrip = await api.createTrip(tripData);
-      
-      // Następnie zaktualizuj pojazd (przebieg i stan paliwa)
-      if (tripData.vehicleId && tripData.endOdometer) {
-        await api.updateVehicle(Number(tripData.vehicleId), {
-          mileage: tripData.endOdometer,
-          fuelLevel: tripData.endFuel,
-          status: 'available'
-        });
-      }
-      
-      return newTrip;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['trips'] });
-      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-      toast.success(`✅ Trasa została dodana do modułu Podróże!`, {
-        description: `Przebieg pojazdu i stan paliwa zostały zaktualizowane.`,
-        duration: 3000,
-      });
-      setTimeout(() => {
-        navigate('/trips');
-      }, 2000);
-    },
-    onError: (error) => {
-      console.error('Błąd zapisu trasy:', error);
-      toast.error('Nie udało się dodać trasy: ' + (error.message || 'Błąd serwera'));
-    }
   });
 
   // Wczytaj zapisane zaplanowane trasy
@@ -236,7 +136,6 @@ export default function MapPage() {
         const parsed = JSON.parse(savedLocation);
         setLocationSettings(prev => ({ ...prev, ...parsed }));
         setGpsEnabled(parsed.gpsEnabled !== false);
-        setShowLiveTracking(parsed.trackLiveRoutes || false);
         setAutoCenter(parsed.autoCenterOnLocation !== false);
       } catch (e) {}
     }
@@ -250,6 +149,14 @@ export default function MapPage() {
         setAutoCenter(parsed.autoCenter !== false);
         setShowRouteMarkers(parsed.showMarkers !== false);
       } catch (e) {}
+    }
+  }, []);
+
+  useEffect(() => () => {
+    trackingActiveRef.current = false;
+    if (watchIdRef.current !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
     }
   }, []);
 
@@ -343,10 +250,7 @@ export default function MapPage() {
     setGpsEnabled(newState);
     localStorage.setItem("gps_enabled", JSON.stringify(newState));
     toast.info(newState ? "Lokalizator włączony" : "Lokalizator wyłączony");
-    if (!newState) {
-      setShowLiveTracking(false);
-      setIsTracking(false);
-    }
+    if (!newState) stopTrackingSession();
   };
 
   // Test połączenia API
@@ -373,127 +277,191 @@ export default function MapPage() {
       });
   };
 
+  const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const earthRadiusKm = 6371;
+    const deltaLat = (lat2 - lat1) * Math.PI / 180;
+    const deltaLng = (lng2 - lng1) * Math.PI / 180;
+    const haversine = Math.sin(deltaLat / 2) ** 2
+      + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+      * Math.sin(deltaLng / 2) ** 2;
+    return earthRadiusKm * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+  };
+
+  const handleTrackingPosition = (position) => {
+    if (!trackingActiveRef.current) return;
+
+    const { latitude, longitude, accuracy } = position.coords;
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+      || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180
+      || !Number.isFinite(accuracy) || accuracy > 100) {
+      return;
+    }
+
+    const timestamp = new Date(position.timestamp || Date.now());
+    const newPoint = { lat: latitude, lng: longitude, timestamp, accuracy };
+    const previous = trackingPointsRef.current[trackingPointsRef.current.length - 1];
+    let distanceFromPrevious = 0;
+    if (previous) {
+      const elapsedSeconds = (timestamp - new Date(previous.timestamp)) / 1000;
+      distanceFromPrevious = calculateDistance(previous.lat, previous.lng, latitude, longitude);
+      if (elapsedSeconds <= 0
+        || (distanceFromPrevious * 1000 / elapsedSeconds) > 70
+        || (distanceFromPrevious < 0.002 && elapsedSeconds < 5)) {
+        return;
+      }
+    }
+
+    const updated = [...trackingPointsRef.current, newPoint];
+    trackingPointsRef.current = updated;
+    trackingDistanceRef.current += distanceFromPrevious;
+    setTrackingPoints(updated);
+    setTrackingDistance(trackingDistanceRef.current);
+    setUserLocation({ lat: latitude, lng: longitude, accuracy });
+    setLocationError(null);
+    setTrackingError(null);
+
+    mapRef.current?.updateLiveRoute(updated.map(({ lat, lng }) => ({ lat, lng })));
+    if (autoCenter) mapRef.current?.centerOn(latitude, longitude);
+  };
+
+  const handleTrackingError = (error) => {
+    if (!trackingActiveRef.current) return;
+    const errorMessages = {
+      1: "Odmówiono dostępu do GPS. Zmień uprawnienia lokalizacji w ustawieniach przeglądarki lub systemu.",
+      2: "GPS chwilowo nie może ustalić pozycji. Śledzenie będzie kontynuowane po odzyskaniu sygnału.",
+      3: "Pobieranie pozycji GPS przekroczyło limit czasu. Oczekiwanie na kolejny pomiar.",
+    };
+    const message = errorMessages[error.code] || `Błąd GPS: ${error.message || "nieznany błąd"}`;
+    setTrackingError(message);
+    if (error.code === 1) {
+      toast.error(message);
+      stopTrackingSession(false);
+    } else {
+      setLocationError(message);
+    }
+  };
+
   // Rozpoczęcie śledzenia
   const startTrackingSession = () => {
+    if (trackingActiveRef.current || watchIdRef.current !== null) return;
     if (!gpsEnabled) {
       toast.error("Lokalizator jest wyłączony. Włącz go najpierw.");
       return;
     }
+    if (!navigator.geolocation) {
+      const message = "To środowisko nie obsługuje geolokalizacji.";
+      setTrackingError(message);
+      toast.error(message);
+      return;
+    }
+
+    trackingActiveRef.current = true;
+    trackingPointsRef.current = [];
+    trackingDistanceRef.current = 0;
+    savedTrackingTripRef.current = null;
+    setCurrentTrackingTrip(null);
+    setTrackingPoints([]);
+    setTrackingDistance(0);
+    setTrackingError(null);
+    setLocationError(null);
     setIsTracking(true);
     setShowSavePanel(false);
-    setTrackingPoints([]);
     setTrackingStartTime(new Date());
-    setTrackingDistance(0);
-    setShowLiveTracking(true);
     setActiveTab("live");
-    toast.success("Rozpoczęto śledzenie trasy");
+    mapRef.current?.clearLiveRoute();
+
+    try {
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        handleTrackingPosition,
+        handleTrackingError,
+        { enableHighAccuracy: locationSettings.highAccuracy, timeout: 15000, maximumAge: 0 }
+      );
+      toast.success("Rozpoczęto śledzenie trasy GPS");
+    } catch (error) {
+      trackingActiveRef.current = false;
+      watchIdRef.current = null;
+      setIsTracking(false);
+      const message = `Nie udało się rozpocząć śledzenia GPS: ${error.message}`;
+      setTrackingError(message);
+      toast.error(message);
+    }
   };
 
   // Zatrzymanie śledzenia
-  const stopTrackingSession = () => {
-    if (!isTracking) return;
-    
+  const stopTrackingSession = (showInsufficientPointsNotice = true) => {
+    if (!trackingActiveRef.current && watchIdRef.current === null) return;
+    trackingActiveRef.current = false;
+    if (watchIdRef.current !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+
     setIsTracking(false);
-    setShowLiveTracking(false);
-    
-    if (trackingPoints.length === 0) {
-      toast.info("Nie zapisano żadnych punktów trasy");
+    const points = trackingPointsRef.current;
+    if (points.length < 2) {
+      mapRef.current?.clearLiveRoute();
       setShowSavePanel(false);
+      if (showInsufficientPointsNotice) {
+        toast.info("Za mało poprawnych punktów GPS, aby zapisać trasę.");
+      }
       return;
     }
-    
+
+    mapRef.current?.fitBounds(points.map(({ lat, lng }) => ({ lat, lng })));
     setShowSavePanel(true);
-    toast.info("Śledzenie zakończone. Możesz teraz zapisać trasę lub odrzucić.");
+    toast.info("Śledzenie zakończone. Możesz zapisać ślad lub przekazać go do Podróży.");
   };
 
-  // Zapisanie trasy po śledzeniu (do localStorage - śledzone trasy)
+  // Zapisuje tylko ślad GPS; dane podróży pozostają w formularzu modułu Podróże.
   const saveCurrentTrackedTrip = () => {
-    const endTime = new Date();
-    const duration = Math.floor((endTime - trackingStartTime) / 1000);
-    
-    const newTrip = {
-      startLocation: trackingPoints[0]?.address || "Start śledzenia",
-      endLocation: trackingPoints[trackingPoints.length - 1]?.address || "Koniec śledzenia",
-      startDate: trackingStartTime,
-      endDate: endTime,
-      startCoordinates: trackingPoints[0] ? { lat: trackingPoints[0].lat, lng: trackingPoints[0].lng } : null,
-      endCoordinates: trackingPoints[trackingPoints.length - 1] ? { lat: trackingPoints[trackingPoints.length - 1].lat, lng: trackingPoints[trackingPoints.length - 1].lng } : null,
-      points: trackingPoints,
-      distance: trackingDistance,
-      duration: duration,
-      status: "completed",
-    };
-    
-    const savedTrip = saveTrackedTrip(newTrip);
-    if (savedTrip) {
-      toast.success("Trasa została zapisana! Znajdziesz ją w zakładce 'Zapisane Trasy'");
-      setShowSavePanel(false);
-      setTrackingPoints([]);
-      setTrackingDistance(0);
-      setTrackingStartTime(null);
-      if (mapRef.current) {
-        mapRef.current.clearRoadRoute();
-      }
+    if (savedTrackingTripRef.current) return savedTrackingTripRef.current;
+    const points = trackingPointsRef.current;
+    if (points.length < 2) {
+      toast.error("Nie można zapisać trasy bez co najmniej dwóch poprawnych punktów GPS.");
+      return null;
     }
+
+    const startTime = trackingStartTime || new Date(points[0].timestamp);
+    const endTime = new Date(points[points.length - 1].timestamp);
+    const savedTrip = saveTrackedTrip({
+      source: "gps",
+      name: `Ślad GPS ${startTime.toLocaleString("pl-PL")}`,
+      startLocation: `${points[0].lat.toFixed(5)}, ${points[0].lng.toFixed(5)}`,
+      endLocation: `${points[points.length - 1].lat.toFixed(5)}, ${points[points.length - 1].lng.toFixed(5)}`,
+      startDate: startTime,
+      endDate: endTime,
+      startCoordinates: { lat: points[0].lat, lng: points[0].lng },
+      endCoordinates: { lat: points[points.length - 1].lat, lng: points[points.length - 1].lng },
+      points,
+      distance: trackingDistanceRef.current,
+      duration: Math.max(0, Math.floor((endTime - startTime) / 1000)),
+      status: "completed",
+    });
+    if (savedTrip) {
+      savedTrackingTripRef.current = savedTrip;
+      setCurrentTrackingTrip(savedTrip);
+      toast.success("Ślad GPS zapisano w zakładce „Zapisane Trasy”.");
+    }
+    return savedTrip;
   };
 
   // Odrzucenie trasy
   const discardTrackedTrip = () => {
     setShowSavePanel(false);
+    if (savedTrackingTripRef.current) {
+      deleteTrackedTrip(savedTrackingTripRef.current.id);
+      savedTrackingTripRef.current = null;
+      setCurrentTrackingTrip(null);
+    }
     setTrackingPoints([]);
+    trackingPointsRef.current = [];
     setTrackingDistance(0);
+    trackingDistanceRef.current = 0;
     setTrackingStartTime(null);
     if (mapRef.current) {
-      mapRef.current.clearRoadRoute();
+      mapRef.current.clearLiveRoute();
     }
     toast.info("Trasa została odrzucona");
-  };
-
-  // Obsługa aktualizacji lokalizacji podczas śledzenia
-  const handleLocationUpdate = (position, history) => {
-    if (!isTracking) return;
-    
-    const newPoint = {
-      lat: position.lat,
-      lng: position.lng,
-      timestamp: new Date(),
-      accuracy: position.accuracy,
-      address: position.address || null,
-    };
-    
-    setTrackingPoints(prev => {
-      const updated = [...prev, newPoint];
-      if (prev.length > 0) {
-        const last = prev[prev.length - 1];
-        const dist = calculateDistance(last.lat, last.lng, position.lat, position.lng);
-        setTrackingDistance(d => d + dist);
-      }
-      
-      if (mapRef.current && updated.length > 1) {
-        const coordinates = updated.map(p => ({ lat: p.lat, lng: p.lng }));
-        mapRef.current.drawRoadRoute(coordinates, {
-          color: '#6366f1',
-          weight: 5,
-          opacity: 0.8,
-          startMarker: true,
-          endMarker: false,
-          fitBounds: false,
-        });
-      }
-      
-      return updated;
-    });
-  };
-
-  const calculateDistance = (lat1, lng1, lat2, lng2) => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
   };
 
   // Zapisanie zaplanowanej trasy
@@ -572,88 +540,32 @@ export default function MapPage() {
     toast.success(`Rozpoczynanie trasy: ${routeData.name || 'Nowa trasa'}`);
   };
 
-  // ✅ Eksport trasy - pokaż okno dialogowe z pełnymi danymi
   const exportTrackedTripToTrips = (trip) => {
-    console.log('📦 Eksportuję trasę do modułu Podróże:', trip);
-    
-    // Resetuj formularz
-    const now = new Date();
-    const nowISO = now.toISOString().split('T')[0];
-    const nowTime = now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
-    setExportDepartureDate(nowISO);
-    setExportDepartureTime(nowTime);
-    setExportReturnDate(nowISO);
-    setExportReturnTime(nowTime);
-    setExportOrderedBy('');
-    setExportPurpose('');
-    
-    // Zapisz dane trasy do stanu i pokaż dialog
-    setExportTripData(trip);
-    setSelectedExportVehicleId(vehicles.length > 0 ? vehicles[0]?.id : '');
-    setSelectedExportDriverId(drivers.length > 0 ? drivers[0]?.id : '');
-    setShowExportDialog(true);
-  };
-
-  // ✅ Funkcja potwierdzająca eksport z wszystkimi danymi i aktualizacją pojazdu
-  const confirmExportToTrips = () => {
-    if (!exportTripData) return;
-    
-    const vehicle = vehicles.find(v => v.id === selectedExportVehicleId);
-    const driver = drivers.find(d => d.id === selectedExportDriverId);
-    
-    if (!vehicle || !driver) {
-      toast.error('Wybierz pojazd i kierowcę');
+    if (!trip || !Number.isFinite(Number(trip.distance)) || Number(trip.distance) <= 0) {
+      toast.error("Trasa nie zawiera prawidłowego dystansu do przekazania.");
       return;
     }
-    
-    // Przygotuj datę i godzinę rozpoczęcia i zakończenia
-    const startDateTime = new Date(`${exportDepartureDate}T${exportDepartureTime}:00`);
-    const endDateTime = new Date(`${exportReturnDate}T${exportReturnTime}:00`);
-    const startDateTimeISO = startDateTime.toISOString();
-    const endDateTimeISO = endDateTime.toISOString();
-    
-    const startLocationText = typeof exportTripData.startLocation === 'object' 
-      ? (exportTripData.startLocation?.display_name || exportTripData.startLocation?.name || "Start")
-      : (exportTripData.startLocation || "Start");
-    
-    const endLocationText = typeof exportTripData.endLocation === 'object'
-      ? (exportTripData.endLocation?.display_name || exportTripData.endLocation?.name || "Cel")
-      : (exportTripData.endLocation || "Cel");
-    
-    // Obliczenia paliwa
-    const fuelConsumption = vehicle.fuelConsumption || 7.5;
-    const distance = exportTripData.distance || 0;
-    const fuelUsedNorm = (distance / 100) * fuelConsumption;
-    const endFuelCalculated = Math.max(0, (vehicle.fuelLevel || 0) - fuelUsedNorm);
-    
-    const tripData = {
-      vehicleId: vehicle.id,
-      driverId: driver.id,
-      startLocation: startLocationText,
-      endLocation: endLocationText,
-      distance: distance,
-      duration: exportTripData.duration || 0,
-      startDate: startDateTimeISO,
-      startTime: startDateTimeISO,
-      endDate: endDateTimeISO,
-      endTime: endDateTimeISO,
-      startOdometer: vehicle.mileage || 0,
-      endOdometer: Math.round((vehicle.mileage || 0) + distance),
-      startFuel: vehicle.fuelLevel || 0,
-      endFuel: endFuelCalculated,
-      fuelUsedNorm: fuelUsedNorm,
-      fuelUsedActual: fuelUsedNorm,
-      status: 'completed',
-      purpose: exportPurpose || `Trasa z mapy: ${startLocationText} → ${endLocationText}`,
-      orderedBy: exportOrderedBy || 'System',
-      points: exportTripData.points || [],
-      coordinates: exportTripData.coordinates || [],
-    };
-    
-    console.log('📤 Wysyłam dane do API:', tripData);
-    createTripMutation.mutate(tripData);
-    setShowExportDialog(false);
-    setExportTripData(null);
+
+    const isGpsTrack = trip.source === "gps" || trackedTrips.some(saved => saved.id === trip.id);
+    const gpsTrack = isGpsTrack ? (trip.id ? trip : saveCurrentTrackedTrip()) : null;
+    if (isGpsTrack && !gpsTrack) return;
+
+    navigate("/trips", {
+      state: {
+        gpsTripDraft: {
+          trackId: gpsTrack?.id || null,
+          source: isGpsTrack ? "gps" : "planned",
+          startLocation: typeof trip.startLocation === "object"
+            ? trip.startLocation?.display_name || trip.startLocation?.name || ""
+            : trip.startLocation || "",
+          endLocation: typeof trip.endLocation === "object"
+            ? trip.endLocation?.display_name || trip.endLocation?.name || ""
+            : trip.endLocation || "",
+          startDate: trip.startDate || new Date().toISOString(),
+          distance: Number(trip.distance),
+        },
+      },
+    });
   };
 
   // Eksport do Karty Drogowej
@@ -703,7 +615,7 @@ export default function MapPage() {
         {/* Panel boczny */}
         <div className={`${showSidebar ? "lg:w-96" : "lg:w-12"} transition-all duration-300 flex-shrink-0`}>
           <GlassCard className="p-0 overflow-hidden">
-            <div className="flex items-center justify-between p-3 border-b border-slate-700">
+            <div className="flex items-center justify-between p-3 border-b border-token">
               {showSidebar ? (
                 <>
                   <h3 className="text-theme-white font-semibold flex items-center gap-2">
@@ -724,7 +636,7 @@ export default function MapPage() {
             {showSidebar && (
               <div className="p-3 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="w-full bg-slate-800/50 border border-slate-700 p-1">
+                  <TabsList className="w-full surface-subtle border border-token p-1">
                     <TabsTrigger value="live" className="flex-1 data-[state=active]:bg-gradient-primary text-xs">Na żywo</TabsTrigger>
                     <TabsTrigger value="tracked" className="flex-1 data-[state=active]:bg-gradient-primary text-xs">Zapisane Trasy</TabsTrigger>
                     <TabsTrigger value="planner" className="flex-1 data-[state=active]:bg-gradient-primary text-xs">Planowanie Trasy</TabsTrigger>
@@ -732,7 +644,7 @@ export default function MapPage() {
 
                   {/* Zakładka: Na żywo */}
                   <TabsContent value="live" className="mt-3 space-y-4">
-                    <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700">
+                    <div className="surface-subtle rounded-xl p-3 border border-token">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {gpsEnabled ? <Wifi className="w-4 h-4 text-green-400" /> : <WifiOff className="w-4 h-4 text-red-400" />}
@@ -749,7 +661,7 @@ export default function MapPage() {
                       </div>
                     </div>
 
-                    <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700">
+                    <div className="surface-subtle rounded-xl p-3 border border-token">
                       <h4 className="text-theme-white text-sm font-semibold mb-2 flex items-center gap-2">
                         <Crosshair className="w-4 h-4 text-primary" />
                         Moja lokalizacja
@@ -784,11 +696,17 @@ export default function MapPage() {
                       </div>
                     </div>
 
-                    <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700">
+                    <div className="surface-subtle rounded-xl p-3 border border-token">
                       <h4 className="text-theme-white text-sm font-semibold mb-3 flex items-center gap-2">
                         <Navigation className="w-4 h-4 text-primary" />
                         Śledzenie trasy
                       </h4>
+
+                      {trackingError && (
+                        <div className="mb-3 rounded-lg border border-red-500/30 bg-red-500/10 p-2">
+                          <p className="text-xs text-red-300">{trackingError}</p>
+                        </div>
+                      )}
                       
                       {isTracking && (
                         <div className="mb-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
@@ -802,11 +720,11 @@ export default function MapPage() {
                             </Badge>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-center">
-                            <div className="bg-slate-900/50 rounded-lg p-2">
+                            <div className="surface-overlay rounded-lg p-2">
                               <p className="text-theme-white-muted text-[10px]">Dystans</p>
                               <p className="text-theme-white font-bold text-sm">{trackingDistance.toFixed(1)} km</p>
                             </div>
-                            <div className="bg-slate-900/50 rounded-lg p-2">
+                            <div className="surface-overlay rounded-lg p-2">
                               <p className="text-theme-white-muted text-[10px]">Czas</p>
                               <p className="text-theme-white font-bold text-sm">
                                 {trackingStartTime ? Math.floor((new Date() - trackingStartTime) / 60000) : 0} min
@@ -823,21 +741,32 @@ export default function MapPage() {
                             <p className="text-yellow-400 text-xs font-medium">Śledzenie zakończone</p>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-center mb-3">
-                            <div className="bg-slate-900/50 rounded-lg p-2">
+                            <div className="surface-overlay rounded-lg p-2">
                               <p className="text-theme-white-muted text-[10px]">Dystans</p>
                               <p className="text-theme-white font-bold text-sm">{trackingDistance.toFixed(1)} km</p>
                             </div>
-                            <div className="bg-slate-900/50 rounded-lg p-2">
+                            <div className="surface-overlay rounded-lg p-2">
                               <p className="text-theme-white-muted text-[10px]">Punkty GPS</p>
                               <p className="text-theme-white font-bold text-sm">{trackingPoints.length}</p>
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-xs" onClick={saveCurrentTrackedTrip}>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button size="sm" disabled={!!currentTrackingTrip} className="bg-green-600 hover:bg-green-700 text-xs" onClick={saveCurrentTrackedTrip}>
                               <Save className="w-3 h-3 mr-1" />
-                              Zapisz tę trasę
+                              {currentTrackingTrip ? "Trasa zapisana" : "Zapisz tę trasę"}
                             </Button>
-                            <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={discardTrackedTrip}>
+                            <Button
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-xs"
+                              onClick={() => {
+                                const savedTrip = saveCurrentTrackedTrip();
+                                if (savedTrip) exportTrackedTripToTrips(savedTrip);
+                              }}
+                            >
+                              <Car className="w-3 h-3 mr-1" />
+                              Użyj w Podróżach
+                            </Button>
+                            <Button size="sm" variant="outline" className="col-span-2 text-xs" onClick={discardTrackedTrip}>
                               <Trash2 className="w-3 h-3 mr-1" />
                               Odrzuć
                             </Button>
@@ -860,7 +789,7 @@ export default function MapPage() {
                       </div>
                     </div>
 
-                    <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700 space-y-3">
+                    <div className="surface-subtle rounded-xl p-3 border border-token space-y-3">
                       <h4 className="text-theme-white text-sm font-semibold">Ustawienia widoku</h4>
                       {[
                         { label: "Znaczniki trasy", state: showRouteMarkers, set: setShowRouteMarkers },
@@ -877,7 +806,7 @@ export default function MapPage() {
                   {/* Zakładka: Zapisane Trasy */}
                   <TabsContent value="tracked" className="mt-3 space-y-3">
                     {/* Zapisane zaplanowane trasy */}
-                    <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700">
+                    <div className="surface-subtle rounded-xl p-3 border border-token">
                       <h4 className="text-theme-white text-sm font-semibold mb-3 flex items-center gap-2">
                         <Save className="w-4 h-4 text-primary" />
                         Zaplanowane trasy ({savedPlannedRoutes.length})
@@ -895,7 +824,7 @@ export default function MapPage() {
                       ) : (
                         <div className="space-y-2 max-h-60 overflow-y-auto">
                           {savedPlannedRoutes.map((route) => (
-                            <div key={route.id} className="p-3 rounded-lg border border-slate-700 bg-slate-900/30 hover:border-slate-500 transition-all">
+                            <div key={route.id} className="p-3 rounded-lg border border-token surface-overlay hover:border-slate-500 transition-all">
                               <div className="flex items-start justify-between gap-2 mb-2">
                                 <div className="flex-1 min-w-0">
                                   <p className="text-theme-white text-sm font-medium truncate">{route.name}</p>
@@ -972,7 +901,7 @@ export default function MapPage() {
                     </div>
 
                     {/* Śledzone trasy */}
-                    <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700">
+                    <div className="surface-subtle rounded-xl p-3 border border-token">
                       <h4 className="text-theme-white text-sm font-semibold mb-3 flex items-center gap-2">
                         <Navigation className="w-4 h-4 text-primary" />
                         Śledzone trasy ({trackedTrips.length})
@@ -1018,7 +947,7 @@ export default function MapPage() {
                       }}
                     />
                     
-                    <div className="mt-4 p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                    <div className="mt-4 p-3 surface-subtle rounded-xl border border-token">
                       <h4 className="text-theme-white text-xs font-semibold mb-2 flex items-center gap-2">
                         <Route className="w-4 h-4 text-primary" />
                         Informacje o routingu
@@ -1043,7 +972,7 @@ export default function MapPage() {
         {/* Mapa */}
         <div className="flex-1 min-w-0">
           <GlassCard className="p-0 overflow-hidden map-container">
-            <div className="flex items-center justify-between p-3 border-b border-slate-700">
+            <div className="flex items-center justify-between p-3 border-b border-token">
               <div className="flex items-center gap-2">
                 {!showSidebar && (<Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setShowSidebar(true)}><Eye className="w-4 h-4" /></Button>)}
                 <h3 className="text-theme-white font-semibold text-sm flex items-center gap-2">
@@ -1072,7 +1001,6 @@ export default function MapPage() {
               ref={mapRef}
               trip={selectedTrackedTrip || selectedTrip}
               trackedTrip={selectedTrackedTrip}
-              showLiveTracking={showLiveTracking}
               showRoute={true}
               showMarkers={showRouteMarkers}
               provider={mapProvider}
@@ -1098,180 +1026,6 @@ export default function MapPage() {
         onExportToKarta={exportToKartaDrogowa}
       />
 
-      {/* Dialog eksportu do modułu Podróże - ROZSZERZONY */}
-      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <Car className="w-5 h-5 text-green-400" />
-              Eksportuj do modułu Podróże
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 mt-4">
-            {/* Podgląd trasy */}
-            <div className="bg-slate-800/50 rounded-lg p-3">
-              <p className="text-slate-400 text-sm mb-1">Trasa do wyeksportowania:</p>
-              <p className="text-white font-medium">
-                {exportTripData && (typeof exportTripData.startLocation === 'object' 
-                  ? exportTripData.startLocation?.display_name 
-                  : exportTripData.startLocation)} → {exportTripData && (typeof exportTripData.endLocation === 'object' 
-                  ? exportTripData.endLocation?.display_name 
-                  : exportTripData.endLocation)}
-              </p>
-              <p className="text-slate-400 text-xs mt-1">
-                Dystans: {(exportTripData?.distance || 0).toFixed(1)} km
-              </p>
-            </div>
-            
-            {/* Wybór pojazdu z aktualnymi danymi */}
-            <div className="space-y-2">
-              <Label className="text-theme-white">Pojazd *</Label>
-              <Select value={selectedExportVehicleId} onValueChange={setSelectedExportVehicleId}>
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                  <SelectValue placeholder="Wybierz pojazd" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vehicles.map(v => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.make} {v.model} ({v.registrationNumber}) - {v.mileage} km
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedVehicleInfo && (
-                <div className="text-xs text-slate-400 mt-1 p-2 bg-slate-800/30 rounded">
-                  <div className="grid grid-cols-2 gap-1">
-                    <span>📊 Aktualny przebieg:</span>
-                    <span className="text-white font-semibold">{selectedVehicleInfo.mileage?.toLocaleString()} km</span>
-                    <span>⛽ Stan paliwa:</span>
-                    <span className="text-white font-semibold">{selectedVehicleInfo.fuelLevel?.toFixed(1)} L</span>
-                    <span>📏 Pojemność baku:</span>
-                    <span className="text-white font-semibold">{selectedVehicleInfo.tankSize} L</span>
-                    <span>📈 Spalanie normatywne:</span>
-                    <span className="text-white font-semibold">{selectedVehicleInfo.fuelConsumption || 7.5} L/100km</span>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Wybór kierowcy */}
-            <div className="space-y-2">
-              <Label className="text-theme-white">Kierowca *</Label>
-              <Select value={selectedExportDriverId} onValueChange={setSelectedExportDriverId}>
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                  <SelectValue placeholder="Wybierz kierowcę" />
-                </SelectTrigger>
-                <SelectContent>
-                  {drivers.map(d => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name || `${d.firstName} ${d.lastName}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Data i godzina wyjazdu */}
-            <div className="space-y-2">
-              <Label className="text-theme-white">Data i godzina wyjazdu *</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  type="date"
-                  value={exportDepartureDate}
-                  onChange={(e) => setExportDepartureDate(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white"
-                />
-                <Input
-                  type="time"
-                  value={exportDepartureTime}
-                  onChange={(e) => setExportDepartureTime(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white"
-                />
-              </div>
-            </div>
-
-            {/* Data i godzina przyjazdu */}
-            <div className="space-y-2">
-              <Label className="text-theme-white">Data i godzina przyjazdu *</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  type="date"
-                  value={exportReturnDate}
-                  onChange={(e) => setExportReturnDate(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white"
-                />
-                <Input
-                  type="time"
-                  value={exportReturnTime}
-                  onChange={(e) => setExportReturnTime(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white"
-                />
-              </div>
-            </div>
-
-            {/* Podgląd obliczonych wartości końcowych */}
-            {selectedVehicleInfo && exportTripData && (
-              <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
-                <p className="text-blue-400 text-xs font-semibold mb-2">📋 Automatyczne wyliczenia:</p>
-                <div className="grid grid-cols-2 gap-1 text-xs">
-                  <span className="text-slate-400">Przebieg końcowy:</span>
-                  <span className="text-white font-semibold">{calculatedEndOdometer.toLocaleString()} km</span>
-                  <span className="text-slate-400">Stan paliwa końcowy:</span>
-                  <span className="text-white font-semibold">{calculatedEndFuel.toFixed(1)} L</span>
-                  <span className="text-slate-400">Przewidywane zużycie:</span>
-                  <span className="text-white font-semibold">
-                    {((exportTripData.distance || 0) / 100 * (selectedVehicleInfo.fuelConsumption || 7.5)).toFixed(1)} L
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Kto zlecił */}
-            <div className="space-y-2">
-              <Label className="text-theme-white">Kto zlecił przejazd?</Label>
-              <Input
-                type="text"
-                value={exportOrderedBy}
-                onChange={(e) => setExportOrderedBy(e.target.value)}
-                placeholder="Imię i nazwisko zlecającego"
-                className="bg-slate-800 border-slate-700 text-white"
-              />
-            </div>
-
-            {/* Cel podróży */}
-            <div className="space-y-2">
-              <Label className="text-theme-white">Cel podróży</Label>
-              <Input
-                type="text"
-                value={exportPurpose}
-                onChange={(e) => setExportPurpose(e.target.value)}
-                placeholder="np. Wyjazd służbowy, dostawa towaru"
-                className="bg-slate-800 border-slate-700 text-white"
-              />
-            </div>
-            
-            <div className="flex justify-end gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowExportDialog(false)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-800"
-              >
-                Anuluj
-              </Button>
-              <Button
-                onClick={confirmExportToTrips}
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
-                disabled={createTripMutation.isPending}
-              >
-                {createTripMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Car className="w-4 h-4 mr-2" />}
-                Eksportuj trasę
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
