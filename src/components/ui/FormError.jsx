@@ -18,7 +18,7 @@ export default function FormError({ error }) {
           animate={{ opacity: 1, y: 0, height: 'auto' }}
           exit={{ opacity: 0, y: -4, height: 0 }}
           transition={{ duration: 0.15 }}
-          className="flex items-center gap-1.5 text-xs text-red-400 mt-1"
+          className="state-error mt-1 flex items-center gap-1.5 border-0 bg-transparent text-xs"
         >
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           {error}
