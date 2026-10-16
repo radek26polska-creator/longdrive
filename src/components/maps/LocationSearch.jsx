@@ -382,20 +382,20 @@ const LocationSearch = ({
 
   const inputElement = (
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-token-muted" />
       <Input
         value={query}
         onChange={handleSearchChange}
         onFocus={handleFocus}
         placeholder={placeholder}
-        className={`pl-9 pr-20 bg-slate-800 border-slate-700 text-theme-white placeholder:text-slate-500 focus:border-primary transition-colors ${inline ? 'h-10' : ''}`}
+        className={`pl-9 pr-20 surface border-token text-theme-white placeholder:text-slate-500 focus:border-primary transition-colors ${inline ? 'h-10' : ''}`}
       />
       <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
         {loading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
         {showCurrentLocation && !loading && (
           <button
             onClick={handleGetCurrentLocation}
-            className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-700/50 rounded-md transition-all"
+            className="p-1.5 text-token-muted hover:text-primary hover:bg-slate-700/50 rounded-md transition-all"
             title="Użyj aktualnej lokalizacji"
           >
             <Navigation className="w-4 h-4" />
@@ -404,7 +404,7 @@ const LocationSearch = ({
         {query && !loading && (
           <button
             onClick={handleClear}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-md transition-all"
+            className="p-1.5 text-token-muted hover:text-token-primary hover:bg-slate-700/50 rounded-md transition-all"
             title="Wyczyść"
           >
             <X className="w-4 h-4" />
@@ -479,7 +479,7 @@ const LocationSearch = ({
                   className="w-full text-left p-2.5 rounded-lg transition-all flex items-start gap-3 group"
                 >
                   <div className="flex-shrink-0">
-                    <IconComponent className="w-4 h-4 text-slate-400" />
+                    <IconComponent className="w-4 h-4 text-token-muted" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-theme-white truncate">{location.name}</p>
