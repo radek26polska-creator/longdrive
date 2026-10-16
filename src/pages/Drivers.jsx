@@ -10,9 +10,10 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  User,
   CreditCard,
-  AlertCircle
+  Filter,
+  ArrowUpDown,
+  X
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import GlassCard from "@/components/ui/GlassCard";
@@ -44,13 +45,15 @@ import { toast } from "sonner";
 import api from "@/api/apiClient";
 
 const statusConfig = {
-  active: { label: 'Aktywny', color: 'bg-emerald-500' },
-  inactive: { label: 'Nieaktywny', color: 'bg-slate-500' },
-  on_leave: { label: 'Urlop', color: 'bg-amber-500' }
+  active: { label: 'Aktywny', color: 'status-success' },
+  inactive: { label: 'Nieaktywny', color: 'status-info' },
+  on_leave: { label: 'Urlop', color: 'status-warning' }
 };
 
 export default function Drivers() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState(null);
   const [formData, setFormData] = useState({
@@ -246,12 +249,36 @@ export default function Drivers() {
     }
   };
 
-  const filteredDrivers = drivers.filter(driver => {
-    const fullName = `${driver.firstName} ${driver.lastName}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase()) ||
-           driver.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           driver.phone?.includes(searchTerm);
-  });
+  const filteredDrivers = drivers
+    .filter(driver => {
+      const normalizedSearch = searchTerm.trim().toLowerCase();
+      const fullName = `${driver.firstName || ''} ${driver.lastName || ''}`.toLowerCase();
+      const matchesSearch = !normalizedSearch ||
+        fullName.includes(normalizedSearch) ||
+        driver.email?.toLowerCase().includes(normalizedSearch) ||
+        driver.phone?.includes(normalizedSearch);
+      const matchesStatus = statusFilter === 'all' || driver.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'status') return (statusConfig[a.status]?.label || '').localeCompare(statusConfig[b.status]?.label || '', 'pl');
+      return `${a.firstName || ''} ${a.lastName || ''}`.localeCompare(`${b.firstName || ''} ${b.lastName || ''}`, 'pl');
+    });
+
+  const hasActiveFilters = Boolean(searchTerm.trim()) || statusFilter !== 'all' || sortBy !== 'name';
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setSortBy("name");
+  };
+
+  const summaryStats = [
+    { label: 'Łącznie', value: drivers.length, icon: Users, tone: 'primary' },
+    { label: 'Aktywni', value: drivers.filter((d) => d.status === 'active').length, icon: CreditCard, tone: 'success' },
+    { label: 'Urlop', value: drivers.filter((d) => d.status === 'on_leave').length, icon: Phone, tone: 'warning' },
+    { label: 'Nieaktywni', value: drivers.filter((d) => d.status === 'inactive').length, icon: Mail, tone: 'info' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -262,7 +289,8 @@ export default function Drivers() {
         action={
           <Button 
             onClick={() => { resetForm(); setIsDialogOpen(true); }}
-            className="bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600"
+            aria-label="Dodaj nowego kierowcę"
+            className="bg-[var(--primary-color)] text-[var(--text-inverse)] hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
           >
             <Plus className="w-4 h-4 mr-2" />
             Dodaj kierowcę
@@ -270,39 +298,95 @@ export default function Drivers() {
         }
       />
 
-      {/* Search */}
-      <GlassCard className="p-4" delay={0.1}>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <Input
-            placeholder="Szukaj kierowcy..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
-          />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {summaryStats.map(({ label, value, icon: Icon, tone }) => (
+          <GlassCard key={label} className="p-4" delay={0.05} hover={false} animate={false}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--text-muted)]">{label}</p>
+                <p className="mt-3 text-2xl font-bold text-[var(--text-primary)]">{value}</p>
+              </div>
+              <div className={`flex h-11 w-11 items-center justify-center rounded-xl border ${
+                tone === 'success' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' :
+                tone === 'warning' ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' :
+                tone === 'info' ? 'border-sky-500/30 bg-sky-500/10 text-sky-400' :
+                'border-[var(--border-color)] bg-[var(--primary-soft)] text-[var(--primary-color)]'
+              }`}>
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </div>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+
+      <GlassCard className="p-4" delay={0.1} hover={false} animate={false}>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+            <Input
+              aria-label="Szukaj kierowcy"
+              placeholder="Szukaj kierowcy, telefonu lub emaila..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-11 pl-10 pr-10 bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
+            />
+            {searchTerm && (
+              <button type="button" aria-label="Wyczyść wyszukiwanie" onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:shrink-0">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger aria-label="Filtr statusu kierowcy" className="h-11 w-full bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)] focus:ring-[var(--focus)] lg:w-48">
+                <Filter className="w-4 h-4 mr-2 text-[var(--text-muted)]" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Wszyscy kierowcy</SelectItem>
+                <SelectItem value="active">Aktywni</SelectItem>
+                <SelectItem value="on_leave">Na urlopie</SelectItem>
+                <SelectItem value="inactive">Nieaktywni</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger aria-label="Sortuj kierowców" className="h-11 w-full bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)] focus:ring-[var(--focus)] lg:w-48">
+                <ArrowUpDown className="w-4 h-4 mr-2 text-[var(--text-muted)]" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Nazwa A–Z</SelectItem>
+                <SelectItem value="status">Według statusu</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {hasActiveFilters && (
+            <Button type="button" variant="ghost" onClick={resetFilters} className="h-11 shrink-0 justify-center text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]">
+              Wyczyść
+            </Button>
+          )}
         </div>
       </GlassCard>
 
-      {/* Drivers Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-48 bg-slate-800/50 rounded-2xl animate-pulse" />
+            <div key={i} className="h-48 rounded-[var(--radius-md)] border border-[var(--border-color)] bg-[var(--surface)] animate-pulse" />
           ))}
         </div>
       ) : filteredDrivers.length === 0 ? (
-        <GlassCard className="p-12 text-center">
-          <Users className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">Brak kierowców</h3>
-          <p className="text-slate-400 mb-4">
-            {searchTerm 
+        <GlassCard className="p-12 text-center" hover={false} animate={false}>
+          <Users className="mx-auto mb-4 h-16 w-16 text-[var(--text-muted)]" />
+          <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">Brak kierowców</h3>
+          <p className="mb-4 text-[var(--text-muted)]">
+            {searchTerm || statusFilter !== 'all'
               ? "Nie znaleziono kierowców spełniających kryteria"
               : "Dodaj pierwszego kierowcę do systemu"}
           </p>
-          {!searchTerm && (
+          {!searchTerm && statusFilter === 'all' && (
             <Button 
               onClick={() => setIsDialogOpen(true)}
-              className="bg-gradient-to-r from-indigo-500 to-cyan-500"
+              className="bg-[var(--primary-color)] text-[var(--text-inverse)] hover:opacity-95 focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
             >
               <Plus className="w-4 h-4 mr-2" />
               Dodaj kierowcę
@@ -310,38 +394,38 @@ export default function Drivers() {
           )}
         </GlassCard>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence mode="popLayout">
             {filteredDrivers.map((driver, index) => (
               <motion.div
                 key={driver.id}
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: index * 0.05 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ delay: index * 0.04 }}
                 layout
               >
-                <GlassCard className="p-6" hover={true} animate={false}>
-                  <div className="flex items-start justify-between mb-4">
-                    <Avatar className="w-14 h-14 border-2 border-indigo-500/50">
-                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white text-lg font-semibold">
+                <GlassCard className="p-5" hover={true} animate={false}>
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <Avatar className="h-14 w-14 border-2 border-[var(--primary-color)]/40">
+                      <AvatarFallback className="border border-[var(--border-color)] bg-[var(--primary-soft)] text-lg font-semibold text-[var(--text-primary)]">
                         {driver.firstName?.charAt(0)}{driver.lastName?.charAt(0) || 'K'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex items-center gap-2">
-                      <Badge className={`${statusConfig[driver.status]?.color || 'bg-slate-500'} text-white border-0`}>
+                      <Badge className={`${statusConfig[driver.status]?.color || 'status-info'} text-[var(--text-primary)]`}>
                         {statusConfig[driver.status]?.label || driver.status}
                       </Badge>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+                          <Button variant="ghost" size="icon" aria-label={`Akcje dla ${driver.firstName} ${driver.lastName}`} className="text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--focus)]">
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
+                        <DropdownMenuContent align="end" className="bg-[var(--popover-surface)] border-[var(--border-color)]">
                           <DropdownMenuItem 
                             onClick={() => handleEdit(driver)}
-                            className="text-slate-300 hover:text-white hover:bg-slate-700"
+                            className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
                           >
                             <Edit className="w-4 h-4 mr-2" />
                             Edytuj
@@ -352,7 +436,7 @@ export default function Drivers() {
                                 deleteMutation.mutate(driver.id);
                               }
                             }}
-                            className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                            className="text-[var(--danger)] hover:text-[var(--danger)] hover:bg-[var(--danger-soft)]"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Usuń
@@ -362,25 +446,25 @@ export default function Drivers() {
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-bold text-white mb-3">
+                  <h3 className="mb-3 text-xl font-bold text-[var(--text-primary)]">
                     {driver.firstName} {driver.lastName}
                   </h3>
 
                   <div className="space-y-2">
                     {driver.phone && (
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                         <Phone className="w-4 h-4" />
                         {driver.phone}
                       </div>
                     )}
                     {driver.email && (
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                         <Mail className="w-4 h-4" />
                         {driver.email}
                       </div>
                     )}
                     {driver.licenseNumber && (
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                         <CreditCard className="w-4 h-4" />
                         {driver.licenseNumber}
                       </div>
@@ -395,84 +479,86 @@ export default function Drivers() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
-              {editingDriver ? 'Edytuj kierowcę' : 'Dodaj nowego kierowcę'}
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-2xl overflow-y-auto border-[var(--border-color)] bg-[var(--surface)] p-0 text-[var(--text-primary)] shadow-[var(--shadow-card)] sm:rounded-[var(--radius-xl)]">
+          <div className="border-b border-[var(--border-color)] bg-[var(--surface-raised)] px-5 py-4 sm:px-6">
+            <DialogHeader className="space-y-1">
+              <DialogTitle className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
+                {editingDriver ? 'Edytuj kierowcę' : 'Dodaj nowego kierowcę'}
+              </DialogTitle>
+            </DialogHeader>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Imię *</Label>
+          <form onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 rounded-[var(--radius-lg)] border border-[var(--border-color)] bg-[var(--surface-raised)] p-3">
+                <Label className="text-sm font-medium text-[var(--text-secondary)]">Imię *</Label>
                 <Input
                   value={formData.firstName}
                   onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="h-11 rounded-xl border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Nazwisko *</Label>
+              <div className="space-y-2 rounded-[var(--radius-lg)] border border-[var(--border-color)] bg-[var(--surface-raised)] p-3">
+                <Label className="text-sm font-medium text-[var(--text-secondary)]">Nazwisko *</Label>
                 <Input
                   value={formData.lastName}
                   onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="h-11 rounded-xl border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
                   required
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Telefon</Label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 rounded-[var(--radius-lg)] border border-[var(--border-color)] bg-[var(--surface-raised)] p-3">
+                <Label className="text-sm font-medium text-[var(--text-secondary)]">Telefon</Label>
                 <Input
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="h-11 rounded-xl border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
+              <div className="space-y-2 rounded-[var(--radius-lg)] border border-[var(--border-color)] bg-[var(--surface-raised)] p-3">
+                <Label className="text-sm font-medium text-[var(--text-secondary)]">Email</Label>
                 <Input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="h-11 rounded-xl border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Nr prawa jazdy</Label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 rounded-[var(--radius-lg)] border border-[var(--border-color)] bg-[var(--surface-raised)] p-3">
+                <Label className="text-sm font-medium text-[var(--text-secondary)]">Nr prawa jazdy</Label>
                 <Input
                   value={formData.licenseNumber}
                   onChange={(e) => setFormData({...formData, licenseNumber: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="h-11 rounded-xl border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
                   placeholder="Opcjonalne - pozostaw puste jeśli brak"
                 />
-                <p className="text-xs text-slate-400">Pole opcjonalne - zostaw puste jeśli nie chcesz podawać</p>
+                <p className="text-xs text-[var(--text-muted)]">Pole opcjonalne - zostaw puste jeśli nie chcesz podawać</p>
               </div>
-              <div className="space-y-2">
-                <Label>Ważność prawa jazdy</Label>
+              <div className="space-y-2 rounded-[var(--radius-lg)] border border-[var(--border-color)] bg-[var(--surface-raised)] p-3">
+                <Label className="text-sm font-medium text-[var(--text-secondary)]">Ważność prawa jazdy</Label>
                 <Input
                   type="date"
                   value={formData.licenseExpiry}
                   onChange={(e) => setFormData({...formData, licenseExpiry: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="h-11 rounded-xl border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Status</Label>
+            <div className="space-y-2 rounded-[var(--radius-lg)] border border-[var(--border-color)] bg-[var(--surface-raised)] p-3">
+              <Label className="text-sm font-medium text-[var(--text-secondary)]">Status</Label>
               <Select 
                 value={formData.status} 
                 onValueChange={(v) => setFormData({...formData, status: v})}
               >
-                <SelectTrigger className="bg-slate-800 border-slate-700">
+                <SelectTrigger className="h-11 rounded-xl border-[var(--border-color)] bg-[var(--surface)] text-[var(--text-primary)] focus:ring-[var(--focus)]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -483,18 +569,18 @@ export default function Drivers() {
               </Select>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex flex-col-reverse gap-3 border-t border-[var(--border-color)] pt-4 sm:flex-row sm:justify-end">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setIsDialogOpen(false)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                className="h-11 border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
               >
                 Anuluj
               </Button>
               <Button 
                 type="submit"
-                className="bg-gradient-to-r from-indigo-500 to-cyan-500"
+                className="h-11 bg-[var(--primary-color)] text-[var(--text-inverse)] hover:opacity-95 focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {(createMutation.isPending || updateMutation.isPending) ? (
