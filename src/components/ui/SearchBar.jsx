@@ -33,12 +33,12 @@ export default function SearchBar({
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
         <Input
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           placeholder={placeholder}
-          className="pl-10 pr-10 bg-slate-800 border-slate-700 text-theme-white placeholder:text-slate-500 focus:border-primary"
+          className="pl-10 pr-10 bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-primary"
         />
         <AnimatePresence>
           {query && (
@@ -47,7 +47,7 @@ export default function SearchBar({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               onClick={() => onQueryChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
             >
               <X className="w-4 h-4" />
             </motion.button>
@@ -60,7 +60,7 @@ export default function SearchBar({
           variant="outline"
           size="icon"
           onClick={onFiltersToggle}
-          className={`border-slate-700 ${hasActiveFilters ? 'border-primary text-primary bg-primary/10' : 'text-slate-400'}`}
+          className={`border-[var(--border-color)] ${hasActiveFilters ? 'border-primary text-primary bg-primary/10' : 'text-[var(--text-muted)]'}`}
         >
           <SlidersHorizontal className="w-4 h-4" />
         </Button>
@@ -71,7 +71,7 @@ export default function SearchBar({
           variant="ghost"
           size="sm"
           onClick={onClear}
-          className="text-slate-400 hover:text-white whitespace-nowrap"
+          className="text-[var(--text-muted)] hover:text-[var(--text-primary)] whitespace-nowrap"
         >
           <X className="w-3 h-3 mr-1" />
           Wyczyść
@@ -79,7 +79,7 @@ export default function SearchBar({
       )}
 
       {totalCount !== undefined && (
-        <span className="text-sm text-slate-400 whitespace-nowrap">
+        <span className="text-sm text-[var(--text-muted)] whitespace-nowrap">
           {hasActiveFilters ? (
             <span>
               <span className="text-primary font-medium">{filteredCount}</span>
