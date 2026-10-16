@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Map, Navigation, Maximize2, Activity, RefreshCw } from 'lucide-react';
+import { Map, Maximize2, Activity, Navigation } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -119,7 +118,7 @@ const MapWidget = ({
       <div className="relative">
         {/* Nagłówek */}
         <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between">
-          <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-sm rounded-lg px-3 py-1.5">
+          <div className="flex items-center gap-2 surface-deep/80 backdrop-blur-sm rounded-lg px-3 py-1.5">
             <Map className="w-4 h-4 text-primary" />
             <span className="text-sm text-theme-white">Mapa tras</span>
             {activeTrips.length > 0 && (
@@ -132,7 +131,7 @@ const MapWidget = ({
             <Button
               variant={tracking ? "default" : "outline"}
               size="icon"
-              className="w-8 h-8 bg-slate-900/80 backdrop-blur-sm"
+              className="w-8 h-8 surface-deep/80 backdrop-blur-sm"
               onClick={toggleTracking}
               title={tracking ? "Zatrzymaj śledzenie" : "Rozpocznij śledzenie"}
             >
@@ -141,7 +140,7 @@ const MapWidget = ({
             <Button
               variant="outline"
               size="icon"
-              className="w-8 h-8 bg-slate-900/80 backdrop-blur-sm"
+              className="w-8 h-8 surface-deep/80 backdrop-blur-sm"
               onClick={centerOnCurrentLocation}
               title="Centruj na mojej pozycji"
             >
@@ -151,7 +150,7 @@ const MapWidget = ({
               <Button
                 variant="outline"
                 size="icon"
-                className="w-8 h-8 bg-slate-900/80 backdrop-blur-sm"
+                className="w-8 h-8 surface-deep/80 backdrop-blur-sm"
                 onClick={onFullscreen}
                 title="Pełny ekran"
               >
@@ -164,20 +163,20 @@ const MapWidget = ({
         {/* Kontener mapy */}
         <div
           ref={mapContainerRef}
-          className="w-full h-[300px] bg-slate-800"
+          className="w-full h-[300px] surface"
         />
 
         {/* Aktywne trasy - lista */}
         {activeTrips.length > 0 && (
           <div className="absolute bottom-3 left-3 right-3 z-10">
-            <div className="bg-slate-900/90 backdrop-blur-sm rounded-lg p-2">
+            <div className="surface-deep/90 backdrop-blur-sm rounded-lg p-2">
               <p className="text-xs text-theme-white-muted mb-2">Aktywne trasy:</p>
               <div className="flex flex-col gap-1">
                 {activeTrips.slice(0, 3).map(trip => (
                   <button
                     key={trip.id}
                     onClick={() => onTripClick?.(trip)}
-                    className="text-left text-xs text-theme-white hover:text-primary transition-colors p-1 rounded hover:bg-slate-800"
+                    className="text-left text-xs text-theme-white hover:text-primary transition-colors p-1 rounded hover:bg-[var(--surface-hover)]"
                   >
                     {trip.startLocation} → {trip.endLocation || 'w trakcie'}
                   </button>
@@ -190,7 +189,7 @@ const MapWidget = ({
         {/* Status śledzenia */}
         {tracking && (
           <div className="absolute top-3 right-3 z-10">
-            <div className="bg-red-500/90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+            <div className="bg-red-500/90 text-token-primary text-xs px-2 py-1 rounded-full flex items-center gap-1">
               <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
               Śledzenie GPS
             </div>
