@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
-import { pl } from "date-fns/locale";
 import {
   Settings,
   Building2,
@@ -17,44 +16,27 @@ import {
   Download,
   Upload,
   Trash2,
-  Type,
   Image,
   Key,
   Lock,
   Unlock,
   Activity,
-  Timer,
-  Zap,
-  Wind,
-  Sparkles,
-  MoveRight,
-  MoveLeft,
   Eye,
-  EyeOff,
-  AlertCircle,
   RefreshCw,
-  Shield,
   Map,
   Navigation,
   Globe,
   Database,
   BugPlay,
   Plug,
-  CloudRain,
   Fuel,
   Cog,
   Satellite,
-  Compass,
   Loader2,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
   BarChart3,
   Calculator,
   Wrench,
-  Car,
   Cloud,
-  History,
   Crosshair,
   Route,
   LayoutDashboard,
@@ -64,9 +46,9 @@ import GlassCard from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { logger } from "@/lib/logger";
 import {
   Select,
   SelectContent,
@@ -74,10 +56,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getReadableTextColor } from "@/lib/colorUtils";
 import { useAppSettings } from "@/lib/ThemeContext";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "sonner";
 import api from "@/api/apiClient";
+import { API_BASE_URL } from "@/lib/runtimeConfig";
 
 // Konfiguracja motywów
 const themes = [
@@ -215,7 +199,15 @@ const SaveAnimation = ({ show }) => {
 };
 
 export default function SettingsPage() {
-  const { settings, saveSettings } = useAppSettings();
+  const {
+    settings,
+    saveSettings,
+    saveCustomBackground: persistCustomBackground,
+    saveMenuOpacity,
+    saveCardOpacity,
+    saveMenuBackgroundColor,
+    saveCardBackgroundColor,
+  } = useAppSettings();
   const { user: authUser, token } = useAuth();
 
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
@@ -245,9 +237,20 @@ export default function SettingsPage() {
   theme: "dark",
   backgroundColor: "bg-app-gradient1",
   textColor: "white",
+  fontColor: "#f8fafc",
+  fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+  fontSize: 14,
+  buttonColor: "#5b7cfa",
+  buttonTextColor: "#ffffff",
+  buttonHoverColor: null,
+  menuHighlightColor: "#7c3aed",
+  menuTextColor: null,
+  menuActiveTextColor: null,
   requireKeyForTrip: false,
   animationType: "fade",
   animationSpeed: 0.3,
+  cardBorderColor: "#475569",
+  cardBorderWidth: 1,
 });
   const [menuOpacity, setMenuOpacity] = useState(0.5);
   const [cardOpacity, setCardOpacity] = useState(0.5);
@@ -256,6 +259,7 @@ export default function SettingsPage() {
   const [customBackground, setCustomBackground] = useState(null);
 
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("company");
 
   const [passwordData, setPasswordData] = useState({
@@ -411,9 +415,20 @@ export default function SettingsPage() {
       theme: settings.theme,
       backgroundColor: settings.backgroundColor,
       textColor: settings.textColor,
+      fontColor: settings.fontColor || "#f8fafc",
+      fontFamily: settings.fontFamily || "Inter, ui-sans-serif, system-ui, sans-serif",
+      fontSize: settings.fontSize || 14,
+      buttonColor: settings.buttonColor || "#5b7cfa",
+      buttonTextColor: settings.buttonTextColor || "#ffffff",
+      buttonHoverColor: settings.buttonHoverColor || null,
+      menuHighlightColor: settings.menuHighlightColor || "#7c3aed",
+      menuTextColor: settings.menuTextColor || null,
+      menuActiveTextColor: settings.menuActiveTextColor || null,
       requireKeyForTrip: settings.requireKeyForTrip,
       animationType: settings.animationType,
       animationSpeed: settings.animationSpeed,
+      cardBorderColor: settings.cardBorderColor,
+      cardBorderWidth: settings.cardBorderWidth,
     });
   }, [settings]);
 
@@ -442,7 +457,7 @@ export default function SettingsPage() {
 
   const saveProfileMutation = useMutation({
     mutationFn: async (data) => {
-      const response = await fetch("http://localhost:5000/api/auth/me", {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -469,6 +484,13 @@ export default function SettingsPage() {
     }, 2000);
   };
 
+  const quickAppearancePresets = [
+    { label: "Klasyczny ciemny", values: { theme: "dark", buttonColor: "#5b7cfa", menuHighlightColor: "#7c3aed", fontColor: "#f8fafc", fontSize: 14 } },
+    { label: "Niebieski biznes", values: { theme: "blue", buttonColor: "#2563eb", menuHighlightColor: "#0ea5e9", fontColor: "#e0f2fe", fontSize: 15 } },
+    { label: "Zielony spokój", values: { theme: "green", buttonColor: "#059669", menuHighlightColor: "#10b981", fontColor: "#ecfdf5", fontSize: 15 } },
+    { label: "Różowy akcent", values: { theme: "pink", buttonColor: "#ec4899", menuHighlightColor: "#f472b6", fontColor: "#fdf2f8", fontSize: 14 } },
+  ];
+
   const saveModulesSettings = () => {
     localStorage.setItem("modules_settings", JSON.stringify(modulesSettings));
     window.dispatchEvent(new Event("modulesSettingsChanged"));
@@ -493,6 +515,7 @@ export default function SettingsPage() {
   };
 
     const handleSave = async () => {
+    setIsSaving(true);
     try {
       if (activeTab === "company") {
         saveCompanyMutation.mutate(companyData);
@@ -507,13 +530,16 @@ export default function SettingsPage() {
       } else if (activeTab === "api") {
         saveApiSettings();
       } else if (activeTab === "appearance") {
-        await saveSettings({ ...localSettings });
-        // Zapisz przezroczystości i własne tło
-        localStorage.setItem("menu_opacity", menuOpacity);
-        localStorage.setItem("card_opacity", cardOpacity);
-        if (customBackground) {
-          localStorage.setItem("custom_background", customBackground);
-        }
+        await saveSettings({
+          ...localSettings,
+          menuOpacity,
+          cardOpacity,
+          customBackground,
+          menuBackgroundColor,
+          cardBackgroundColor,
+          cardBorderColor: localSettings.cardBorderColor,
+          cardBorderWidth: localSettings.cardBorderWidth,
+        });
         triggerSaveAnimation();
       } else if (activeTab === "animations") {
         await saveSettings({ ...localSettings });
@@ -521,6 +547,8 @@ export default function SettingsPage() {
       }
     } catch (error) {
       toast.error("Błąd podczas zapisu: " + error.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -528,7 +556,6 @@ export default function SettingsPage() {
     const newVal = !debugEnabled;
     setDebugEnabled(newVal);
     localStorage.setItem("debug_enabled", newVal.toString());
-    const { logger } = await import("@/lib/logger");
     if (newVal) {
       logger.enable();
       toast.success("Tryb debugowania WŁĄCZONY");
@@ -540,12 +567,10 @@ export default function SettingsPage() {
   };
 
   const refreshLogs = async () => {
-    const { logger } = await import("@/lib/logger");
     setLogs(logger.getLogs());
   };
 
   const downloadLogs = async () => {
-    const { logger } = await import("@/lib/logger");
     const exportData = logger.export();
     const blob = new Blob([JSON.stringify(exportData, null, 2)], {
       type: "application/json",
@@ -561,7 +586,6 @@ export default function SettingsPage() {
 
   const clearLogs = async () => {
     if (confirm("Czy na pewno wyczyścić wszystkie logi?")) {
-      const { logger } = await import("@/lib/logger");
       logger.clear();
       refreshLogs();
       toast.success("Logi wyczyszczone");
@@ -580,7 +604,7 @@ export default function SettingsPage() {
     setChangingPassword(true);
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/change-password",
+        `${API_BASE_URL}/auth/change-password`,
         {
           method: "POST",
           headers: {
@@ -735,17 +759,17 @@ export default function SettingsPage() {
           showSaveButton ? (
             <Button
               onClick={handleSave}
-              className="bg-gradient-primary"
-              disabled={saveCompanyMutation.isPending || saveProfileMutation.isPending}
+              className={`bg-gradient-primary ${isSaving ? "animate-pulse" : ""}`}
+              disabled={saveCompanyMutation.isPending || saveProfileMutation.isPending || isSaving}
             >
-              {saveCompanyMutation.isPending || saveProfileMutation.isPending ? (
+              {saveCompanyMutation.isPending || saveProfileMutation.isPending || isSaving ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : saveSuccess ? (
                 <Check className="w-4 h-4 mr-2" />
               ) : (
                 <Save className="w-4 h-4 mr-2" />
               )}
-              {saveSuccess ? "Zapisano!" : "Zapisz ustawienia"}
+              {isSaving ? "Zapisywanie..." : saveSuccess ? "Zapisano!" : "Zapisz ustawienia"}
             </Button>
           ) : undefined
         }
@@ -1755,47 +1779,279 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
-                              {/* ===== NOWE SEKCJE ===== */}
-{/* Kolor obwódki kafelków - color picker */}
-<div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
-    <Palette className="w-4 h-4 text-primary" />
-    Kolor obwódki kafelków
-  </h3>
-  <div className="flex items-center gap-4">
-    <input
-      type="color"
-      value={localSettings.cardColor ? (
-        localSettings.cardColor === 'slate' ? '#64748b' :
-        localSettings.cardColor === 'blue' ? '#2563eb' :
-        localSettings.cardColor === 'purple' ? '#7c3aed' :
-        localSettings.cardColor === 'green' ? '#059669' :
-        localSettings.cardColor === 'amber' ? '#d97706' :
-        localSettings.cardColor === 'rose' ? '#e11d48' :
-        localSettings.cardColor === 'cyan' ? '#0891b2' :
-        localSettings.cardColor === 'orange' ? '#ea580c' :
-        localSettings.cardColor === 'pink' ? '#db2777' :
-        localSettings.cardColor === 'lime' ? '#65a30d' :
-        localSettings.cardColor === 'sky' ? '#0284c7' : '#6366f1'
-      ) : '#6366f1'}
-      onChange={(e) => {
-        // Dla color pickera zapisujemy hex jako cardColor
-        setLocalSettings({ ...localSettings, cardColor: e.target.value });
-      }}
-      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
-    />
-    <div 
-      className="flex-1 h-10 rounded-lg border border-slate-600"
-      style={{ backgroundColor: localSettings.cardColor || '#6366f1' }}
-    />
-    <span className="text-theme-white text-sm font-mono">
-      {localSettings.cardColor || '#6366f1'}
-    </span>
-  </div>
-  <p className="text-xs text-slate-500 mt-2">
-    Wybierz dowolny kolor obwódki dla kafelków za pomocą palety kolorów.
-  </p>
-</div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Szybkie ustawienia wyglądu
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {quickAppearancePresets.map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setLocalSettings((prev) => ({ ...prev, ...preset.values }))}
+                        className="rounded-lg border border-slate-600 bg-slate-900/60 px-3 py-2 text-left text-xs text-theme-white transition hover:border-primary hover:bg-slate-800"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Kolor czcionki
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      value={localSettings.fontColor || "#f8fafc"}
+                      onChange={(e) => setLocalSettings({ ...localSettings, fontColor: e.target.value })}
+                      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                    />
+                    <div className="flex-1 h-10 rounded-lg border border-slate-600" style={{ backgroundColor: localSettings.fontColor || "#f8fafc" }} />
+                    <span className="text-theme-white text-sm font-mono">{localSettings.fontColor || "#f8fafc"}</span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Rodzaj czcionki
+                  </h3>
+                  <Select
+                    value={localSettings.fontFamily || "Inter, ui-sans-serif, system-ui, sans-serif"}
+                    onValueChange={(value) => setLocalSettings({ ...localSettings, fontFamily: value })}
+                  >
+                    <SelectTrigger className="bg-slate-900/50 border-slate-600 text-theme-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Inter, ui-sans-serif, system-ui, sans-serif">Inter</SelectItem>
+                      <SelectItem value="'Segoe UI', sans-serif">Segoe UI</SelectItem>
+                      <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+                      <SelectItem value="'Trebuchet MS', sans-serif">Trebuchet MS</SelectItem>
+                      <SelectItem value="'Georgia', serif">Georgia</SelectItem>
+                      <SelectItem value="'Times New Roman', serif">Times New Roman</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Wielkość czcionki
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-theme-white-secondary">
+                      <span>Mała</span>
+                      <span className="font-medium text-theme-white">{localSettings.fontSize || 14}px</span>
+                      <span>Duża</span>
+                    </div>
+                    <Slider
+                      value={[localSettings.fontSize || 14]}
+                      min={12}
+                      max={20}
+                      step={1}
+                      onValueChange={([value]) => setLocalSettings({ ...localSettings, fontSize: value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Tło głównych przycisków
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      aria-label="Tło głównych przycisków"
+                      value={localSettings.buttonColor || "#5b7cfa"}
+                      onChange={(e) => setLocalSettings({ ...localSettings, buttonColor: e.target.value })}
+                      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                    />
+                    <div className="flex-1 h-10 rounded-lg border border-slate-600" style={{ backgroundColor: localSettings.buttonColor || "#5b7cfa" }} />
+                    <span className="text-theme-white text-sm font-mono">{localSettings.buttonColor || "#5b7cfa"}</span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Kolor tekstu głównych przycisków
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      aria-label="Kolor tekstu głównych przycisków"
+                      value={localSettings.buttonTextColor || "#ffffff"}
+                      onChange={(e) => setLocalSettings({ ...localSettings, buttonTextColor: e.target.value })}
+                      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                    />
+                    <button
+                      type="button"
+                      className="flex-1 h-10 rounded-lg border border-slate-600 px-3 text-sm font-medium"
+                      style={{
+                        backgroundColor: localSettings.buttonColor || "#5b7cfa",
+                        color: localSettings.buttonTextColor || "#ffffff",
+                      }}
+                    >
+                      Przykładowy przycisk
+                    </button>
+                    <span className="text-theme-white text-sm font-mono">{localSettings.buttonTextColor || "#ffffff"}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Ustawienie dotyczy zwykłych przycisków akcji; zachowuje kolory przycisków usuwania i statusów.
+                  </p>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Kolor po najechaniu na przycisk
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      aria-label="Kolor przycisku po najechaniu"
+                      value={localSettings.buttonHoverColor || localSettings.buttonColor || "#5b7cfa"}
+                      onChange={(e) => setLocalSettings({ ...localSettings, buttonHoverColor: e.target.value })}
+                      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                    />
+                    <div
+                      className="flex-1 h-10 rounded-lg border border-slate-600"
+                      style={{ backgroundColor: localSettings.buttonHoverColor || localSettings.buttonColor || "#5b7cfa" }}
+                    />
+                    <span className="text-theme-white text-sm font-mono">
+                      {localSettings.buttonHoverColor || localSettings.buttonColor || "#5b7cfa"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setLocalSettings({ ...localSettings, buttonHoverColor: null })}
+                      className="text-xs text-theme-white-secondary underline"
+                    >
+                      Jak tło
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Domyślnie przycisk używa tego samego koloru co jego tło.
+                  </p>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Kolor podświetlenia menu
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      aria-label="Kolor podświetlenia menu"
+                      value={localSettings.menuHighlightColor || "#7c3aed"}
+                      onChange={(e) => setLocalSettings({ ...localSettings, menuHighlightColor: e.target.value })}
+                      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                    />
+                    <div className="flex-1 h-10 rounded-lg border border-slate-600" style={{ backgroundColor: localSettings.menuHighlightColor || "#7c3aed" }} />
+                    <span className="text-theme-white text-sm font-mono">{localSettings.menuHighlightColor || "#7c3aed"}</span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Kolor tekstu nieaktywnego menu
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      aria-label="Kolor tekstu nieaktywnego menu"
+                      value={localSettings.menuTextColor || getReadableTextColor(menuBackgroundColor)}
+                      onChange={(e) => setLocalSettings({ ...localSettings, menuTextColor: e.target.value })}
+                      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                    />
+                    <div
+                      className="flex-1 h-10 rounded-lg border border-slate-600 flex items-center px-3 text-sm"
+                      style={{
+                        backgroundColor: menuBackgroundColor,
+                        color: localSettings.menuTextColor || getReadableTextColor(menuBackgroundColor),
+                      }}
+                    >
+                      Pozycja menu
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setLocalSettings({ ...localSettings, menuTextColor: null })}
+                      className="text-xs text-theme-white-secondary underline"
+                    >
+                      Automatyczny kontrast
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Kolor tekstu aktywnej zakładki menu
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      aria-label="Kolor tekstu aktywnej zakładki menu"
+                      value={localSettings.menuActiveTextColor || getReadableTextColor(localSettings.menuHighlightColor || "#7c3aed")}
+                      onChange={(e) => setLocalSettings({ ...localSettings, menuActiveTextColor: e.target.value })}
+                      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                    />
+                    <div
+                      className="flex-1 h-10 rounded-lg border border-slate-600 flex items-center px-3 text-sm"
+                      style={{
+                        backgroundColor: localSettings.menuHighlightColor || "#7c3aed",
+                        color: localSettings.menuActiveTextColor || getReadableTextColor(localSettings.menuHighlightColor || "#7c3aed"),
+                      }}
+                    >
+                      Aktywna zakładka
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setLocalSettings({ ...localSettings, menuActiveTextColor: null })}
+                      className="text-xs text-theme-white-secondary underline"
+                    >
+                      Automatyczny kontrast
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-primary" />
+                    Kolor obwódki kafelków
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      value={localSettings.cardColor ? (
+                        localSettings.cardColor === 'slate' ? '#64748b' :
+                        localSettings.cardColor === 'blue' ? '#2563eb' :
+                        localSettings.cardColor === 'purple' ? '#7c3aed' :
+                        localSettings.cardColor === 'green' ? '#059669' :
+                        localSettings.cardColor === 'amber' ? '#d97706' :
+                        localSettings.cardColor === 'rose' ? '#e11d48' :
+                        localSettings.cardColor === 'cyan' ? '#0891b2' :
+                        localSettings.cardColor === 'orange' ? '#ea580c' :
+                        localSettings.cardColor === 'pink' ? '#db2777' :
+                        localSettings.cardColor === 'lime' ? '#65a30d' :
+                        localSettings.cardColor === 'sky' ? '#0284c7' : '#6366f1'
+                      ) : '#6366f1'}
+                      onChange={(e) => setLocalSettings({ ...localSettings, cardColor: e.target.value })}
+                      className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                    />
+                    <div className="flex-1 h-10 rounded-lg border border-slate-600" style={{ backgroundColor: localSettings.cardColor || '#6366f1' }} />
+                    <span className="text-theme-white text-sm font-mono">{localSettings.cardColor || '#6366f1'}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">Wybierz kolor obwódki dla kafelków.</p>
+                </div>
                 {/* Własne tło z obrazka */}
                 <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
                   <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
@@ -1810,11 +2066,16 @@ export default function SettingsPage() {
                     onChange={(e) => {
                       const file = e.target.files[0];
                       if (file) {
-                        const url = URL.createObjectURL(file);
-                        setCustomBackground(url);
-                        localStorage.setItem("custom_background", url);
-                        toast.success("Tło zostało zmienione!");
-                        setTimeout(() => window.location.reload(), 500);
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          const dataUrl = typeof reader.result === "string" ? reader.result : null;
+                          if (!dataUrl) return;
+                          setCustomBackground(dataUrl);
+                          persistCustomBackground(dataUrl);
+                          toast.success("Tło zostało zmienione!");
+                        };
+                        reader.onerror = () => toast.error("Nie udało się wczytać obrazu.");
+                        reader.readAsDataURL(file);
                       }
                     }}
                   />
@@ -1836,7 +2097,7 @@ export default function SettingsPage() {
                         className="w-full"
                         onClick={() => {
                           setCustomBackground(null);
-                          localStorage.removeItem("custom_background");
+                          persistCustomBackground(null);
                           toast.success("Tło zostało usunięte");
                           setTimeout(() => window.location.reload(), 500);
                         }}
@@ -1862,7 +2123,7 @@ export default function SettingsPage() {
                       value={menuBackgroundColor}
                       onChange={(e) => {
                         setMenuBackgroundColor(e.target.value);
-                        localStorage.setItem('menu_background_color', e.target.value);
+                        saveMenuBackgroundColor(e.target.value);
                       }}
                       className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
                     />
@@ -1891,7 +2152,7 @@ export default function SettingsPage() {
                       value={cardBackgroundColor}
                       onChange={(e) => {
                         setCardBackgroundColor(e.target.value);
-                        localStorage.setItem('card_background_color', e.target.value);
+                        saveCardBackgroundColor(e.target.value);
                       }}
                       className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
                     />
@@ -1908,6 +2169,50 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
+                {/* KOLOR I GRUBOŚĆ OBRAMOWANIA KAFELKÓW */}
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                  <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4 text-primary" />
+                    Obramowanie kafelków
+                  </h3>
+                  <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-center">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        aria-label="Kolor obwódki kafelków"
+                        value={localSettings.cardBorderColor}
+                        onChange={(e) => setLocalSettings({
+                          ...localSettings,
+                          cardBorderColor: e.target.value,
+                        })}
+                        className="w-16 h-10 rounded border border-slate-600 cursor-pointer bg-slate-900"
+                      />
+                      <span className="text-theme-white text-sm font-mono">
+                        {localSettings.cardBorderColor}
+                      </span>
+                    </div>
+                    <div>
+                      <Label className="text-theme-white-secondary mb-2 block">
+                        Grubość obwódki: {localSettings.cardBorderWidth}px
+                      </Label>
+                      <Slider
+                        aria-label="Grubość obwódki kafelków"
+                        value={[localSettings.cardBorderWidth]}
+                        onValueChange={([value]) => setLocalSettings({
+                          ...localSettings,
+                          cardBorderWidth: value,
+                        })}
+                        min={0}
+                        max={4}
+                        step={1}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Kolor i grubość obwódki są niezależne od koloru tła kafelka.
+                  </p>
+                </div>
+
                 {/* Przezroczystość menu bocznego */}
                 <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
                   <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
@@ -1919,7 +2224,7 @@ export default function SettingsPage() {
                       value={[menuOpacity]}
                       onValueChange={([val]) => {
                         setMenuOpacity(val);
-                        localStorage.setItem("menu_opacity", val);
+                        saveMenuOpacity(val);
                       }}
                       min={0.1}
                       max={1}
@@ -1946,7 +2251,7 @@ export default function SettingsPage() {
                       value={[cardOpacity]}
                       onValueChange={([val]) => {
                         setCardOpacity(val);
-                        localStorage.setItem("card_opacity", val);
+                        saveCardOpacity(val);
                       }}
                       min={0.1}
                       max={1}
