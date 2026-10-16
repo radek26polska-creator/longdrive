@@ -46,18 +46,18 @@ export const rules = {
 
   phone: (msg = 'Nieprawidłowy numer telefonu') => (value) => {
     if (!value) return null;
-    return /^[\d\s\+\-\(\)]{7,20}$/.test(value) ? null : msg;
+    return /^[\d\s+\-()]{7,20}$/.test(value) ? null : msg;
   },
 
   nip: (msg = 'Nieprawidłowy NIP (10 cyfr)') => (value) => {
     if (!value) return null;
-    const digits = value.replace(/[\s\-]/g, '');
+    const digits = value.replace(/[\s-]/g, '');
     return /^\d{10}$/.test(digits) ? null : msg;
   },
 
   plateNumber: (msg = 'Nieprawidłowy numer rejestracyjny') => (value) => {
     if (!value) return null;
-    return /^[A-Z0-9]{4,8}$/i.test(value.replace(/[\s\-]/g, '')) ? null : msg;
+    return /^[A-Z0-9]{4,8}$/i.test(value.replace(/[\s-]/g, '')) ? null : msg;
   },
 
   vin: (msg = 'VIN musi mieć 17 znaków') => (value) => {
