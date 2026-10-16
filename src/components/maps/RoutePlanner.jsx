@@ -2,7 +2,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  MapPin, 
   Navigation, 
   Clock, 
   Route as RouteIcon,
@@ -283,7 +282,7 @@ const RoutePlanner = ({
           value={routeName} 
           onChange={(e) => setRouteName(e.target.value)} 
           placeholder="np. Trasa do klienta" 
-          className="bg-slate-900/50 border-slate-600 text-theme-white text-sm h-9"
+          className="surface-overlay border-slate-600 text-theme-white text-sm h-9"
         />
       </div>
 
@@ -313,7 +312,7 @@ const RoutePlanner = ({
           <Button
             variant="ghost"
             size="icon"
-            className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700"
+            className="w-8 h-8 rounded-full surface hover:bg-slate-700"
             onClick={handleSwapLocations}
             disabled={!startLocation || !endLocation}
           >
@@ -423,7 +422,7 @@ const RoutePlanner = ({
                 </div>
               </div>
 
-              <div className="mt-3 pt-3 border-t border-slate-700">
+              <div className="mt-3 pt-3 border-t border-token">
                 <div className="flex items-start gap-2">
                   <div className="flex flex-col items-center">
                     <div className="w-2 h-2 rounded-full bg-green-500" />
