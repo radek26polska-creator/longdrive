@@ -1,23 +1,51 @@
 import React from 'react';
+import { calculateTripMetrics } from '@/lib/tripCalculations';
 
 const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMileage, endFuel, fuelAdded, format = 'A4' }, ref) => {
+  const normalizeDateTimeValue = (value) => {
+    if (!value || typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return `${trimmed}T00:00:00`;
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(trimmed)) return trimmed;
+    return trimmed;
+  };
+
   const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
+    const parsed = normalizeDateTimeValue(dateStr);
+    if (!parsed) return '';
+    const date = new Date(parsed);
     if (isNaN(date.getTime())) return '';
     return date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  const actualEndMileage = trip?.endOdometer || endMileage || trip?.startOdometer || 0;
-  const actualEndFuel = trip?.endFuel ?? endFuel ?? vehicle?.fuelLevel ?? 0;
-  const actualFuelAdded = trip?.fuelAdded ?? fuelAdded ?? 0;
-  const distance = actualEndMileage - (trip?.startOdometer || 0);
-  const fuelConsumption = vehicle?.fuelConsumption || 7.5;
-  const fuelUsedNorm = (distance / 100) * fuelConsumption;
-  const fuelUsedActual = (trip?.startFuel || 0) + actualFuelAdded - actualEndFuel;
-  const fuelDiff = fuelUsedNorm - fuelUsedActual;
-  const fuelSavings = fuelDiff > 0 ? fuelDiff : 0;
-  const fuelOveruse = fuelDiff < 0 ? Math.abs(fuelDiff) : 0;
+  const formatTime = (dateStr) => {
+    const parsed = normalizeDateTimeValue(dateStr);
+    if (!parsed) return '';
+    const date = new Date(parsed);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const metrics = calculateTripMetrics({
+    startOdometer: trip?.startOdometer,
+    endOdometer: trip?.endOdometer ?? endMileage,
+    startFuel: trip?.startFuel,
+    endFuel: trip?.endFuel ?? endFuel,
+    fuelAdded: trip?.fuelAdded ?? fuelAdded,
+    vehicle,
+  });
+  const {
+    endOdometer: actualEndMileage,
+    endFuel: actualEndFuel,
+    fuelAdded: actualFuelAdded,
+    fuelConsumption,
+    fuelUsedNorm,
+    fuelUsedActual,
+    fuelSavings,
+    fuelOveruse,
+    distance,
+  } = metrics;
 
   const isA5 = format === 'A5';
 
@@ -39,26 +67,29 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
   const lightGreen  = '#e8f5e9';
   const borderColor = '#5a8a6a';
 
-  const startRaw = trip?.startTime || trip?.startDate;
-  const endRaw   = trip?.endTime   || trip?.endDate;
+  const startRaw = trip?.startTime || trip?.startDate || trip?.departureDate ||
+    (trip?.departureDate && trip?.departureTime ? `${trip.departureDate}T${trip.departureTime}:00` : null);
+  const endRaw = trip?.endTime || trip?.endDate || trip?.returnDate ||
+    (trip?.returnDate && trip?.returnTime ? `${trip.returnDate}T${trip.returnTime}:00` : null);
 
-  const startDate = startRaw ? formatDate(startRaw) : '';
-  const endDate   = endRaw   ? formatDate(endRaw)   : '';
-  const startTime = startRaw
-    ? new Date(startRaw).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
-    : '';
-  const endTime = endRaw
-    ? new Date(endRaw).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
-    : '';
+  const startDate = formatDate(startRaw)
+    || (trip?.departureDate ? formatDate(trip.departureDate) : '');
+  const endDate = formatDate(endRaw)
+    || (trip?.returnDate ? formatDate(trip.returnDate) : '');
+  const startTime = formatTime(startRaw)
+    || (trip?.departureTime ? formatTime(`${trip.departureDate || trip.startDate || new Date().toISOString().slice(0, 10)}T${trip.departureTime}:00`) : '');
+  const endTime = formatTime(endRaw)
+    || (trip?.returnTime ? formatTime(`${trip.returnDate || trip.endDate || new Date().toISOString().slice(0, 10)}T${trip.returnTime}:00`) : '');
 
   const cell = {
     border: `1px solid ${borderColor}`,
-    padding: cellPad,
+    padding: isA5 ? '1px 3px 2px' : '2px 5px 3px',
     fontSize: baseFontSize,
-    verticalAlign: 'top',
+    verticalAlign: 'middle',
     wordBreak: 'break-word',
     overflowWrap: 'break-word',
-    lineHeight: '1.3',
+    lineHeight: '1.1',
+    textAlign: 'left',
   };
 
   const hCell = {
@@ -69,13 +100,44 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
     color: '#1a1a1a',
     verticalAlign: 'middle',
     textAlign: 'center',
-    lineHeight: '1.2',
+    lineHeight: '1.15',
   };
 
   const num = { fontWeight: 'bold', color: greenColor, marginRight: '3px' };
 
+  const signatureValue = (value, fallback = '_____________________') => {
+    const trimmed = typeof value === 'string' ? value.trim() : '';
+    const signatureText = trimmed || fallback;
+    return (
+      <div
+        style={{
+          minHeight: isA5 ? '18px' : '28px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          marginTop: isA5 ? '10px' : '12px',
+          fontFamily: '"Segoe Print", "Bradley Hand", cursive',
+          fontSize: isA5 ? '8px' : '12px',
+          color: '#111827',
+          textAlign: 'center',
+          lineHeight: 1.1,
+          letterSpacing: '0.04em',
+          wordBreak: 'keep-all',
+        }}
+      >
+        {signatureText}
+      </div>
+    );
+  };
+
   const driverName = driver?.name ||
     (driver ? `${driver.firstName || ''} ${driver.lastName || ''}`.trim() : '');
+
+  const orderedBySignature = trip?.orderedBy || trip?.resultsControlSignature || trip?.arrivalSignature || '';
+  const approvalSignature = trip?.resultsControlSignature || trip?.arrivalSignature || trip?.orderedBy || '';
+
+  const vehicleBodyType = vehicle?.bodyType || trip?.bodyType || trip?.vehicleBodyTypeSnapshot || '....................................';
 
   // 🔧 POPRAWA 1: Usunięto `body * { visibility: hidden }` - to powodowało znikanie menu
   // 🔧 POPRAWA 2: Dodano `display: block` i `position: relative` zamiast `fixed`
@@ -92,12 +154,12 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
         visibility: hidden !important;
       }
       
-      #karta-drogowa-print,
-      #karta-drogowa-print * {
+      [data-print-document="karta-drogowa"],
+      [data-print-document="karta-drogowa"] * {
         visibility: visible !important;
       }
       
-      #karta-drogowa-print {
+      [data-print-document="karta-drogowa"] {
         position: absolute !important;
         top: 0 !important;
         left: 0 !important;
@@ -116,7 +178,7 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
   return (
     <div
       ref={ref}
-      id="karta-drogowa-print"
+      data-print-document="karta-drogowa"
       style={{
         width: pageWidth,
         maxWidth: pageWidth,
@@ -255,7 +317,7 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
             </td>
             <td style={{ ...cell }}>
               Rodzaj nadwozia:&nbsp;
-              <span style={{ fontWeight: '600' }}>{vehicle?.bodyType || '....................................'}</span>
+              <span style={{ fontWeight: '600' }}>{vehicleBodyType}</span>
             </td>
           </tr>
         </tbody>
@@ -312,9 +374,13 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
           <tr>
             <td style={{ ...cell }}>
               <span style={num}>6</span> Pojazd samochodowy sprawny do wyjazdu
-              <div style={{ marginTop: isA5 ? '8px' : '12px', display: 'flex', gap: '30px' }}>
-                <span style={{ fontSize: labelFontSize, color: '#6b7280' }}>Podpis _____________</span>
-                <span style={{ fontSize: labelFontSize, color: '#6b7280' }}>Podpis kierowcy _____________</span>
+              <div style={{ marginTop: isA5 ? '8px' : '12px', display: 'flex', gap: '20px', alignItems: 'flex-end' }}>
+                <span style={{ fontSize: labelFontSize, color: '#6b7280', minWidth: isA5 ? '70px' : '110px' }}>
+                  {trip?.driverTechSignature || 'Podpis _____________'}
+                </span>
+                <span style={{ fontSize: labelFontSize, color: '#6b7280', minWidth: isA5 ? '90px' : '150px' }}>
+                  {trip?.driverResultsSignature || 'Podpis kierowcy _____________'}
+                </span>
               </div>
             </td>
             <td style={{ ...cell }}>
@@ -338,15 +404,15 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
               <span style={{ fontWeight: '600' }}>{trip?.orderedBy || '___________________________'}</span>
             </td>
             <td style={{ ...cell }}>
-              Zatwierdził przejazd: ___________________________
+              Zatwierdził przejazd: {trip?.resultsControlSignature || trip?.arrivalSignature || trip?.orderedBy || '___________________________'}
             </td>
           </tr>
           <tr>
             <td style={{ ...cell }}>
-              <span style={{ fontSize: labelFontSize, color: '#6b7280' }}>Podpis _________________</span>
+              {signatureValue(orderedBySignature, '_________________')}
             </td>
             <td style={{ ...cell }}>
-              <span style={{ fontSize: labelFontSize, color: '#6b7280' }}>Podpis _________________</span>
+              {signatureValue(approvalSignature, '_________________')}
             </td>
           </tr>
         </tbody>
@@ -372,23 +438,33 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
               <div style={{ marginBottom: '6px' }}>
                 <span style={num}>10</span> Podpis wystawiającego kartę
               </div>
-              <div style={{ fontSize: labelFontSize, color: '#6b7280', marginBottom: isA5 ? '12px' : '20px' }}>
-                ______________________
-              </div>
+              {signatureValue(trip?.resultsCalculatedBy || trip?.fuelIssuedBy || '', '____________________')}
               <div style={{ marginBottom: '4px', fontSize: labelFontSize }}>
                 <span style={num}>11</span> Norma zużycia paliwa<br />na 100 km przebiegu:
               </div>
               <div style={{ fontWeight: '700', fontSize: isA5 ? '11px' : '13px', color: greenColor }}>
-                {fuelConsumption} l/100km
+                {fuelConsumption} l/100km{metrics.fuelConsumptionSource === 'default' ? ' (domyślna)' : ''}
               </div>
             </td>
           </tr>
           <tr>
-            <td style={{ ...hCell, fontSize: tinyFontSize }}>
+            <td style={{
+              ...hCell,
+              fontSize: tinyFontSize,
+              height: isA5 ? '28px' : '34px',
+              padding: isA5 ? '3px 2px' : '4px 4px',
+              lineHeight: '1.2',
+            }}>
               Stan paliwa<br />przy otrzymaniu<br />karty
             </td>
             <td style={{ ...hCell, fontSize: tinyFontSize }} colSpan="4">Pobrano</td>
-            <td style={{ ...hCell, fontSize: tinyFontSize }}>
+            <td style={{
+              ...hCell,
+              fontSize: tinyFontSize,
+              height: isA5 ? '28px' : '34px',
+              padding: isA5 ? '3px 2px' : '4px 4px',
+              lineHeight: '1.2',
+            }}>
               Stan paliwa<br />przy zwrocie<br />karty
             </td>
           </tr>
@@ -397,21 +473,29 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
             <td style={{ ...hCell, fontSize: tinyFontSize }}>Gdzie</td>
             <td style={{ ...hCell, fontSize: tinyFontSize }}>Nr kwitu</td>
             <td style={{ ...hCell, fontSize: tinyFontSize }}>Ilość</td>
-            <td style={{ ...hCell, fontSize: tinyFontSize }}>Podpis<br />wydającego</td>
+            <td style={{
+              ...hCell,
+              fontSize: tinyFontSize,
+              height: isA5 ? '20px' : '24px',
+              padding: isA5 ? '2px' : '3px 4px',
+              lineHeight: '1.2',
+            }}>
+              Podpis<br />wydającego
+            </td>
             <td style={{ ...hCell, fontSize: tinyFontSize }}>6</td>
           </tr>
           <tr>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '700', fontSize: valueFontSize, height: isA5 ? '20px' : '24px' }}>
-              {(trip?.startFuel || 0).toFixed(1)} L
+              {metrics.startFuel !== null ? `${metrics.startFuel.toFixed(1)} L` : 'brak danych'}
             </td>
             <td style={{ ...cell, textAlign: 'center', fontSize: smallFontSize }}>{trip?.fuelStation || ''}</td>
             <td style={{ ...cell, textAlign: 'center', fontSize: smallFontSize }}>{trip?.fuelReceiptNumber || ''}</td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '700', fontSize: smallFontSize }}>
-              {actualFuelAdded > 0 ? `${actualFuelAdded.toFixed(1)} L` : '—'}
+              {actualFuelAdded !== null && actualFuelAdded > 0 ? `${actualFuelAdded.toFixed(1)} L` : actualFuelAdded === 0 ? '0.0 L' : 'brak danych'}
             </td>
             <td style={{ ...cell, textAlign: 'center' }}> </td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '700', fontSize: valueFontSize }}>
-              {actualEndFuel.toFixed(1)} L
+              {actualEndFuel !== null ? `${actualEndFuel.toFixed(1)} L` : 'brak danych'}
             </td>
           </tr>
           <tr>
@@ -468,19 +552,19 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
             <td style={{ ...cell, textAlign: 'center', fontWeight: '600', fontSize: smallFontSize }}>{endDate}</td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '600', fontSize: smallFontSize }}>{endTime}</td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '700', fontSize: valueFontSize }}>
-              {actualEndMileage > 0 ? `${actualEndMileage.toLocaleString()} km` : ''}
+              {actualEndMileage !== null ? `${actualEndMileage.toLocaleString()} km` : 'brak danych'}
             </td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '600', fontSize: smallFontSize }}>
-              {fuelUsedNorm > 0 ? `${fuelUsedNorm.toFixed(1)} L` : ''}
+              {fuelUsedNorm !== null ? `${fuelUsedNorm.toFixed(1)} L` : 'brak danych'}
             </td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '600', fontSize: smallFontSize }}>
-              {fuelUsedActual > 0 ? `${fuelUsedActual.toFixed(1)} L` : '—'}
+              {fuelUsedActual !== null ? `${fuelUsedActual.toFixed(1)} L` : 'brak danych'}
             </td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '700', fontSize: smallFontSize, color: '#10b981' }}>
-              {fuelSavings > 0 ? `${fuelSavings.toFixed(1)} L` : ''}
+              {fuelSavings !== null ? `${fuelSavings.toFixed(1)} L` : '—'}
             </td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '700', fontSize: smallFontSize, color: '#ef4444' }}>
-              {fuelOveruse > 0 ? `${fuelOveruse.toFixed(1)} L` : ''}
+              {fuelOveruse !== null ? `${fuelOveruse.toFixed(1)} L` : '—'}
             </td>
           </tr>
           <tr>
@@ -490,7 +574,7 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
             <td style={{ ...cell, textAlign: 'center', fontWeight: '600', fontSize: smallFontSize }}>{startDate}</td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '600', fontSize: smallFontSize }}>{startTime}</td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '700', fontSize: valueFontSize }}>
-              {(trip?.startOdometer || 0).toLocaleString()} km
+              {metrics.startOdometer !== null ? `${metrics.startOdometer.toLocaleString()} km` : 'brak danych'}
             </td>
             <td style={cell}> </td>
             <td style={cell}> </td>
@@ -519,7 +603,7 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
             <td style={{ ...cell, height: isA5 ? '22px' : '28px' }}> </td>
             <td style={{ ...cell, textAlign: 'center' }}> </td>
             <td style={{ ...cell, textAlign: 'center', fontWeight: '700', fontSize: isA5 ? '13px' : '15px', color: greenColor }}>
-              {distance > 0 ? `${distance.toLocaleString()} km` : '—'}
+              {distance === null ? 'brak danych' : `${distance.toLocaleString()} km`}
             </td>
           </tr>
         </tbody>
@@ -536,27 +620,21 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
           <tr>
             <td style={{ ...cell }}>
               <span style={num}>15</span> Podpis kierowcy
-              <div style={{ marginTop: isA5 ? '14px' : '18px', fontSize: labelFontSize, color: '#6b7280' }}>
-                _______________________
-              </div>
+              {signatureValue(trip?.driverResultsSignature, '_____________________')}
             </td>
             <td style={{ ...cell }}>
               <span style={num}>16</span> Wyniki obliczył
-              <div style={{ marginTop: isA5 ? '14px' : '18px', fontSize: labelFontSize, color: '#6b7280' }}>
-                _______________________
-              </div>
+              {signatureValue(trip?.resultsCalculatedBy, '_____________________')}
             </td>
             <td style={{ ...cell }}>
               <span style={num}>17</span> Podpis kontr. wyniki
-              <div style={{ marginTop: isA5 ? '14px' : '18px', fontSize: labelFontSize, color: '#6b7280' }}>
-                _______________________
-              </div>
+              {signatureValue(trip?.resultsControlSignature, '_____________________')}
             </td>
           </tr>
         </tbody>
       </table>
 
-      {/* ===== SEKCJA 19 – UWAGI ===== */}
+      {/* ===== SEKCJA 18 – UWAGI ===== */}
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <colgroup>
           <col style={{ width: '60%' }} />
@@ -565,7 +643,7 @@ const KartaDrogowa = React.forwardRef(({ trip, vehicle, driver, company, endMile
         <tbody>
           <tr>
             <td style={{ ...cell, verticalAlign: 'top', minHeight: isA5 ? '30px' : '38px' }}>
-              <span style={num}>19</span> Uwagi
+              <span style={num}>18</span> Uwagi
               <div style={{ marginTop: '3px', fontSize: baseFontSize, minHeight: isA5 ? '22px' : '28px' }}>
                 {trip?.notes || ''}
               </div>
