@@ -3,25 +3,22 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Truck, Users, Map, Calendar, Cloud,
-  Fuel, Wrench, TrendingUp, Activity, Plus, ArrowRight,
-  Car, UserCheck, AlertTriangle, CheckCircle, Clock,
-  Battery, Thermometer, Gauge, Route, Navigation, Eye,
-  BarChart3
+  LayoutDashboard, Truck, Users,
+  Fuel, Wrench, TrendingUp, Plus, ArrowRight,
+  Car, AlertTriangle, CheckCircle, Gauge, Route, Navigation
 } from "lucide-react";
 import StatCard from "@/components/ui/StatCard";
 import GlassCard from "@/components/ui/GlassCard";
 import PageHeader from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import WeatherWidget from "@/components/weather/WeatherWidget";
 import CalendarWidget from "@/components/calendar/CalendarWidget";
 import api from "@/api/apiClient";
 import { useAppSettings } from "@/lib/ThemeContext";
 import { useAuth } from "@/lib/AuthContext";
-import { format, formatDistanceToNow, isToday, isThisWeek, isValid } from "date-fns";
+import { format, formatDistanceToNow, isValid } from "date-fns";
 import { pl } from "date-fns/locale";
 
 const serviceTypeLabels = {
@@ -34,10 +31,10 @@ const serviceTypeLabels = {
 };
 
 const statusColors = {
-  available: "text-green-400 bg-green-400/10",
-  in_use: "text-blue-400 bg-blue-400/10",
-  maintenance: "text-yellow-400 bg-yellow-400/10",
-  unavailable: "text-red-400 bg-red-400/10",
+  available: "status-success",
+  in_use: "status-info",
+  maintenance: "status-warning",
+  unavailable: "status-danger",
 };
 
 const statusLabels = {
@@ -48,9 +45,9 @@ const statusLabels = {
 };
 
 const tripStatusColors = {
-  in_progress: "text-blue-400 bg-blue-400/10",
-  completed: "text-green-400 bg-green-400/10",
-  cancelled: "text-red-400 bg-red-400/10",
+  in_progress: "status-info",
+  completed: "status-success",
+  cancelled: "status-danger",
 };
 
 const tripStatusLabels = {
@@ -217,8 +214,9 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      <div className="surface rounded-[var(--radius-md)] flex flex-col items-center justify-center gap-3 h-96" role="status" aria-live="polite">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--primary-color)]" />
+        <span className="text-sm text-[var(--text-muted)]">Ładowanie danych floty…</span>
       </div>
     );
   }
@@ -229,15 +227,33 @@ export default function Dashboard() {
     : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7 pb-8">
       <PageHeader
         title="Panel główny"
         subtitle={`Witaj${user?.name ? `, ${user.name}` : ""}! Oto podsumowanie Twojej floty.`}
         icon={LayoutDashboard}
       />
 
+      <div className="ops-commandbar rounded-[var(--radius-lg)]">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="ops-live-dot" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="ops-eyebrow">OPERACJE FLOTY · LIVE</p>
+            <p className="ops-command-copy">Stan systemu aktualizowany na bieżąco</p>
+          </div>
+        </div>
+        <div className="ops-command-metrics">
+          <span><strong>{stats.availableVehicles}</strong> dostępnych</span>
+          <span><strong>{stats.activeTrips}</strong> w trasie</span>
+          <span><strong>{stats.maintenanceVehicles}</strong> w serwisie</span>
+        </div>
+        <Button size="sm" onClick={() => navigate("/trips")} className="shrink-0 bg-primary hover:bg-primary-dark">
+          <Plus className="w-4 h-4 mr-1.5" /> Nowa trasa
+        </Button>
+      </div>
+
       {/* Karty statystyk */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Pojazdy"
           value={vehicles.length}
@@ -280,17 +296,17 @@ export default function Dashboard() {
       {(lowFuelVehicles.length > 0 || activeTripsList.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {lowFuelVehicles.length > 0 && (
-            <GlassCard className="p-4 border border-red-500/20">
+            <GlassCard className="p-4 border border-[var(--danger)]/25">
               <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-5 h-5 text-red-400" />
-                <h3 className="text-theme-white font-semibold">
+                <AlertTriangle className="w-5 h-5 text-[var(--danger)]" />
+                <h3 className="text-[var(--text-primary)] font-semibold">
                   Niski poziom paliwa ({lowFuelVehicles.length})
                 </h3>
               </div>
               <div className="space-y-2">
                 {lowFuelVehicles.slice(0, 3).map((v) => (
                   <div key={v.id} className="flex items-center justify-between text-sm">
-                    <span className="text-theme-white-secondary">
+                    <span className="text-[var(--text-secondary)]">
                       {v.name || v.make} — {v.licensePlate}
                     </span>
                     <Badge variant="destructive" className="text-xs">
@@ -311,20 +327,20 @@ export default function Dashboard() {
             </GlassCard>
           )}
           {activeTripsList.length > 0 && (
-            <GlassCard className="p-4 border border-blue-500/20">
+            <GlassCard className="p-4 border border-[var(--info)]/25">
               <div className="flex items-center gap-2 mb-3">
-                <Navigation className="w-5 h-5 text-blue-400" />
-                <h3 className="text-theme-white font-semibold">
+                <Navigation className="w-5 h-5 text-[var(--info)]" />
+                <h3 className="text-[var(--text-primary)] font-semibold">
                   Aktywne trasy ({activeTripsList.length})
                 </h3>
               </div>
               <div className="space-y-2">
                 {activeTripsList.slice(0, 3).map((t) => (
                   <div key={t.id} className="flex items-center justify-between text-sm">
-                    <span className="text-theme-white-secondary">
+                    <span className="text-[var(--text-secondary)]">
                       {getVehicleName(t.vehicleId)}
                     </span>
-                    <Badge className="text-xs bg-blue-500/20 text-blue-400">
+                    <Badge className="text-xs status-info">
                       W trakcie
                     </Badge>
                   </div>
@@ -369,36 +385,36 @@ export default function Dashboard() {
             >
               <GlassCard className="p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Fuel className="w-5 h-5 text-green-400" />
-                  <h3 className="text-theme-white font-semibold">Ceny paliw</h3>
-                  <Badge className="text-xs bg-green-500/20 text-green-400 ml-auto">
-                    Live
+                  <Fuel className="w-5 h-5 text-[var(--success)]" />
+                  <h3 className="text-[var(--text-primary)] font-semibold">Ceny paliw</h3>
+                  <Badge className="text-xs status-info ml-auto">
+                    Orientacyjne
                   </Badge>
                 </div>
                 <div className="space-y-3">
                   {[
-                    { name: "Pb95", color: "text-green-400", price: "5.89", unit: "zł/L" },
-                    { name: "Pb98", color: "text-blue-400", price: "6.29", unit: "zł/L" },
-                    { name: "ON", color: "text-yellow-400", price: "5.99", unit: "zł/L" },
-                    { name: "LPG", color: "text-orange-400", price: "2.99", unit: "zł/L" },
+                    { name: "Pb95", color: "text-[var(--success)]", price: "5.89", unit: "zł/L" },
+                    { name: "Pb98", color: "text-[var(--info)]", price: "6.29", unit: "zł/L" },
+                    { name: "ON", color: "text-[var(--warning)]", price: "5.99", unit: "zł/L" },
+                    { name: "LPG", color: "text-[var(--accent-color)]", price: "2.99", unit: "zł/L" },
                   ].map((fuel) => (
                     <div
                       key={fuel.name}
-                      className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50"
+                      className="flex items-center justify-between p-2 rounded-lg bg-[var(--surface-raised)]"
                     >
                       <span className={`font-semibold ${fuel.color}`}>
                         {fuel.name}
                       </span>
-                      <span className="text-theme-white font-bold">
+                      <span className="text-[var(--text-primary)] font-bold">
                         {fuel.price}{" "}
-                        <span className="text-xs text-theme-white-muted">
+                        <span className="text-xs text-[var(--text-muted)]">
                           {fuel.unit}
                         </span>
                       </span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-theme-white-muted mt-3 text-center">
+                <p className="text-xs text-[var(--text-muted)] mt-3 text-center">
                   * Ceny orientacyjne — skonfiguruj klucz CollectAPI w ustawieniach
                 </p>
               </GlassCard>
@@ -423,7 +439,7 @@ export default function Dashboard() {
 
       {/* Zakładki z danymi */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full bg-slate-800/50 border border-slate-700 p-1 flex flex-wrap gap-1 h-auto">
+        <TabsList className="w-full justify-start overflow-x-auto bg-[var(--surface-raised)] border border-[var(--border-color)] p-1.5 flex flex-nowrap gap-1 h-auto rounded-[var(--radius-lg)] scrollbar-none">
           {[
             { id: "overview", label: "Przegląd", icon: LayoutDashboard },
             { id: "trips", label: "Trasy", icon: Route },
@@ -434,7 +450,7 @@ export default function Dashboard() {
             <TabsTrigger
               key={id}
               value={id}
-              className="flex-1 data-[state=active]:bg-gradient-primary flex items-center gap-1.5 text-xs"
+              className="min-w-max flex-1 data-[state=active]:bg-[var(--primary-color)] data-[state=active]:text-[var(--text-inverse)] flex items-center gap-1.5 text-xs transition-colors"
             >
               <Icon className="w-3.5 h-3.5" />
               {label}
@@ -447,25 +463,25 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Statystyki kosztów */}
             <GlassCard className="p-4">
-              <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
+              <h3 className="text-[var(--text-primary)] font-semibold mb-3 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-primary" />
                 Koszty
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-theme-white-secondary text-sm">Serwisy</span>
-                  <span className="text-theme-white font-semibold">
+                  <span className="text-[var(--text-secondary)] text-sm">Serwisy</span>
+                  <span className="text-[var(--text-primary)] font-semibold">
                     {stats.totalServiceCost.toFixed(2)} zł
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-theme-white-secondary text-sm">Tankowania</span>
-                  <span className="text-theme-white font-semibold">
+                  <span className="text-[var(--text-secondary)] text-sm">Tankowania</span>
+                  <span className="text-[var(--text-primary)] font-semibold">
                     {stats.totalFuelCost.toFixed(2)} zł
                   </span>
                 </div>
-                <div className="flex justify-between items-center border-t border-slate-700 pt-2">
-                  <span className="text-theme-white font-semibold text-sm">Łącznie</span>
+                <div className="flex justify-between items-center border-t border-[var(--border-color)] pt-2">
+                  <span className="text-[var(--text-primary)] font-semibold text-sm">Łącznie</span>
                   <span className="text-primary font-bold">
                     {(stats.totalServiceCost + stats.totalFuelCost).toFixed(2)} zł
                   </span>
@@ -475,20 +491,20 @@ export default function Dashboard() {
 
             {/* Stan floty */}
             <GlassCard className="p-4">
-              <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
-                <Car className="w-4 h-4 text-blue-400" />
+              <h3 className="text-[var(--text-primary)] font-semibold mb-3 flex items-center gap-2">
+                <Car className="w-4 h-4 text-[var(--info)]" />
                 Stan floty
               </h3>
               <div className="space-y-2">
                 {[
-                  { label: "Dostępne", count: stats.availableVehicles, color: "bg-green-400" },
-                  { label: "W użyciu", count: stats.inUseVehicles, color: "bg-blue-400" },
-                  { label: "W serwisie", count: stats.maintenanceVehicles, color: "bg-yellow-400" },
+                  { label: "Dostępne", count: stats.availableVehicles, color: "bg-[var(--success)]" },
+                  { label: "W użyciu", count: stats.inUseVehicles, color: "bg-[var(--info)]" },
+                  { label: "W serwisie", count: stats.maintenanceVehicles, color: "bg-[var(--warning)]" },
                 ].map(({ label, count, color }) => (
                   <div key={label} className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${color}`} />
-                    <span className="text-theme-white-secondary text-sm flex-1">{label}</span>
-                    <span className="text-theme-white font-semibold">{count}</span>
+                    <span className="text-[var(--text-secondary)] text-sm flex-1">{label}</span>
+                    <span className="text-[var(--text-primary)] font-semibold">{count}</span>
                   </div>
                 ))}
               </div>
@@ -504,23 +520,23 @@ export default function Dashboard() {
 
             {/* Nadchodzące serwisy */}
             <GlassCard className="p-4">
-              <h3 className="text-theme-white font-semibold mb-3 flex items-center gap-2">
-                <Wrench className="w-4 h-4 text-yellow-400" />
+              <h3 className="text-[var(--text-primary)] font-semibold mb-3 flex items-center gap-2">
+                <Wrench className="w-4 h-4 text-[var(--warning)]" />
                 Nadchodzące serwisy
               </h3>
               {upcomingServices.length === 0 ? (
                 <div className="text-center py-4">
-                  <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                  <p className="text-theme-white-secondary text-sm">Brak zaplanowanych serwisów</p>
+                  <CheckCircle className="w-8 h-8 text-[var(--success)] mx-auto mb-2" />
+                  <p className="text-[var(--text-secondary)] text-sm">Brak zaplanowanych serwisów</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {upcomingServices.map((s) => (
-                    <div key={s.id} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700">
-                      <p className="text-theme-white text-sm font-medium">
+                    <div key={s.id} className="p-2 rounded-lg bg-[var(--surface-raised)] border border-[var(--border-color)]">
+                      <p className="text-[var(--text-primary)] text-sm font-medium">
                         {serviceTypeLabels[s.serviceType] || s.name || "Serwis"}
                       </p>
-                      <p className="text-theme-white-muted text-xs">
+                      <p className="text-[var(--text-muted)] text-xs">
                         {getVehicleName(s.vehicleId)} •{" "}
                         {s.date ? format(new Date(s.date), "dd MMM yyyy", { locale: pl }) : "---"}
                       </p>
@@ -544,7 +560,7 @@ export default function Dashboard() {
         <TabsContent value="trips" className="mt-4">
           <GlassCard className="p-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-theme-white font-semibold flex items-center gap-2">
+              <h3 className="text-[var(--text-primary)] font-semibold flex items-center gap-2">
                 <Route className="w-4 h-4 text-primary" />
                 Ostatnie trasy
               </h3>
@@ -554,10 +570,10 @@ export default function Dashboard() {
             </div>
             {recentTrips.length === 0 ? (
               <div className="text-center py-8">
-                <Route className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-theme-white-secondary">Brak zarejestrowanych tras</p>
+                <Route className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
+                <p className="text-[var(--text-secondary)]">Brak zarejestrowanych tras</p>
                 <Button
-                  className="mt-3 bg-gradient-primary"
+                  className="mt-3 bg-primary hover:bg-primary-dark"
                   size="sm"
                   onClick={() => navigate("/trips")}
                 >
@@ -569,28 +585,37 @@ export default function Dashboard() {
                 {recentTrips.map((trip) => (
                   <div
                     key={trip.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-slate-500 transition-colors cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Otwórz trasę ${trip.startLocation || "Start"} do ${trip.endLocation || "Cel"}`}
+                    className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-raised)] border border-[var(--border-color)] hover:border-[var(--border-strong)] transition-colors cursor-pointer"
                     onClick={() => navigate(`/trips/${trip.id}`)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        navigate(`/trips/${trip.id}`);
+                      }
+                    }}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-theme-white font-medium text-sm truncate">
+                      <p className="text-[var(--text-primary)] font-medium text-sm truncate">
                         {trip.startLocation || "Start"} → {trip.endLocation || "Cel"}
                       </p>
-                      <p className="text-theme-white-muted text-xs">
+                      <p className="text-[var(--text-muted)] text-xs">
                         {getVehicleName(trip.vehicleId)} • {getDriverName(trip.driverId)}
                       </p>
-                      <p className="text-theme-white-muted text-xs">
+                      <p className="text-[var(--text-muted)] text-xs">
                         {formatDate(trip.startDate)}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1 ml-3">
                       <Badge
-                        className={`text-xs ${tripStatusColors[trip.status] || "text-slate-400 bg-slate-400/10"}`}
+                        className={`text-xs ${tripStatusColors[trip.status] || "text-[var(--text-muted)] bg-[var(--surface-hover)]"}`}
                       >
                         {tripStatusLabels[trip.status] || trip.status}
                       </Badge>
                       {trip.distance && (
-                        <span className="text-xs text-theme-white-muted">
+                        <span className="text-xs text-[var(--text-muted)]">
                           {formatDistance(trip.distance)}
                         </span>
                       )}
@@ -606,8 +631,8 @@ export default function Dashboard() {
         <TabsContent value="services" className="mt-4">
           <GlassCard className="p-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-theme-white font-semibold flex items-center gap-2">
-                <Wrench className="w-4 h-4 text-yellow-400" />
+              <h3 className="text-[var(--text-primary)] font-semibold flex items-center gap-2">
+                <Wrench className="w-4 h-4 text-[var(--warning)]" />
                 Serwisy
               </h3>
               <Button size="sm" variant="outline" onClick={() => navigate("/services")}>
@@ -616,8 +641,8 @@ export default function Dashboard() {
             </div>
             {services.length === 0 ? (
               <div className="text-center py-8">
-                <Wrench className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-theme-white-secondary">Brak serwisów</p>
+                <Wrench className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
+                <p className="text-[var(--text-secondary)]">Brak serwisów</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -625,18 +650,18 @@ export default function Dashboard() {
                   .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
                   .slice(0, 6)
                   .map((s) => (
-                    <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700">
+                    <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-raised)] border border-[var(--border-color)]">
                       <div>
-                        <p className="text-theme-white font-medium text-sm">
+                        <p className="text-[var(--text-primary)] font-medium text-sm">
                           {serviceTypeLabels[s.serviceType] || s.name || "Serwis"}
                         </p>
-                        <p className="text-theme-white-muted text-xs">
+                        <p className="text-[var(--text-muted)] text-xs">
                           {getVehicleName(s.vehicleId)} •{" "}
                           {s.date ? format(new Date(s.date), "dd MMM yyyy", { locale: pl }) : "---"}
                         </p>
                       </div>
                       {s.cost && (
-                        <span className="text-theme-white font-semibold text-sm">
+                        <span className="text-[var(--text-primary)] font-semibold text-sm">
                           {s.cost} zł
                         </span>
                       )}
@@ -651,8 +676,8 @@ export default function Dashboard() {
         <TabsContent value="fuel" className="mt-4">
           <GlassCard className="p-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-theme-white font-semibold flex items-center gap-2">
-                <Fuel className="w-4 h-4 text-green-400" />
+              <h3 className="text-[var(--text-primary)] font-semibold flex items-center gap-2">
+                <Fuel className="w-4 h-4 text-[var(--success)]" />
                 Ostatnie tankowania
               </h3>
               <Button size="sm" variant="outline" onClick={() => navigate("/refueling")}>
@@ -661,27 +686,27 @@ export default function Dashboard() {
             </div>
             {recentRefuelings.length === 0 ? (
               <div className="text-center py-8">
-                <Fuel className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-theme-white-secondary">Brak tankowań</p>
+                <Fuel className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
+                <p className="text-[var(--text-secondary)]">Brak tankowań</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {recentRefuelings.map((r) => (
-                  <div key={r.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700">
+                  <div key={r.id} className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface-raised)] border border-[var(--border-color)]">
                     <div>
-                      <p className="text-theme-white font-medium text-sm">
+                      <p className="text-[var(--text-primary)] font-medium text-sm">
                         {getVehicleName(r.vehicleId)}
                       </p>
-                      <p className="text-theme-white-muted text-xs">
+                      <p className="text-[var(--text-muted)] text-xs">
                         {r.date ? format(new Date(r.date), "dd MMM yyyy", { locale: pl }) : "---"}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-theme-white font-semibold text-sm">
+                      <p className="text-[var(--text-primary)] font-semibold text-sm">
                         {r.liters || 0} L
                       </p>
                       {r.cost && (
-                        <p className="text-theme-white-muted text-xs">{r.cost} zł</p>
+                        <p className="text-[var(--text-muted)] text-xs">{r.cost} zł</p>
                       )}
                     </div>
                   </div>
@@ -695,8 +720,8 @@ export default function Dashboard() {
         <TabsContent value="fleet" className="mt-4">
           <GlassCard className="p-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-theme-white font-semibold flex items-center gap-2">
-                <Car className="w-4 h-4 text-blue-400" />
+              <h3 className="text-[var(--text-primary)] font-semibold flex items-center gap-2">
+                <Car className="w-4 h-4 text-[var(--info)]" />
                 Pojazdy floty
               </h3>
               <Button size="sm" variant="outline" onClick={() => navigate("/vehicles")}>
@@ -705,10 +730,10 @@ export default function Dashboard() {
             </div>
             {vehicles.length === 0 ? (
               <div className="text-center py-8">
-                <Car className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-theme-white-secondary">Brak pojazdów</p>
+                <Car className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
+                <p className="text-[var(--text-secondary)]">Brak pojazdów</p>
                 <Button
-                  className="mt-3 bg-gradient-primary"
+                  className="mt-3 bg-primary hover:bg-primary-dark"
                   size="sm"
                   onClick={() => navigate("/vehicles")}
                 >
@@ -723,40 +748,49 @@ export default function Dashboard() {
                     : 0;
                   const fuelColor =
                     fuelPercent < 20
-                      ? "bg-red-500"
+                      ? "bg-[var(--danger)]"
                       : fuelPercent < 40
-                      ? "bg-yellow-500"
-                      : "bg-green-500";
+                      ? "bg-[var(--warning)]"
+                      : "bg-[var(--success)]";
                   return (
                     <div
                       key={vehicle.id}
-                      className="p-3 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-slate-500 transition-colors cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Otwórz pojazd ${vehicle.name || vehicle.make || "Pojazd"}`}
+                      className="p-3 rounded-xl bg-[var(--surface-raised)] border border-[var(--border-color)] hover:border-[var(--border-strong)] transition-colors cursor-pointer"
                       onClick={() => navigate(`/vehicles/${vehicle.id}`)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          navigate(`/vehicles/${vehicle.id}`);
+                        }
+                      }}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <p className="text-theme-white font-medium text-sm">
+                          <p className="text-[var(--text-primary)] font-medium text-sm">
                             {vehicle.name || vehicle.make || "Pojazd"}
                           </p>
-                          <p className="text-xs text-theme-white-muted">
+                          <p className="text-xs text-[var(--text-muted)]">
                             {vehicle.licensePlate || vehicle.registrationNumber}
                           </p>
                         </div>
                         <Badge
-                          className={`text-xs ${statusColors[vehicle.status] || "text-slate-400 bg-slate-400/10"}`}
+                          className={`text-xs ${statusColors[vehicle.status] || "text-[var(--text-muted)] bg-[var(--surface-hover)]"}`}
                         >
                           {statusLabels[vehicle.status] || vehicle.status || "---"}
                         </Badge>
                       </div>
                       <div>
-                        <div className="flex justify-between text-xs text-theme-white-muted mb-1">
+                        <div className="flex justify-between text-xs text-[var(--text-muted)] mb-1">
                           <span>Paliwo</span>
                           <span>
                             {vehicle.fuelLevel || 0} / {vehicle.tankCapacity || 60} L (
                             {Math.round(Math.min(100, fuelPercent))}%)
                           </span>
                         </div>
-                        <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                        <div className="w-full h-1.5 bg-[var(--surface-hover)] rounded-full overflow-hidden">
                           <div
                             className={`h-full ${fuelColor} rounded-full transition-all`}
                             style={{ width: `${Math.min(100, fuelPercent)}%` }}
