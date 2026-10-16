@@ -1,7 +1,6 @@
 // src/components/maps/MapView.jsx - WERSJA Z OBSŁUGĄ ZAPISANYCH TRAS
 import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
-import { motion } from 'framer-motion';
-import { MapPin, Navigation, Maximize2, Minimize2, ZoomIn, ZoomOut, Crosshair } from 'lucide-react';
+import { Maximize2, Minimize2, ZoomIn, ZoomOut, Crosshair, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import GlassCard from '@/components/ui/GlassCard';
 import L from 'leaflet';
@@ -39,9 +38,11 @@ const MapView = forwardRef(({
   const [tracking, setTracking] = useState(false);
   const userMarkerRef = useRef(null);
   const watchIdRef = useRef(null);
+  const tileLayerRef = useRef(null);
   
   // Refs dla routingu
   const routeLayerRef = useRef(null);
+  const liveRouteLayerRef = useRef(null);
   const startMarkerRef = useRef(null);
   const endMarkerRef = useRef(null);
   const tripMarkersRef = useRef([]);
@@ -86,7 +87,7 @@ const MapView = forwardRef(({
         
         startMarkerRef.current = L.marker([start.lat, start.lng], {
           icon: L.divIcon({
-            html: `<div class="w-8 h-8 bg-green-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">S</div>`,
+            html: `<div class="w-8 h-8 bg-green-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-token-primary text-xs font-bold">S</div>`,
             className: 'custom-marker-start',
             iconSize: [32, 32],
             iconAnchor: [16, 16]
@@ -101,7 +102,7 @@ const MapView = forwardRef(({
         
         endMarkerRef.current = L.marker([end.lat, end.lng], {
           icon: L.divIcon({
-            html: `<div class="w-8 h-8 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">M</div>`,
+            html: `<div class="w-8 h-8 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-token-primary text-xs font-bold">M</div>`,
             className: 'custom-marker-end',
             iconSize: [32, 32],
             iconAnchor: [16, 16]
@@ -121,6 +122,10 @@ const MapView = forwardRef(({
     clearRoadRoute: () => {
       clearRoadRoute();
     },
+
+    updateLiveRoute: (coordinates) => updateLiveRoute(coordinates),
+
+    clearLiveRoute: () => clearLiveRoute(),
 
     addMarker: (lat, lng, options = {}) => {
       if (!map) return null;
@@ -168,24 +173,35 @@ const MapView = forwardRef(({
     }
   };
 
+  const updateLiveRoute = (coordinates) => {
+    if (!map || !coordinates || coordinates.length < 2) return null;
+    const latlngs = coordinates.map(({ lat, lng }) => [lat, lng]);
+    if (liveRouteLayerRef.current) {
+      liveRouteLayerRef.current.setLatLngs(latlngs);
+    } else {
+      liveRouteLayerRef.current = L.polyline(latlngs, {
+        color: '#6366f1',
+        weight: 5,
+        opacity: 0.85,
+        smoothFactor: 1,
+        className: 'route-line',
+      }).addTo(map);
+    }
+    return liveRouteLayerRef.current;
+  };
+
+  const clearLiveRoute = () => {
+    if (liveRouteLayerRef.current && map) {
+      map.removeLayer(liveRouteLayerRef.current);
+      liveRouteLayerRef.current = null;
+    }
+  };
+
   // Inicjalizacja mapy
   useEffect(() => {
-    if (!mapContainerRef.current || map) return;
-
-    let tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-    let attribution = '&copy; OpenStreetMap contributors';
-    
-    if (mapStyle === 'satellite') {
-      tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      attribution = '&copy; Esri';
-    } else if (mapStyle === 'terrain') {
-      tileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-      attribution = '&copy; OpenTopoMap';
-    }
+    if (!mapContainerRef.current) return;
 
     const mapInstance = L.map(mapContainerRef.current).setView([52.2297, 21.0122], defaultZoom);
-    L.tileLayer(tileUrl, { attribution, maxZoom: 19 }).addTo(mapInstance);
-
     setMap(mapInstance);
     
     if (onMapReady) {
@@ -196,27 +212,50 @@ const MapView = forwardRef(({
       if (watchIdRef.current) {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
-      if (mapInstance) mapInstance.remove();
+      userMarkerRef.current = null;
+      tileLayerRef.current = null;
+      routeLayerRef.current = null;
+      liveRouteLayerRef.current = null;
+      startMarkerRef.current = null;
+      endMarkerRef.current = null;
+      tripMarkersRef.current = [];
+      mapInstance.remove();
     };
-  }, [mapStyle, defaultZoom]);
+  }, [defaultZoom]);
+
+  useEffect(() => {
+    if (!map) return;
+
+    let tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let attribution = '&copy; OpenStreetMap contributors';
+    if (mapStyle === 'satellite') {
+      tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      attribution = '&copy; Esri';
+    } else if (mapStyle === 'terrain') {
+      tileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+      attribution = '&copy; OpenTopoMap';
+    }
+
+    if (tileLayerRef.current) map.removeLayer(tileLayerRef.current);
+    tileLayerRef.current = L.tileLayer(tileUrl, { attribution, maxZoom: 19 }).addTo(map);
+  }, [map, mapStyle]);
 
   // Dodawanie markera gdy zmieni się userLocation
   useEffect(() => {
     if (!map || !userLocation) return;
 
-    if (userMarkerRef.current) {
-      userMarkerRef.current.remove();
-    }
-
-    const marker = L.marker([userLocation.lat, userLocation.lng]);
-    marker.addTo(map);
-    marker.bindPopup(`
+    const popupContent = `
       <b>Twoja lokalizacja</b><br/>
       Dokładność: ~${Math.round(userLocation.accuracy)}m<br/>
       ${userLocation.lat.toFixed(5)}, ${userLocation.lng.toFixed(5)}
-    `).openPopup();
-    
-    userMarkerRef.current = marker;
+    `;
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLatLng([userLocation.lat, userLocation.lng]);
+      userMarkerRef.current.setPopupContent(popupContent);
+    } else {
+      userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng]).addTo(map);
+      userMarkerRef.current.bindPopup(popupContent).openPopup();
+    }
 
     if (autoCenter) {
       map.setView([userLocation.lat, userLocation.lng], map.getZoom());
@@ -278,7 +317,7 @@ const MapView = forwardRef(({
     if (tripData.startCoordinates) {
       const startMarker = L.marker([tripData.startCoordinates.lat, tripData.startCoordinates.lng], {
         icon: L.divIcon({
-          html: `<div class="w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">S</div>`,
+          html: `<div class="w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-token-primary text-xs font-bold">S</div>`,
           className: 'custom-marker-start',
           iconSize: [24, 24],
           iconAnchor: [12, 12]
@@ -292,7 +331,7 @@ const MapView = forwardRef(({
     if (tripData.endCoordinates) {
       const endMarker = L.marker([tripData.endCoordinates.lat, tripData.endCoordinates.lng], {
         icon: L.divIcon({
-          html: `<div class="w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">M</div>`,
+          html: `<div class="w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-token-primary text-xs font-bold">M</div>`,
           className: 'custom-marker-end',
           iconSize: [24, 24],
           iconAnchor: [12, 12]
@@ -373,7 +412,7 @@ const MapView = forwardRef(({
     <div className={`relative ${className}`}>
       <div
         ref={mapContainerRef}
-        className="w-full h-full min-h-[400px] rounded-xl overflow-hidden bg-slate-800"
+        className="w-full h-full min-h-[400px] rounded-xl overflow-hidden surface"
         style={{ height: isFullscreen ? '100vh' : height }}
       />
 
