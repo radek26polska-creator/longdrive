@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "../utils";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Route,
   Search,
@@ -30,8 +29,7 @@ import {
   ArrowUpDown,
   CalendarDays,
   CheckSquare,
-  Square,
-  Key
+  Square
 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import GlassCard from "@/components/ui/GlassCard";
@@ -64,11 +62,14 @@ import ConfirmModal from "@/components/ConfirmModal.jsx";
 import KartaDrogowa from "@/components/print/KartaDrogowa.jsx";
 import { useKeyBlocker } from '@/hooks/useKeyBlocker';
 import api from "@/api/apiClient";
+import { calculateProjectedEndFuel, calculateTripMetrics } from "@/lib/tripCalculations";
+import { validateTripCompletion } from "@/lib/tripCalculations";
+import { toast } from "sonner";
 
 const statusConfig = {
-  in_progress: { label: 'W trakcie', color: 'bg-amber-500', icon: Play },
-  completed: { label: 'Zakończona', color: 'bg-emerald-500', icon: CheckCircle },
-  cancelled: { label: 'Anulowana', color: 'bg-red-500', icon: Trash2 }
+  in_progress: { label: 'W trakcie', color: 'status-warning', icon: Play },
+  completed: { label: 'Zakończona', color: 'status-success', icon: CheckCircle },
+  cancelled: { label: 'Anulowana', color: 'status-danger', icon: Trash2 }
 };
 
 const sortOptions = [
@@ -89,6 +90,8 @@ const dateRangeOptions = [
 ];
 
 export default function Trips() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date_desc");
@@ -121,7 +124,9 @@ export default function Trips() {
     endLocation: '',
     departureDate: todayDate,
     departureTime: currentTime,
+    notes: '',
   });
+  const [gpsTripDraft, setGpsTripDraft] = useState(null);
   const [endFormData, setEndFormData] = useState({
     endOdometer: 0,
     fuelAdded: 0,
@@ -132,6 +137,32 @@ export default function Trips() {
   });
 
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const draft = location.state?.gpsTripDraft;
+    if (!draft) return;
+
+    const startDate = new Date(draft.startDate);
+    const validStartDate = Number.isNaN(startDate.getTime()) ? new Date() : startDate;
+    const localDateTime = new Date(validStartDate.getTime() - validStartDate.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+    const gpsNote = draft.trackId
+      ? `Ślad GPS ID ${draft.trackId}; dystans GPS ${Number(draft.distance).toFixed(2)} km.`
+      : `Dystans trasy ${Number(draft.distance).toFixed(2)} km.`;
+
+    setGpsTripDraft(draft);
+    setStartFormData((previous) => ({
+      ...previous,
+      startLocation: previous.startLocation || draft.startLocation || '',
+      endLocation: previous.endLocation || draft.endLocation || '',
+      departureDate: localDateTime.slice(0, 10),
+      departureTime: localDateTime.slice(11, 16),
+      notes: previous.notes || gpsNote,
+    }));
+    setIsStartDialogOpen(true);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.key, location.pathname, location.state, navigate]);
 
   const { data: tripsRaw = [], isLoading } = useQuery({
     queryKey: ['trips'],
@@ -195,27 +226,33 @@ export default function Trips() {
   // Czy są jakiekolwiek pojazdy z wydanymi kluczykami
   const hasAnyIssuedKeys = issuedVehicles?.length > 0;
 
-  console.log('🔑 Trips - DIAGNOSTYKA (ODWRÓCONA LOGIKA):');
-  console.log('  - requireKeyForTrip:', requireKeyForTrip);
-  console.log('  - issuedVehicleIds (DOZWOLONE):', issuedVehicleIds);
-  console.log('  - issuedVehicles count:', issuedVehicles?.length);
-  console.log('  - startFormData.vehicleId:', startFormData.vehicleId);
-  console.log('  - hasKeyForSelectedVehicle:', hasKeyForSelectedVehicle);
-  console.log('  - isSelectedVehicleBlocked:', isSelectedVehicleBlocked);
-
   const getVehicle = (id) => vehicles.find(v => v.id === id);
   const getDriver = (id) => drivers.find(d => d.id === id);
 
   const selectedVehicle = selectedTrip ? getVehicle(selectedTrip.vehicleId) : null;
-  const distance = selectedTrip && endFormData.endOdometer ? endFormData.endOdometer - selectedTrip.startOdometer : 0;
-  const fuelConsumptionNorm = selectedVehicle?.fuelConsumption || 7.5;
-  const fuelUsedNorm = distance > 0 ? (distance / 100) * fuelConsumptionNorm : 0;
+  const previewMetrics = calculateTripMetrics({
+    startOdometer: selectedTrip?.startOdometer,
+    endOdometer: selectedTrip ? endFormData.endOdometer : null,
+    startFuel: selectedTrip?.startFuel,
+    endFuel: null,
+    fuelAdded: endFormData.fuelAdded,
+    vehicle: selectedVehicle,
+  });
+  const distance = previewMetrics.distance;
+  const fuelConsumptionNorm = previewMetrics.fuelConsumption;
+  const fuelUsedNorm = previewMetrics.fuelUsedNorm;
 
-  const automaticallyCalculatedEndFuel = selectedTrip && distance > 0
-    ? Math.max(0, (selectedTrip.startFuel || 0) + endFormData.fuelAdded - fuelUsedNorm)
-    : (selectedTrip?.startFuel || 0);
+  const projectedEndFuel = selectedTrip && distance !== null
+    ? calculateProjectedEndFuel({
+      startFuel: selectedTrip.startFuel,
+      fuelAdded: endFormData.fuelAdded,
+      distance,
+      vehicle: selectedVehicle,
+    })
+    : null;
+  const automaticallyCalculatedEndFuel = projectedEndFuel === null ? null : Math.max(0, projectedEndFuel);
 
-  const predictedFuelUsed = distance > 0 ? fuelUsedNorm : 0;
+  const predictedFuelUsed = fuelUsedNorm;
 
   const filteredAndSortedTrips = useMemo(() => {
     let filtered = [...trips];
@@ -341,13 +378,10 @@ export default function Trips() {
       const tripData = {
         ...data,
         startTime,
-        startDate: startTime,
         startOdometer: vehicle?.mileage || 0,
         startFuel: vehicle?.fuelLevel || 0,
         status: 'in_progress'
       };
-      console.log('🚀 Rozpoczynam trasę z datą:', tripData.startTime);
-      console.log('📋 Dane trasy:', tripData);
       await api.updateVehicle(Number(data.vehicleId), { status: 'in_use' });
       return api.createTrip(tripData);
     },
@@ -357,17 +391,47 @@ export default function Trips() {
       queryClient.invalidateQueries({ queryKey: ['companySettings'] });
       setIsStartDialogOpen(false);
       resetStartForm();
+      setGpsTripDraft(null);
     }
   });
 
   const endTripMutation = useMutation({
     mutationFn: async ({ trip, endData }) => {
       const vehicle = getVehicle(trip.vehicleId);
-      const distance = endData.endOdometer - trip.startOdometer;
-      const fuelConsumption = vehicle?.fuelConsumption || 7.5;
-
-      const fuelUsedNorm = (distance / 100) * fuelConsumption;
-      const automaticallyCalculatedEndFuel = Math.max(0, (trip.startFuel || 0) + endData.fuelAdded - fuelUsedNorm);
+      const distance = Number(endData.endOdometer) - Number(trip.startOdometer);
+      const projectedEndFuel = calculateProjectedEndFuel({
+        startFuel: trip.startFuel,
+        fuelAdded: endData.fuelAdded,
+        distance,
+        vehicle,
+      });
+      const calculated = calculateTripMetrics({
+        startOdometer: trip.startOdometer,
+        endOdometer: endData.endOdometer,
+        startFuel: trip.startFuel,
+        endFuel: projectedEndFuel,
+        fuelAdded: endData.fuelAdded,
+        vehicle,
+      });
+      const validation = validateTripCompletion({
+        startOdometer: trip.startOdometer,
+        endOdometer: endData.endOdometer,
+        startFuel: trip.startFuel,
+        endFuel: projectedEndFuel,
+        fuelAdded: endData.fuelAdded,
+        vehicle,
+      });
+      if (!validation.valid || projectedEndFuel === null) {
+        throw new Error([
+          ...validation.errors,
+          ...(projectedEndFuel === null ? ['Nie można obliczyć końcowego stanu paliwa; uzupełnij dane początkowe.'] : []),
+        ].join(' '));
+      }
+      const {
+        fuelUsedNorm,
+        fuelUsedActual,
+      } = calculated;
+      const automaticallyCalculatedEndFuel = Math.max(0, projectedEndFuel);
 
       const updatedTrip = {
         ...trip,
@@ -383,30 +447,10 @@ export default function Trips() {
         status: 'completed',
         distance,
         fuelUsedNorm,
-        fuelUsedActual: fuelUsedNorm,
+        fuelUsedActual,
       };
 
-      await api.updateVehicle(Number(trip.vehicleId), {
-        mileage: endData.endOdometer,
-        fuelLevel: automaticallyCalculatedEndFuel,
-        status: 'available'
-      });
-
       const result = await api.updateTrip(Number(trip.id), updatedTrip);
-
-      if (endData.fuelAdded > 0) {
-        await api.createRefuel({
-          vehicleId: Number(trip.vehicleId),
-          date: new Date().toISOString().split('T')[0],
-          liters: endData.fuelAdded,
-          cost: endData.fuelCost || 0,
-          mileage: endData.endOdometer,
-          invoiceNumber: endData.fuelReceiptNumber || '',
-          notes: endData.fuelStation ? `Stacja: ${endData.fuelStation}` : '',
-          fullTank: false,
-          tripId: Number(trip.id),
-        });
-      }
 
       return result;
     },
@@ -420,7 +464,7 @@ export default function Trips() {
     },
     onError: (error) => {
       console.error('❌ Błąd mutacji:', error);
-      alert(`Nie udało się zakończyć trasy: ${error.message}`);
+      toast.error(`Nie można zakończyć trasy. ${error.message}`);
     }
   });
 
@@ -462,9 +506,33 @@ export default function Trips() {
     if (!element) return;
     printWindow.document.write(`
       <!DOCTYPE html><html><head><title>Karta drogowa</title>
-      <style>body{font-family:Arial,sans-serif;margin:0;padding:20px;background:white;}</style>
+      <style>
+        @page { size: A4 portrait; margin: 0; }
+        html,body { margin: 0; padding: 0; background: white; }
+        body { font-family: Arial, sans-serif; }
+        [data-print-document="karta-drogowa"] {
+          width: 210mm !important;
+          min-height: 297mm !important;
+          box-sizing: border-box !important;
+          margin: 0 auto !important;
+          background: white !important;
+        }
+        [data-print-document="karta-drogowa"] table {
+          border-collapse: collapse;
+          width: 100%;
+        }
+        [data-print-document="karta-drogowa"] td,
+        [data-print-document="karta-drogowa"] th {
+          box-sizing: border-box;
+        }
+      </style>
       </head><body>${element.outerHTML}
-      <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>
+      <script>
+        window.onload = function () {
+          window.print();
+          window.onafterprint = function () { window.close(); };
+        };
+      </script>
       </body></html>
     `);
     printWindow.document.close();
@@ -481,6 +549,7 @@ export default function Trips() {
       endLocation: '',
       departureDate: n.toISOString().split('T')[0],
       departureTime: n.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
+      notes: '',
     });
   };
 
@@ -491,7 +560,7 @@ export default function Trips() {
       fuelCost: 0,
       fuelReceiptNumber: '',
       fuelStation: '',
-      notes: ''
+      notes: selectedTrip?.notes || ''
     });
   };
 
@@ -522,8 +591,27 @@ export default function Trips() {
   const handleEndTrip = async (e) => {
     e.preventDefault();
     try {
-      if (endFormData.endOdometer <= selectedTrip.startOdometer) {
-        alert('Nowy stan licznika musi być większy niż początkowy!');
+      const vehicle = getVehicle(selectedTrip.vehicleId);
+      const distance = Number(endFormData.endOdometer) - Number(selectedTrip.startOdometer);
+      const projectedEndFuel = calculateProjectedEndFuel({
+        startFuel: selectedTrip.startFuel,
+        fuelAdded: endFormData.fuelAdded,
+        distance,
+        vehicle,
+      });
+      const validation = validateTripCompletion({
+        startOdometer: selectedTrip.startOdometer,
+        endOdometer: endFormData.endOdometer,
+        startFuel: selectedTrip.startFuel,
+        endFuel: projectedEndFuel,
+        fuelAdded: endFormData.fuelAdded,
+        vehicle,
+      });
+      if (!validation.valid || projectedEndFuel === null) {
+        toast.error(`Nie można zakończyć trasy. ${[
+          ...validation.errors,
+          ...(projectedEndFuel === null ? ['Brakuje danych do obliczenia końcowego paliwa.'] : []),
+        ].join(' ')}`);
         return;
       }
       await endTripMutation.mutateAsync({ trip: selectedTrip, endData: endFormData });
@@ -615,25 +703,33 @@ export default function Trips() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute top-4 right-4 z-10 flex gap-2">
-              <button
+              <Button
                 onClick={handlePrint}
-                className="p-3 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors shadow-lg"
+                variant="secondary"
+                size="icon"
                 title="Drukuj"
               >
                 <Printer className="w-5 h-5" />
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setShowPreviewModal(false)}
-                className="p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-lg"
+                variant="destructive"
+                size="icon"
                 title="Zamknij"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
             <div className="h-full overflow-auto p-8">
               <div id="karta-drogowa-preview">
                 <KartaDrogowa
-                  trip={previewTrip}
+                  trip={{
+                    ...previewTrip,
+                    startDate: previewTrip.startDate || previewTrip.startTime || previewTrip.departureDate,
+                    endDate: previewTrip.endDate || previewTrip.endTime || previewTrip.returnDate,
+                    startTime: previewTrip.startTime || previewTrip.departureTime || previewTrip.startDate,
+                    endTime: previewTrip.endTime || previewTrip.returnTime || previewTrip.endDate,
+                  }}
                   vehicle={getVehicle(previewTrip.vehicleId)}
                   driver={getDriver(previewTrip.driverId)}
                   company={settings}
@@ -658,7 +754,6 @@ export default function Trips() {
               <Button
                 onClick={() => setShowBulkDeleteConfirm(true)}
                 variant="destructive"
-                className="bg-red-600 hover:bg-red-700"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Usuń ({selectedTrips.size})
@@ -666,7 +761,7 @@ export default function Trips() {
             )}
             <Button
               onClick={handleStartTripClick}
-              className="bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Play className="w-4 h-4 mr-2" />
               Rozpocznij trasę
@@ -677,22 +772,22 @@ export default function Trips() {
 
       {/* ✅ Informacja o dostępnych pojazdach z kluczykami */}
       {requireKeyForTrip && (
-        <GlassCard className={`p-4 border-l-4 ${hasAnyIssuedKeys ? 'border-green-500 bg-green-500/10' : 'border-red-500 bg-red-500/10'}`} delay={0.15}>
+        <GlassCard className={`p-4 border-l-4 ${hasAnyIssuedKeys ? 'status-success' : 'status-danger'}`} delay={0.15}>
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hasAnyIssuedKeys ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hasAnyIssuedKeys ? 'bg-[var(--success-soft)]' : 'bg-[var(--danger-soft)]'}`}>
               {hasAnyIssuedKeys ? (
-                <CheckCircle className="w-5 h-5 text-green-400" />
+                <CheckCircle className="w-5 h-5 text-[var(--success)]" />
               ) : (
-                <AlertTriangle className="w-5 h-5 text-red-400" />
+                <AlertTriangle className="w-5 h-5 text-[var(--danger)]" />
               )}
             </div>
             <div>
-              <p className="text-white font-medium">
+              <p className="text-[var(--text-primary)] font-medium">
                 {hasAnyIssuedKeys 
                   ? `✅ Dostępne pojazdy z kluczykami: ${issuedVehicles?.length || 0}`
                   : '❌ Brak wydanych kluczyków'}
               </p>
-              <p className="text-slate-400 text-sm">
+              <p className="text-[var(--text-muted)] text-sm">
                 {hasAnyIssuedKeys 
                   ? 'Możesz rozpocząć trasę tylko dla pojazdów z wydanymi kluczykami.'
                   : 'Aby rozpocząć trasę, najpierw wydaj kluczyk w module "Kluczyki".'}
@@ -703,14 +798,14 @@ export default function Trips() {
       )}
 
       {activeTrips.length > 0 && (
-        <GlassCard className="p-4 border-l-4 border-amber-500" delay={0.1}>
+        <GlassCard className="p-4 border-l-4 status-warning" delay={0.1}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-              <Play className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 rounded-full bg-[var(--warning-soft)] flex items-center justify-center">
+              <Play className="w-5 h-5 text-[var(--warning)]" />
             </div>
             <div>
-              <p className="text-white font-medium">Trasy w trakcie: {activeTrips.length}</p>
-              <p className="text-slate-400 text-sm">Zakończ aktywne trasy, aby wygenerować karty drogowe</p>
+              <p className="text-[var(--text-primary)] font-medium">Trasy w trakcie: {activeTrips.length}</p>
+              <p className="text-[var(--text-muted)] text-sm">Zakończ aktywne trasy, aby wygenerować karty drogowe</p>
             </div>
           </div>
         </GlassCard>
@@ -720,18 +815,18 @@ export default function Trips() {
       <GlassCard className="p-4" delay={0.2}>
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
             <Input
               placeholder="Szukaj po nr karty, trasie, celu, rejestracji lub kierowcy..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+              className="pl-10 bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
             />
           </div>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full lg:w-40 bg-slate-700/50 border-slate-600 text-white">
-              <Filter className="w-4 h-4 mr-2 text-slate-400" />
+            <SelectTrigger className="w-full lg:w-40 bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)]">
+              <Filter className="w-4 h-4 mr-2 text-[var(--text-muted)]" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -743,8 +838,8 @@ export default function Trips() {
           </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full lg:w-44 bg-slate-700/50 border-slate-600 text-white">
-              <ArrowUpDown className="w-4 h-4 mr-2 text-slate-400" />
+            <SelectTrigger className="w-full lg:w-44 bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)]">
+              <ArrowUpDown className="w-4 h-4 mr-2 text-[var(--text-muted)]" />
               <SelectValue placeholder="Sortuj" />
             </SelectTrigger>
             <SelectContent>
@@ -756,12 +851,12 @@ export default function Trips() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="bg-slate-700/50 border-slate-600 text-white hover:bg-slate-700">
+              <Button variant="outline" className="bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
                 <CalendarDays className="w-4 h-4 mr-2" />
                 {dateRange === 'custom' ? 'Wybrany zakres' : dateRangeOptions.find(o => o.value === dateRange)?.label || 'Data'}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-slate-800 border-slate-700">
+            <DropdownMenuContent className="bg-[var(--popover-surface)] border-[var(--border-color)]">
               {dateRangeOptions.map(opt => (
                 <DropdownMenuItem
                   key={opt.value}
@@ -769,7 +864,7 @@ export default function Trips() {
                     setDateRange(opt.value);
                     setShowDatePicker(opt.value === 'custom');
                   }}
-                  className="text-slate-300 hover:text-white hover:bg-slate-700"
+                  className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
                 >
                   {opt.label}
                 </DropdownMenuItem>
@@ -780,7 +875,7 @@ export default function Trips() {
           <Button
             onClick={exportToCSV}
             variant="outline"
-            className="bg-slate-700/50 border-slate-600 text-white hover:bg-slate-700"
+            className="bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
           >
             <Download className="w-4 h-4 mr-2" />
             Eksport CSV
@@ -790,21 +885,21 @@ export default function Trips() {
         {showDatePicker && dateRange === 'custom' && (
           <div className="flex gap-4 mt-4">
             <div className="flex-1">
-              <Label className="text-slate-300 text-sm">Od daty</Label>
+              <Label className="text-[var(--text-secondary)] text-sm">Od daty</Label>
               <Input
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="bg-slate-700/50 border-slate-600 text-white"
+                className="bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)]"
               />
             </div>
             <div className="flex-1">
-              <Label className="text-slate-300 text-sm">Do daty</Label>
+              <Label className="text-[var(--text-secondary)] text-sm">Do daty</Label>
               <Input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="bg-slate-700/50 border-slate-600 text-white"
+                className="bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)]"
               />
             </div>
           </div>
@@ -815,14 +910,14 @@ export default function Trips() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-slate-800/50 rounded-2xl animate-pulse" />
+            <div key={i} className="h-32 surface rounded-[var(--radius-md)] animate-pulse" />
           ))}
         </div>
       ) : filteredAndSortedTrips.length === 0 ? (
         <GlassCard className="p-12 text-center">
-          <Route className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+          <Route className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-white mb-2">Brak tras</h3>
-          <p className="text-slate-400 mb-4">
+          <p className="text-[var(--text-muted)] mb-4">
             {searchTerm || statusFilter !== 'all' || dateRange !== 'all'
               ? "Nie znaleziono tras spełniających kryteria"
               : "Rozpocznij pierwszą trasę"}
@@ -830,7 +925,7 @@ export default function Trips() {
           {!searchTerm && statusFilter === 'all' && dateRange === 'all' && (
             <Button
               onClick={handleStartTripClick}
-              className="bg-gradient-to-r from-indigo-500 to-cyan-500"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Play className="w-4 h-4 mr-2" />
               Rozpocznij trasę
@@ -844,12 +939,12 @@ export default function Trips() {
               variant="ghost"
               size="sm"
               onClick={handleSelectAll}
-              className="text-slate-400 hover:text-white"
+              className="text-[var(--text-muted)] hover:text-white"
             >
               {selectAll ? <CheckSquare className="w-4 h-4 mr-1" /> : <Square className="w-4 h-4 mr-1" />}
               {selectAll ? 'Odznacz wszystkie' : 'Zaznacz wszystkie'}
             </Button>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-[var(--text-muted)]">
               {selectedTrips.size} z {filteredAndSortedTrips.length} zaznaczonych
             </span>
           </div>
@@ -872,32 +967,32 @@ export default function Trips() {
                   transition={{ delay: index * 0.05 }}
                   layout
                 >
-                  <GlassCard className={`p-6 transition-all ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/5' : ''}`} hover={true} animate={false}>
+                  <GlassCard className={`p-6 transition-all ${isSelected ? 'ring-2 ring-[var(--primary-color)] bg-[var(--primary-soft)]' : ''}`} hover={true} animate={false}>
                     <div className="flex flex-col lg:flex-row lg:items-start gap-4">
                       <div className="flex items-center">
                         <button
                           onClick={() => handleSelectTrip(trip.id)}
-                          className="p-1 hover:bg-slate-700 rounded"
+                          className="p-1 hover:bg-[var(--surface-hover)] rounded"
                         >
                           {isSelected ? (
-                            <CheckSquare className="w-5 h-5 text-indigo-400" />
+                            <CheckSquare className="w-5 h-5 text-[var(--primary-light)]" />
                           ) : (
-                            <Square className="w-5 h-5 text-slate-500" />
+                            <Square className="w-5 h-5 text-[var(--text-muted)]" />
                           )}
                         </button>
                       </div>
 
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          <Badge className={`${statusConfig[trip.status]?.color || 'bg-slate-500'} text-white border-0`}>
+                          <Badge className={`${statusConfig[trip.status]?.color || 'status-info'} text-[var(--text-primary)]`}>
                             <StatusIcon className="w-3 h-3 mr-1" />
                             {statusConfig[trip.status]?.label || trip.status}
                           </Badge>
-                          <span className="text-slate-400 text-sm font-mono">
+                          <span className="text-[var(--text-muted)] text-sm font-mono">
                             {trip.cardNumber || `#${String(trip.id).slice(-6)}`}
                           </span>
                           {tripDisplayDate && (
-                            <span className="text-slate-500 text-xs flex items-center gap-1">
+                            <span className="text-[var(--text-muted)] text-xs flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               {format(new Date(tripDisplayDate), 'dd.MM.yyyy HH:mm', { locale: pl })}
                             </span>
@@ -906,21 +1001,21 @@ export default function Trips() {
 
                         <div className="flex items-center gap-3 mb-3">
                           <div className="flex items-center gap-2 text-white">
-                            <MapPin className="w-4 h-4 text-indigo-400" />
+                            <MapPin className="w-4 h-4 text-[var(--primary-light)]" />
                             <span className="font-medium">{trip.startLocation || 'Start'}</span>
                           </div>
-                          <div className="flex-1 h-px bg-gradient-to-r from-indigo-500 to-cyan-500 max-w-[100px]" />
+                          <div className="flex-1 h-px bg-primary text-primary-foreground hover:bg-primary/90 max-w-[100px]" />
                           <div className="flex items-center gap-2 text-white">
                             <span className="font-medium">{trip.endLocation || 'Cel'}</span>
-                            <Flag className="w-4 h-4 text-cyan-400" />
+                            <Flag className="w-4 h-4 text-[var(--accent-color)]" />
                           </div>
                         </div>
 
                         {trip.purpose && (
-                          <p className="text-slate-300 mb-3">{trip.purpose}</p>
+                          <p className="text-[var(--text-secondary)] mb-3">{trip.purpose}</p>
                         )}
 
-                        <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+                        <div className="flex flex-wrap gap-4 text-sm text-[var(--text-muted)]">
                           {vehicle && (
                             <div className="flex items-center gap-1">
                               <Car className="w-4 h-4" />
@@ -935,21 +1030,21 @@ export default function Trips() {
                           )}
                           {trip.status === 'completed' && distance > 0 && (
                             <div className="flex items-center gap-1">
-                              <Gauge className="w-4 h-4 text-emerald-400" />
-                              <span className="text-emerald-400 font-medium">{distance} km</span>
+                              <Gauge className="w-4 h-4 text-[var(--success)]" />
+                              <span className="text-[var(--success)] font-medium">{distance} km</span>
                             </div>
                           )}
                           {trip.status === 'in_progress' && trip.startOdometer > 0 && (
                             <div className="flex items-center gap-1">
-                              <Gauge className="w-4 h-4 text-amber-400" />
-                              <span className="text-amber-400 font-medium">Start: {trip.startOdometer} km</span>
+                              <Gauge className="w-4 h-4 text-[var(--warning)]" />
+                              <span className="text-[var(--warning)] font-medium">Start: {trip.startOdometer} km</span>
                             </div>
                           )}
                         </div>
 
                         {trip.orderedBy && (
-                          <div className="mt-3 text-sm text-slate-400">
-                            Zlecił: <span className="text-slate-300">{trip.orderedBy}</span>
+                          <div className="mt-3 text-sm text-[var(--text-muted)]">
+                            Zlecił: <span className="text-[var(--text-secondary)]">{trip.orderedBy}</span>
                           </div>
                         )}
                       </div>
@@ -959,7 +1054,7 @@ export default function Trips() {
                           <Button
                             onClick={() => openEndTripDialog(trip)}
                             size="sm"
-                            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+                            className="bg-primary text-primary-foreground hover:bg-primary/90"
                           >
                             <StopCircle className="w-4 h-4 mr-2" />
                             Zakończ trasę
@@ -969,7 +1064,7 @@ export default function Trips() {
                         <Button
                           onClick={() => handlePreview(trip)}
                           size="icon"
-                          className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500 hover:text-white hover:border-indigo-400 w-8 h-8 transition-all"
+                          className="bg-[var(--primary-soft)] text-[var(--primary-light)] border border-[var(--border-color)] hover:bg-[var(--primary-color)] hover:text-[var(--text-primary)] w-8 h-8 transition-all"
                           title="Podgląd karty drogowej"
                         >
                           <Eye className="w-4 h-4" />
@@ -977,21 +1072,21 @@ export default function Trips() {
 
                         <Link
                           to={`/trips/${trip.id}`}
-                          className="px-3 py-1.5 bg-indigo-500/20 text-indigo-300 text-xs font-medium rounded-lg hover:bg-indigo-500/30 transition-colors"
+                          className="px-3 py-1.5 bg-[var(--primary-soft)] text-[var(--primary-light)] text-xs font-medium rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
                         >
                           Szczegóły
                         </Link>
 
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white w-8 h-8">
+                            <Button variant="ghost" size="icon" className="text-[var(--text-muted)] hover:text-white w-8 h-8">
                               <MoreVertical className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
+                          <DropdownMenuContent align="end" className="bg-[var(--popover-surface)] border-[var(--border-color)]">
                             <DropdownMenuItem
                               onClick={() => handlePreview(trip)}
-                              className="text-slate-300 hover:text-white hover:bg-slate-700"
+                              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
                             >
                               <Eye className="w-4 h-4 mr-2" />
                               Podgląd
@@ -1000,15 +1095,15 @@ export default function Trips() {
                               onClick={() => {
                                 window.location.href = `/trips/${trip.id}?edit=true`;
                               }}
-                              className="text-slate-300 hover:text-white hover:bg-slate-700"
+                              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
                             >
                               <Edit className="w-4 h-4 mr-2" />
                               Edytuj
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-slate-700" />
+                            <DropdownMenuSeparator className="bg-[var(--surface-hover)]" />
                             <DropdownMenuItem
                               onClick={() => setItemToDelete(trip.id)}
-                              className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                              className="text-[var(--danger)] hover:text-[var(--danger)] hover:bg-[var(--danger-soft)]"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
                               Usuń
@@ -1026,15 +1121,34 @@ export default function Trips() {
       )}
 
       {/* Start Trip Dialog */}
-      <Dialog open={isStartDialogOpen} onOpenChange={setIsStartDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white">
+      <Dialog
+        open={isStartDialogOpen}
+        onOpenChange={(open) => {
+          setIsStartDialogOpen(open);
+          if (!open && gpsTripDraft) {
+            setGpsTripDraft(null);
+            resetStartForm();
+          }
+        }}
+      >
+        <DialogContent className="bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)]">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <Play className="w-5 h-5 text-emerald-400" />
-              Rozpocznij trasę
+              <Play className="w-5 h-5 text-[var(--success)]" />
+              {gpsTripDraft ? "Utwórz podróż ze śladu" : "Rozpocznij trasę"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleStartTrip} className="space-y-4 mt-4">
+            {gpsTripDraft && (
+              <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-3">
+                <p className="text-sm font-semibold text-blue-300">
+                  Dystans GPS: {Number(gpsTripDraft.distance).toFixed(2)} km
+                </p>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                  Ślad jest zachowany w Mapie. Dystans GPS nie zastępuje odczytu licznika; przy zakończeniu podróży podaj rzeczywisty stan licznika, aby użyć standardowych obliczeń przebiegu i paliwa.
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Pojazd *</Label>
@@ -1043,7 +1157,7 @@ export default function Trips() {
                   onValueChange={(v) => setStartFormData({...startFormData, vehicleId: v})}
                   required
                 >
-                  <SelectTrigger className="bg-slate-800 border-slate-700">
+                  <SelectTrigger className="bg-[var(--popover-surface)] border-[var(--border-color)]">
                     <SelectValue placeholder="Wybierz pojazd" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1075,7 +1189,7 @@ export default function Trips() {
                   onValueChange={(v) => setStartFormData({...startFormData, driverId: v})}
                   required
                 >
-                  <SelectTrigger className="bg-slate-800 border-slate-700">
+                  <SelectTrigger className="bg-[var(--popover-surface)] border-[var(--border-color)]">
                     <SelectValue placeholder="Wybierz kierowcę" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1089,8 +1203,8 @@ export default function Trips() {
 
             {/* ✅ Ostrzeżenie o braku kluczyka */}
             {startFormData.vehicleId && requireKeyForTrip && !hasKeyForSelectedVehicle && (
-              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3">
-                <p className="text-red-400 text-sm flex items-center gap-2">
+              <div className="state-error p-3">
+                <p className="text-[var(--danger)] text-sm flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4" />
                   Brak wydanego kluczyka dla tego pojazdu! Najpierw pobierz kluczyk w module "Kluczyki".
                 </p>
@@ -1100,7 +1214,7 @@ export default function Trips() {
             {/* ✅ Potwierdzenie wydanego kluczyka */}
             {startFormData.vehicleId && requireKeyForTrip && hasKeyForSelectedVehicle && (
               <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-3">
-                <p className="text-green-400 text-sm flex items-center gap-2">
+                <p className="text-[var(--success)] text-sm flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Kluczyk wydany - możesz rozpocząć trasę.
                 </p>
@@ -1114,7 +1228,7 @@ export default function Trips() {
                   type="date"
                   value={startFormData.departureDate}
                   onChange={(e) => setStartFormData({...startFormData, departureDate: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   required
                 />
               </div>
@@ -1124,7 +1238,7 @@ export default function Trips() {
                   type="time"
                   value={startFormData.departureTime}
                   onChange={(e) => setStartFormData({...startFormData, departureTime: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   required
                 />
               </div>
@@ -1135,7 +1249,7 @@ export default function Trips() {
               <Input
                 value={startFormData.orderedBy}
                 onChange={(e) => setStartFormData({...startFormData, orderedBy: e.target.value})}
-                className="bg-slate-800 border-slate-700"
+                className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                 placeholder="Imię i nazwisko zlecającego"
                 required
               />
@@ -1147,7 +1261,7 @@ export default function Trips() {
                 <Input
                   value={startFormData.startLocation}
                   onChange={(e) => setStartFormData({...startFormData, startLocation: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   placeholder="Miejsce startu"
                 />
               </div>
@@ -1156,7 +1270,7 @@ export default function Trips() {
                 <Input
                   value={startFormData.endLocation}
                   onChange={(e) => setStartFormData({...startFormData, endLocation: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   placeholder="Miejsce docelowe"
                 />
               </div>
@@ -1167,14 +1281,24 @@ export default function Trips() {
               <Input
                 value={startFormData.purpose}
                 onChange={(e) => setStartFormData({...startFormData, purpose: e.target.value})}
-                className="bg-slate-800 border-slate-700"
+                className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                 placeholder="np. Wyjazd służbowy"
               />
             </div>
 
-            <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-lg p-4">
-              <p className="text-sm text-indigo-400 mb-1">Informacja - automatycznie zapisane:</p>
-              <p className="text-xs text-slate-400">
+            <div className="space-y-2">
+              <Label>Uwagi{gpsTripDraft ? " / powiązanie śladu GPS" : ""}</Label>
+              <Textarea
+                value={startFormData.notes}
+                onChange={(e) => setStartFormData({ ...startFormData, notes: e.target.value })}
+                className="bg-[var(--popover-surface)] border-[var(--border-color)]"
+                placeholder="Dodatkowe informacje o przejeździe"
+              />
+            </div>
+
+            <div className="bg-[var(--primary-soft)] border border-[var(--border-color)] rounded-lg p-4">
+              <p className="text-sm text-[var(--primary-light)] mb-1">Informacja - automatycznie zapisane:</p>
+              <p className="text-xs text-[var(--text-muted)]">
                 • Aktualny przebieg pojazdu
                 <br />
                 • Stan paliwa
@@ -1187,14 +1311,20 @@ export default function Trips() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsStartDialogOpen(false)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                onClick={() => {
+                  if (gpsTripDraft) {
+                    setGpsTripDraft(null);
+                    resetStartForm();
+                  }
+                  setIsStartDialogOpen(false);
+                }}
+                className="border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
               >
                 Anuluj
               </Button>
               <Button
                 type="submit"
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={startTripMutation.isPending || (requireKeyForTrip && startFormData.vehicleId && !hasKeyForSelectedVehicle)}
               >
                 <Play className="w-4 h-4 mr-2" />
@@ -1207,34 +1337,34 @@ export default function Trips() {
 
       {/* End Trip Dialog */}
       <Dialog open={isEndDialogOpen} onOpenChange={setIsEndDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-h-[80vh] overflow-y-auto">
+        <DialogContent className="bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <StopCircle className="w-5 h-5 text-red-400" />
+              <StopCircle className="w-5 h-5 text-[var(--danger)]" />
               Zakończ trasę
             </DialogTitle>
           </DialogHeader>
 
           {selectedTrip && (
-            <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
-              <p className="text-sm text-slate-400 mb-2">Dane rozpoczęcia trasy:</p>
+            <div className="bg-[var(--surface)] border border-[var(--border-color)] rounded-lg p-4 mb-4">
+              <p className="text-sm text-[var(--text-muted)] mb-2">Dane rozpoczęcia trasy:</p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-slate-400">Przebieg początkowy:</span>
+                  <span className="text-[var(--text-muted)]">Przebieg początkowy:</span>
                   <div className="text-white font-bold text-lg">{selectedTrip.startOdometer} km</div>
                 </div>
                 <div>
-                  <span className="text-slate-400">Stan paliwa początkowy:</span>
+                  <span className="text-[var(--text-muted)]">Stan paliwa początkowy:</span>
                   <div className="text-white font-bold text-lg">{(selectedTrip.startFuel || 0).toFixed(2)} L</div>
                 </div>
               </div>
               {selectedTrip.cardNumber && (
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-[var(--text-muted)] mt-2">
                   Nr karty: {selectedTrip.cardNumber}
                 </p>
               )}
               {(selectedTrip.startDate || selectedTrip.startTime) && (
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--text-muted)]">
                   Rozpoczęto: {format(new Date(selectedTrip.startDate || selectedTrip.startTime), 'dd MMM yyyy, HH:mm', { locale: pl })}
                 </p>
               )}
@@ -1251,16 +1381,16 @@ export default function Trips() {
                   const newOdometer = parseInt(e.target.value) || 0;
                   setEndFormData({...endFormData, endOdometer: newOdometer});
                 }}
-                className="bg-slate-800 border-slate-700 text-lg font-semibold"
+                className="bg-[var(--popover-surface)] border-[var(--border-color)] text-lg font-semibold"
                 min={selectedTrip?.startOdometer || 0}
                 required
               />
               {selectedTrip && distance > 0 && (
-                <div className="mt-2 p-2 bg-emerald-500/20 rounded-lg">
-                  <p className="text-emerald-400 text-sm font-semibold">
+                <div className="mt-2 p-2 bg-[var(--success-soft)] rounded-lg">
+                  <p className="text-[var(--success)] text-sm font-semibold">
                     Przejechany dystans: <span className="text-xl">{distance} km</span>
                   </p>
-                  <p className="text-slate-400 text-xs">
+                  <p className="text-[var(--text-muted)] text-xs">
                     = {endFormData.endOdometer} km - {selectedTrip.startOdometer} km
                   </p>
                 </div>
@@ -1274,31 +1404,33 @@ export default function Trips() {
                 step="0.1"
                 value={endFormData.fuelAdded}
                 onChange={(e) => setEndFormData({...endFormData, fuelAdded: parseFloat(e.target.value) || 0})}
-                className="bg-slate-800 border-slate-700"
+                className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                 placeholder="Ilość paliwa zatankowanego podczas trasy"
               />
             </div>
 
             {distance > 0 && (
-              <div className="bg-gradient-to-r from-indigo-900/50 to-cyan-900/50 rounded-lg p-4 border border-indigo-500/30">
-                <h4 className="text-indigo-300 font-semibold mb-3 text-sm uppercase tracking-wide">
+              <div className="bg-[var(--primary-soft)] rounded-lg p-4 border border-[var(--border-color)]">
+                <h4 className="text-[var(--primary-light)] font-semibold mb-3 text-sm uppercase tracking-wide">
                   Automatyczne wyliczenia
                 </h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-slate-400">Średnie spalanie normatywne:</span>
-                    <div className="text-cyan-400 font-bold text-lg">{fuelConsumptionNorm} L/100km</div>
+                    <span className="text-[var(--text-muted)]">Średnie spalanie normatywne:</span>
+                    <div className="text-[var(--accent-color)] font-bold text-lg">{fuelConsumptionNorm} L/100km</div>
                   </div>
                   <div>
-                    <span className="text-slate-400">Przewidywane zużycie:</span>
-                    <div className="text-orange-400 font-bold text-lg">{predictedFuelUsed.toFixed(2)} L</div>
+                    <span className="text-[var(--text-muted)]">Przewidywane zużycie:</span>
+                    <div className="text-[var(--warning)] font-bold text-lg">
+                      {predictedFuelUsed === null ? 'brak danych' : `${predictedFuelUsed.toFixed(2)} L`}
+                    </div>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-slate-400">AUTOMATYCZNY NOWY STAN PALIWA:</span>
-                    <div className="text-green-400 font-bold text-2xl mt-1">
-                      {automaticallyCalculatedEndFuel.toFixed(2)} L
+                    <span className="text-[var(--text-muted)]">AUTOMATYCZNY NOWY STAN PALIWA:</span>
+                    <div className="text-[var(--success)] font-bold text-2xl mt-1">
+                      {automaticallyCalculatedEndFuel === null ? 'brak danych' : `${automaticallyCalculatedEndFuel.toFixed(2)} L`}
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
                       = {selectedTrip?.startFuel || 0} L (start) + {endFormData.fuelAdded} L (dolane) - {predictedFuelUsed.toFixed(2)} L (zużycie)
                     </p>
                   </div>
@@ -1313,7 +1445,7 @@ export default function Trips() {
                   type="text"
                   value={endFormData.fuelStation}
                   onChange={(e) => setEndFormData({...endFormData, fuelStation: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   placeholder="np. Orlen"
                 />
               </div>
@@ -1323,7 +1455,7 @@ export default function Trips() {
                   type="text"
                   value={endFormData.fuelReceiptNumber}
                   onChange={(e) => setEndFormData({...endFormData, fuelReceiptNumber: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                 />
               </div>
             </div>
@@ -1336,7 +1468,7 @@ export default function Trips() {
                 min="0"
                 value={endFormData.fuelCost}
                 onChange={(e) => setEndFormData({...endFormData, fuelCost: parseFloat(e.target.value) || 0})}
-                className="bg-slate-800 border-slate-700"
+                className="bg-[var(--popover-surface)] border-[var(--border-color)]"
               />
             </div>
 
@@ -1345,15 +1477,15 @@ export default function Trips() {
               <Textarea
                 value={endFormData.notes}
                 onChange={(e) => setEndFormData({...endFormData, notes: e.target.value})}
-                className="bg-slate-800 border-slate-700"
+                className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                 rows={3}
                 placeholder="Dodatkowe informacje o trasie..."
               />
             </div>
 
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
-              <p className="text-sm text-emerald-400">Po zakończeniu:</p>
-              <ul className="text-xs text-emerald-300/80 mt-1 space-y-1">
+            <div className="status-success rounded-lg p-4">
+              <p className="text-sm text-[var(--success)]">Po zakończeniu:</p>
+              <ul className="text-xs text-[var(--success)] mt-1 space-y-1">
                 <li>• Stan paliwa zostanie automatycznie obliczony</li>
                 <li>• Przebieg pojazdu zostanie zaktualizowany</li>
                 <li>• Karta drogowa będzie dostępna do podglądu</li>
@@ -1365,13 +1497,13 @@ export default function Trips() {
                 type="button"
                 variant="outline"
                 onClick={() => setIsEndDialogOpen(false)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                className="border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
               >
                 Anuluj
               </Button>
               <Button
                 type="submit"
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={endTripMutation.isPending}
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
