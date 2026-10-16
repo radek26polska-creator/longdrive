@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   Cloud, Sun, CloudRain, Snowflake, Wind, Droplets, 
-  Thermometer, RefreshCw, MapPin, CloudSnow, CloudFog,
+  Thermometer, RefreshCw, MapPin, CloudFog,
   CloudLightning, CloudDrizzle, Eye, Gauge, ChevronRight,
   Calendar, ExternalLink
 } from 'lucide-react';
