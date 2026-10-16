@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MapPin, Calendar, Clock, Route, Eye, Trash2, 
-  Navigation, FileText, ChevronRight, Car, TrendingUp,
+  FileText, ChevronRight, Car,
   Activity, Circle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,7 @@ const TrackedTripsList = ({
       case 'completed': return 'text-green-400 bg-green-400/10';
       case 'in_progress': return 'text-blue-400 bg-blue-400/10';
       case 'cancelled': return 'text-red-400 bg-red-400/10';
-      default: return 'text-slate-400 bg-slate-400/10';
+      default: return 'text-token-muted bg-slate-400/10';
     }
   };
 
@@ -76,13 +76,13 @@ const TrackedTripsList = ({
         return (
           <div
             key={trip.id}
-            className={`bg-slate-800/50 rounded-xl border transition-all ${
-              isExpanded ? 'border-primary' : 'border-slate-700'
+            className={`surface-subtle rounded-xl border transition-all ${
+              isExpanded ? 'border-primary' : 'border-token'
             }`}
           >
             {/* Nagłówek trasy */}
             <div 
-              className="p-3 cursor-pointer hover:bg-slate-800/30 transition-colors"
+              className="p-3 cursor-pointer hover:bg-[var(--surface-hover)]-overlay transition-colors"
               onClick={() => setExpandedTripId(isExpanded ? null : trip.id)}
             >
               <div className="flex items-start justify-between gap-2">
@@ -129,7 +129,7 @@ const TrackedTripsList = ({
                 </div>
                 
                 <ChevronRight 
-                  className={`w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ${
+                  className={`w-4 h-4 text-token-muted transition-transform flex-shrink-0 ${
                     isExpanded ? 'rotate-90' : ''
                   }`}
                 />
@@ -145,10 +145,10 @@ const TrackedTripsList = ({
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="p-3 pt-0 border-t border-slate-700 space-y-3">
+                  <div className="p-3 pt-0 border-t border-token space-y-3">
                     {/* Statystyki trasy */}
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="text-center p-2 bg-slate-900/50 rounded-lg">
+                      <div className="text-center p-2 surface-overlay rounded-lg">
                         <p className="text-xs text-theme-white-muted flex items-center justify-center gap-1">
                           <Route className="w-3 h-3" />
                           Dystans
@@ -157,7 +157,7 @@ const TrackedTripsList = ({
                           {formatDistance(distance)}
                         </p>
                       </div>
-                      <div className="text-center p-2 bg-slate-900/50 rounded-lg">
+                      <div className="text-center p-2 surface-overlay rounded-lg">
                         <p className="text-xs text-theme-white-muted flex items-center justify-center gap-1">
                           <Clock className="w-3 h-3" />
                           Czas
@@ -166,7 +166,7 @@ const TrackedTripsList = ({
                           {formatDuration(duration)}
                         </p>
                       </div>
-                      <div className="text-center p-2 bg-slate-900/50 rounded-lg">
+                      <div className="text-center p-2 surface-overlay rounded-lg">
                         <p className="text-xs text-theme-white-muted flex items-center justify-center gap-1">
                           <Activity className="w-3 h-3" />
                           Średnia prędkość
