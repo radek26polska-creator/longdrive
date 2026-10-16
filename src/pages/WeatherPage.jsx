@@ -4,8 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Cloud, Sun, CloudRain, Snowflake, Wind, Droplets, 
-  Thermometer, RefreshCw, MapPin, CloudSnow, CloudFog,
-  CloudLightning, CloudDrizzle, Eye, Gauge, ArrowLeft,
+  Thermometer, RefreshCw, MapPin, CloudFog,
+  CloudLightning, CloudDrizzle, Gauge, ArrowLeft,
   Calendar
 } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
