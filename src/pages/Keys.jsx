@@ -43,6 +43,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { useAppSettings } from '@/lib/ThemeContext';
 import { toast } from "sonner";
@@ -273,7 +281,6 @@ export default function Keys() {
         action={
           <Button 
             onClick={() => { resetForm(); setIsDialogOpen(true); }}
-            className="bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600"
           >
             <Plus className="w-4 h-4 mr-2" />
             Wydaj kluczyk
@@ -285,17 +292,17 @@ export default function Keys() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-500/20 border-2 border-red-500/50 rounded-xl p-6 backdrop-blur-sm"
+          className="state-error p-5 sm:p-6"
         >
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-red-500/30 flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-red-400" />
+            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--danger-soft)]">
+              <AlertCircle className="h-5 w-5 text-[var(--danger)]" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">
+              <h3 className="section-title mb-2">
                 ⚠️ UWAGA – wydane kluczyki blokują możliwość rozpoczęcia trasy!
               </h3>
-              <p className="text-red-200 mb-4">
+              <p className="mb-4 text-sm text-[var(--text-secondary)]">
                 Następujące kluczyki są aktualnie poza biurem. Aby odblokować możliwość rozpoczęcia trasy, 
                 wszystkie muszą zostać zwrócone.
               </p>
@@ -304,23 +311,23 @@ export default function Keys() {
                   const vehicle = vehicles.find(v => v.id === issue.vehicleId);
                   const driver = drivers.find(d => d.id === issue.driverId);
                   return (
-                    <div key={issue.id} className="bg-red-500/10 rounded-lg p-3 border border-red-500/30">
+                    <div key={issue.id} className="surface-raised rounded-[var(--radius-sm)] p-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-white font-medium">
+                          <p className="font-medium text-[var(--text-primary)]">
                             {vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.registrationNumber})` : 'Nieznany pojazd'}
                           </p>
-                          <p className="text-sm text-red-200">
+                          <p className="text-sm text-[var(--text-secondary)]">
                             Wydano: {driver?.name || 'Nieznany kierowca'} • {format(new Date(issue.timestamp), 'HH:mm, dd MMM', { locale: pl })}
                           </p>
                           {issue.notes && (
-                            <p className="text-xs text-red-300 mt-1">Uwagi: {issue.notes}</p>
+                            <p className="mt-1 text-xs text-[var(--text-muted)]">Uwagi: {issue.notes}</p>
                           )}
                         </div>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-red-500/50 text-red-200 hover:bg-red-500/20"
+                          className="border-[var(--danger)]/40 text-[var(--danger)] hover:bg-[var(--danger-soft)]"
                           onClick={() => handleQuickReturn(issue)}
                           disabled={returnMutation.isPending}
                         >
@@ -332,9 +339,9 @@ export default function Keys() {
                   );
                 })}
               </div>
-              <div className="mt-4 p-3 bg-red-500/40 rounded-lg">
-                <p className="text-white font-medium flex items-center gap-2">
-                  <span className="text-lg">🔴</span>
+              <div className="mt-4 rounded-[var(--radius-sm)] border border-[var(--danger)]/25 bg-[var(--danger-soft)] p-3">
+                <p className="flex items-center gap-2 font-medium text-[var(--text-primary)]">
+                  <span className="text-[var(--danger)]">●</span>
                   Aby rozpocząć trasę, musisz najpierw zwrócić wszystkie kluczyki!
                 </p>
               </div>
@@ -345,12 +352,12 @@ export default function Keys() {
 
       <GlassCard className="p-4" delay={0.1}>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
           <Input
             placeholder="Szukaj po pojeździe lub kierowcy..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+            className="pl-10"
           />
         </div>
       </GlassCard>
@@ -358,116 +365,96 @@ export default function Keys() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-slate-800/50 rounded-2xl animate-pulse" />
+            <div key={i} className="h-16 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-raised)]" />
           ))}
         </div>
       ) : sortedLogs.length === 0 ? (
         <GlassCard className="p-12 text-center">
-          <Key className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">Brak wpisów</h3>
-          <p className="text-slate-400 mb-4">
+          <Key className="mx-auto mb-4 h-12 w-12 text-[var(--text-muted)]" />
+          <h3 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">Brak wpisów</h3>
+          <p className="mb-4 text-[var(--text-muted)]">
             {searchTerm 
               ? "Nie znaleziono wpisów spełniających kryteria"
               : "Dodaj pierwszy wpis do ewidencji"}
           </p>
           {!searchTerm && (
-            <Button 
-              onClick={() => setIsDialogOpen(true)}
-              className="bg-gradient-to-r from-indigo-500 to-cyan-500"
-            >
+            <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
               <Plus className="w-4 h-4 mr-2" />
               Wydaj kluczyk
             </Button>
           )}
         </GlassCard>
       ) : (
-        <div className="space-y-3">
+        <GlassCard className="overflow-hidden" hover={false}>
           <AnimatePresence mode="popLayout">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Pojazd i kierowca</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Uwagi</TableHead>
+                  <TableHead className="text-right">Akcje</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
             {sortedLogs.map((log, index) => (
-              <motion.div
+              <TableRow
                 key={log.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ delay: index * 0.03 }}
-                layout
+                className="align-top"
               >
-                <GlassCard className="p-4" hover={true} animate={false}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      log.action === 'issued'
-                        ? 'bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30' 
-                        : 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30'
-                    }`}>
-                      {log.action === 'issued'
-                        ? <ArrowUpRight className="w-5 h-5 text-emerald-400" />
-                        : <ArrowDownLeft className="w-5 h-5 text-amber-400" />
-                      }
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className={`${
-                          log.action === 'issued' ? 'bg-emerald-500' : 'bg-amber-500'
-                        } text-white border-0`}>
-                          {log.action === 'issued' ? 'Wydano' : 'Zwrócono'}
-                        </Badge>
-                        <span className="text-sm text-slate-400">
-                          {log.timestamp && format(new Date(log.timestamp), 'dd MMM yyyy, HH:mm', { locale: pl })}
-                        </span>
+                  <TableCell>
+                    <Badge className={log.action === 'issued' ? 'status-success' : 'status-warning'}>
+                      {log.action === 'issued' ? <ArrowUpRight className="mr-1 h-3 w-3" /> : <ArrowDownLeft className="mr-1 h-3 w-3" />}
+                      {log.action === 'issued' ? 'Wydano' : 'Zwrócono'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex min-w-[13rem] items-start gap-2 text-sm">
+                      <Car className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary-light)]" />
+                      <div>
+                        <p className="font-medium text-[var(--text-primary)]">{getVehicleName(log.vehicleId)}</p>
+                        {log.driverId && <p className="mt-1 flex items-center gap-1 text-[var(--text-muted)]"><User className="h-3.5 w-3.5" />{getDriverName(log.driverId)}</p>}
                       </div>
-                      <div className="flex flex-wrap gap-4 text-sm">
-                        <div className="flex items-center gap-1 text-white">
-                          <Car className="w-4 h-4 text-indigo-400" />
-                          {getVehicleName(log.vehicleId)}
-                        </div>
-                        {log.driverId && (
-                          <div className="flex items-center gap-1 text-slate-400">
-                            <User className="w-4 h-4" />
-                            {getDriverName(log.driverId)}
-                          </div>
-                        )}
-                      </div>
-                      {log.notes && (
-                        <p className="text-slate-500 text-xs mt-1">{log.notes}</p>
-                      )}
-                      {log.issuedBy && (
-                        <p className="text-slate-500 text-xs mt-1">
-                          {log.action === 'issued' ? 'Wydał' : 'Przyjął'}: {log.issuedBy}
-                        </p>
-                      )}
                     </div>
-
-                    <div className="flex items-center gap-2">
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-[var(--text-secondary)]">
+                    {log.timestamp && format(new Date(log.timestamp), 'dd MMM yyyy, HH:mm', { locale: pl })}
+                    {log.issuedBy && <p className="mt-1 text-xs text-[var(--text-muted)]">{log.action === 'issued' ? 'Wydał' : 'Przyjął'}: {log.issuedBy}</p>}
+                  </TableCell>
+                  <TableCell className="max-w-[16rem] text-sm text-[var(--text-muted)]">
+                    {log.notes || '—'}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end gap-2">
                       {log.action === 'issued' && (
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-emerald-500/50 text-emerald-200 hover:bg-emerald-500/20"
+                          className="border-[var(--success)]/40 text-[var(--success)] hover:bg-[var(--success-soft)]"
                           onClick={() => handleQuickReturn(log)}
                           disabled={returnMutation.isPending}
                         >
-                          <RotateCcw className="w-4 h-4 mr-1" />
-                          Zwróć
+                          <RotateCcw className="h-4 w-4 sm:mr-1" />
+                          <span className="hidden sm:inline">Zwróć</span>
                         </Button>
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+                          <Button variant="ghost" size="icon" className="text-[var(--text-muted)]">
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
+                        <DropdownMenuContent align="end">
                           <DropdownMenuItem 
                             onClick={() => handleEdit(log)}
-                            className="text-slate-300 hover:text-white hover:bg-slate-700"
                           >
                             <Edit className="w-4 h-4 mr-2" />
                             Edytuj
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => deleteMutation.mutate(log.id)}
-                            className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                            className="text-[var(--danger)]"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Usuń
@@ -475,21 +462,22 @@ export default function Keys() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                  </div>
-                </GlassCard>
-              </motion.div>
+                  </TableCell>
+              </TableRow>
             ))}
+              </TableBody>
+            </Table>
           </AnimatePresence>
-        </div>
+        </GlassCard>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
               {editingLog ? 'Edytuj wpis' : 'Wydaj kluczyk'}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription>
               {editingLog ? 'Zmień dane istniejącego wpisu' : 'Zarejestruj wydanie kluczyka do pojazdu'}
             </DialogDescription>
           </DialogHeader>
@@ -502,10 +490,10 @@ export default function Keys() {
                 onValueChange={(v) => setFormData({...formData, vehicleId: v})}
                 required
               >
-                <SelectTrigger id="vehicle" className="bg-slate-800 border-slate-700">
+                <SelectTrigger id="vehicle">
                   <SelectValue placeholder="Wybierz pojazd" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectContent>
                   {vehicles.map(v => (
                     <SelectItem key={v.id} value={String(v.id)}>
                       {v.make} {v.model} ({v.registrationNumber})
@@ -522,10 +510,10 @@ export default function Keys() {
                 onValueChange={(v) => setFormData({...formData, driverId: v})}
                 required
               >
-                <SelectTrigger id="driver" className="bg-slate-800 border-slate-700">
+                <SelectTrigger id="driver">
                   <SelectValue placeholder="Wybierz kierowcę" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectContent>
                   {drivers.map(d => (
                     <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                   ))}
@@ -540,10 +528,10 @@ export default function Keys() {
                 onValueChange={(v) => setFormData({...formData, action: v})}
                 required
               >
-                <SelectTrigger id="action" className="bg-slate-800 border-slate-700">
+                <SelectTrigger id="action">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectContent>
                   <SelectItem value="issued">Wydanie</SelectItem>
                   <SelectItem value="returned">Zwrot</SelectItem>
                 </SelectContent>
@@ -557,7 +545,6 @@ export default function Keys() {
                 type="datetime-local"
                 value={formData.timestamp}
                 onChange={(e) => setFormData({...formData, timestamp: e.target.value})}
-                className="bg-slate-800 border-slate-700"
                 required
               />
             </div>
@@ -568,7 +555,6 @@ export default function Keys() {
                 id="issuedBy"
                 value={formData.issuedBy}
                 onChange={(e) => setFormData({...formData, issuedBy: e.target.value})}
-                className="bg-slate-800 border-slate-700"
                 placeholder="Imię i nazwisko"
                 required
               />
@@ -580,7 +566,6 @@ export default function Keys() {
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                className="bg-slate-800 border-slate-700"
                 rows={3}
                 placeholder="Dodatkowe informacje..."
               />
@@ -591,13 +576,11 @@ export default function Keys() {
                 type="button" 
                 variant="outline" 
                 onClick={() => setIsDialogOpen(false)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-800"
               >
                 Anuluj
               </Button>
               <Button 
                 type="submit"
-                className="bg-gradient-to-r from-indigo-500 to-cyan-500"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {createMutation.isPending || updateMutation.isPending ? (
