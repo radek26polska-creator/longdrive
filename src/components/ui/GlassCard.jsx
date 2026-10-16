@@ -10,7 +10,7 @@ export default function GlassCard({
   hover = true,
   customOpacity = null 
 }) {
-  const { cardOpacity, cardBackgroundColor, settings, cardColor } = useAppSettings();
+  const { cardOpacity, cardBackgroundColor, cardBorderColor, cardBorderWidth, settings, cardColor } = useAppSettings();
   const opacity = customOpacity !== null ? customOpacity : cardOpacity;
   
   // Pobierz kolor główny z motywu (jako fallback)
@@ -56,16 +56,17 @@ export default function GlassCard({
   };
   
   const bgColor = hexToRgba(cardBackgroundColor || '#1e293b', opacity);
-  const borderColor = getBorderColor();
+  const borderColor = cardBorderColor || getBorderColor();
   
   const content = (
     <div 
-      className={`backdrop-blur-xl rounded-2xl border shadow-xl transition-all duration-300 ${className}`}
+      className={`rounded-[var(--radius-md)] border border-[var(--border-color)] bg-[var(--surface)] shadow-[var(--shadow-card)] transition-colors duration-200 ${hover ? 'hover:bg-[var(--surface-hover)]' : ''} ${className}`}
       style={{ 
-        backgroundColor: bgColor,
-        borderColor: borderColor,
+        backgroundColor: cardBackgroundColor ? bgColor : undefined,
+        borderColor,
+        borderWidth: `${Number(cardBorderWidth) || 1}px`,
         // Efekt hover (mignięcie) - przezroczystość i cień
-        transition: 'all 0.3s ease'
+        transition: 'all 0.2s ease'
       }}
     >
       {children}
@@ -78,11 +79,11 @@ export default function GlassCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
+      transition={{ duration: 0.25, delay }}
       whileHover={hover ? { 
         y: -2, 
-        transition: { duration: 0.2 },
-        scale: 1.01
+        transition: { duration: 0.18 },
+        scale: 1.005
       } : {}}
     >
       {content}
