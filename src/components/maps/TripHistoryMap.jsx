@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Filter, ChevronDown, Play, MapPin, Activity, Clock } from 'lucide-react';
+import { Calendar, Play, MapPin, Clock } from 'lucide-react';
 import MapView from './MapView';
 import GlassCard from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
@@ -141,7 +141,7 @@ const TripHistoryMap = ({
           <div className="flex-1 min-w-[150px]">
             <label className="text-xs text-theme-white-muted mb-1 block">Pojazd</label>
             <Select value={filterVehicle} onValueChange={setFilterVehicle}>
-              <SelectTrigger className="bg-slate-800 border-slate-700">
+              <SelectTrigger className="surface border-token">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -155,7 +155,7 @@ const TripHistoryMap = ({
           <div className="flex-1 min-w-[150px]">
             <label className="text-xs text-theme-white-muted mb-1 block">Kierowca</label>
             <Select value={filterDriver} onValueChange={setFilterDriver}>
-              <SelectTrigger className="bg-slate-800 border-slate-700">
+              <SelectTrigger className="surface border-token">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -169,7 +169,7 @@ const TripHistoryMap = ({
           <div className="flex-1 min-w-[150px]">
             <label className="text-xs text-theme-white-muted mb-1 block">Okres</label>
             <Select value={filterDate} onValueChange={setFilterDate}>
-              <SelectTrigger className="bg-slate-800 border-slate-700">
+              <SelectTrigger className="surface border-token">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -230,7 +230,7 @@ const TripHistoryMap = ({
                 className={`p-3 rounded-lg cursor-pointer transition-all border ${
                   isSelected 
                     ? 'border-primary bg-primary/10' 
-                    : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                    : 'border-token surface-subtle hover:border-slate-600'
                 }`}
               >
                 <div className="flex items-start justify-between mb-2">
@@ -265,7 +265,7 @@ const TripHistoryMap = ({
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="mt-2 pt-2 border-t border-slate-700"
+                    className="mt-2 pt-2 border-t border-token"
                   >
                     <Button
                       variant="ghost"
