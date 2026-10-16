@@ -4,6 +4,15 @@ const defaultSettings = {
   theme: 'dark',
   backgroundColor: 'bg-app-gradient1',
   textColor: 'white',
+  fontColor: '#f8fafc',
+  fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+  fontSize: 14,
+  buttonColor: '#5b7cfa',
+  buttonTextColor: '#ffffff',
+  buttonHoverColor: null,
+  menuHighlightColor: '#7c3aed',
+  menuTextColor: null,
+  menuActiveTextColor: null,
   requireKeyForTrip: false,
   animationType: 'fade',
   animationSpeed: 0.3,
@@ -11,9 +20,10 @@ const defaultSettings = {
   cardOpacity: 0.5,
   cardColor: 'slate',
   customBackground: null,
-  // NOWE USTAWIENIA KOLORÓW TŁA
-  menuBackgroundColor: '#0f172a',     // domyślnie ciemny granat
-  cardBackgroundColor: '#1e293b',    // domyślnie jaśniejszy granat
+  menuBackgroundColor: '#0f172a',
+  cardBackgroundColor: '#1e293b',
+  cardBorderColor: '#475569',
+  cardBorderWidth: 1,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -76,12 +86,33 @@ export const AppSettingsProvider = ({ children }) => {
   const loadSettings = async () => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setSettings({ ...defaultSettings, ...parsed });
+      const legacySettings = localStorage.getItem('theme_settings') || localStorage.getItem('appearance_settings');
+      if (saved || legacySettings) {
+        const parsed = JSON.parse(saved || legacySettings);
+        const nextSettings = {
+          ...defaultSettings,
+          ...parsed,
+          fontColor: parsed.fontColor ?? parsed.font_color ?? defaultSettings.fontColor,
+          fontFamily: parsed.fontFamily ?? parsed.font_family ?? defaultSettings.fontFamily,
+          fontSize: parsed.fontSize ?? parsed.font_size ?? defaultSettings.fontSize,
+          buttonColor: parsed.buttonColor ?? parsed.button_color ?? defaultSettings.buttonColor,
+          buttonTextColor: parsed.buttonTextColor ?? parsed.button_text_color ?? defaultSettings.buttonTextColor,
+          buttonHoverColor: parsed.buttonHoverColor ?? parsed.button_hover_color ?? defaultSettings.buttonHoverColor,
+          menuHighlightColor: parsed.menuHighlightColor ?? parsed.menu_highlight_color ?? defaultSettings.menuHighlightColor,
+          menuTextColor: parsed.menuTextColor ?? parsed.menu_text_color ?? defaultSettings.menuTextColor,
+          menuActiveTextColor: parsed.menuActiveTextColor ?? parsed.menu_active_text_color ?? defaultSettings.menuActiveTextColor,
+          menuOpacity: parsed.menuOpacity ?? parsed.menu_opacity,
+          cardOpacity: parsed.cardOpacity ?? parsed.card_opacity,
+          customBackground: parsed.customBackground ?? parsed.custom_background,
+          menuBackgroundColor: parsed.menuBackgroundColor ?? parsed.menu_background_color,
+          cardBackgroundColor: parsed.cardBackgroundColor ?? parsed.card_background_color,
+          cardBorderColor: parsed.cardBorderColor ?? parsed.card_border_color,
+          cardBorderWidth: parsed.cardBorderWidth ?? parsed.card_border_width,
+        };
+        setSettings(nextSettings);
         // Wczytaj kolory tła z ustawień
-        if (parsed.menuBackgroundColor) setMenuBackgroundColor(parsed.menuBackgroundColor);
-        if (parsed.cardBackgroundColor) setCardBackgroundColor(parsed.cardBackgroundColor);
+        if (nextSettings.menuBackgroundColor) setMenuBackgroundColor(nextSettings.menuBackgroundColor);
+        if (nextSettings.cardBackgroundColor) setCardBackgroundColor(nextSettings.cardBackgroundColor);
       } else {
         setSettings(defaultSettings);
       }
@@ -89,12 +120,15 @@ export const AppSettingsProvider = ({ children }) => {
       // Wczytaj przezroczystości
       const savedMenuOpacity = localStorage.getItem('menu_opacity');
       if (savedMenuOpacity) setMenuOpacity(parseFloat(savedMenuOpacity));
+      else if (saved) setMenuOpacity(parseFloat(JSON.parse(saved).menuOpacity ?? defaultSettings.menuOpacity));
       const savedCardOpacity = localStorage.getItem('card_opacity');
       if (savedCardOpacity) setCardOpacity(parseFloat(savedCardOpacity));
+      else if (saved) setCardOpacity(parseFloat(JSON.parse(saved).cardOpacity ?? defaultSettings.cardOpacity));
       
       // Wczytaj własne tło
       const savedBg = localStorage.getItem('custom_background');
-      if (savedBg) setCustomBackground(savedBg);
+      // Blob URLs are scoped to the previous document and cannot survive reloads.
+      if (savedBg && !savedBg.startsWith('blob:')) setCustomBackground(savedBg);
       
       // Wczytaj kolory tła z localStorage (bezpośrednio dla zgodności)
       const savedMenuBg = localStorage.getItem('menu_background_color');
@@ -110,22 +144,37 @@ export const AppSettingsProvider = ({ children }) => {
   };
 
   const saveSettings = async (newSettings) => {
-    setSettings(newSettings);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+    const nextSettings = { ...defaultSettings, ...newSettings };
+    setSettings(nextSettings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSettings));
+    localStorage.setItem('menu_opacity', String(nextSettings.menuOpacity ?? menuOpacity));
+    localStorage.setItem('card_opacity', String(nextSettings.cardOpacity ?? cardOpacity));
+    if (nextSettings.customBackground) localStorage.setItem('custom_background', nextSettings.customBackground);
   };
 
   const saveMenuOpacity = (value) => {
     setMenuOpacity(value);
+    const nextSettings = { ...settings, menuOpacity: value };
+    setSettings(nextSettings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSettings));
     localStorage.setItem('menu_opacity', value);
   };
 
   const saveCardOpacity = (value) => {
     setCardOpacity(value);
+    const nextSettings = { ...settings, cardOpacity: value };
+    setSettings(nextSettings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSettings));
     localStorage.setItem('card_opacity', value);
   };
 
   const saveCustomBackground = (url) => {
-    setCustomBackground(url);
+    if (url?.startsWith('blob:')) return;
+    const nextBackground = url || null;
+    setCustomBackground(nextBackground);
+    const nextSettings = { ...settings, customBackground: nextBackground };
+    setSettings(nextSettings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSettings));
     if (url) {
       localStorage.setItem('custom_background', url);
     } else {
@@ -157,7 +206,47 @@ export const AppSettingsProvider = ({ children }) => {
     const root = document.documentElement;
     root.classList.remove(...themeClasses);
     root.classList.add(`theme-${settings.theme}`);
-  }, [settings.theme]);
+    root.classList.toggle('dark', settings.theme === 'dark' || settings.mode === 'dark' || settings.darkMode === true);
+  }, [settings.theme, settings.mode, settings.darkMode]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const fontColor = settings.fontColor || defaultSettings.fontColor;
+    const fontFamily = settings.fontFamily || defaultSettings.fontFamily;
+    const fontSize = settings.fontSize || defaultSettings.fontSize;
+    const buttonColor = settings.buttonColor || defaultSettings.buttonColor;
+    const buttonTextColor = settings.buttonTextColor || defaultSettings.buttonTextColor;
+    const buttonHoverColor = settings.buttonHoverColor || buttonColor;
+    const menuHighlightColor = settings.menuHighlightColor || defaultSettings.menuHighlightColor;
+
+    const toRgba = (hex, alpha) => {
+      const clean = hex.replace('#', '');
+      const full = clean.length === 3 ? clean.split('').map((char) => char + char).join('') : clean;
+      const value = parseInt(full, 16);
+      const r = (value >> 16) & 255;
+      const g = (value >> 8) & 255;
+      const b = value & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
+    root.style.setProperty('--text-primary', fontColor);
+    root.style.setProperty('--text-secondary', fontColor === '#0f172a' ? '#475569' : '#cbd5e1');
+    root.style.setProperty('--primary-color', buttonColor);
+    root.style.setProperty('--primary-dark', buttonHoverColor);
+    root.style.setProperty('--button-text-color', buttonTextColor);
+    root.style.setProperty('--button-hover-color', buttonHoverColor);
+    root.style.setProperty('--accent-color', buttonColor);
+    root.style.setProperty('--primary-light', buttonColor);
+    root.style.setProperty('--primary-soft', toRgba(buttonColor, 0.12));
+    root.style.setProperty('--menu-highlight-color', menuHighlightColor);
+    root.style.setProperty('--menu-highlight-soft', toRgba(menuHighlightColor, 0.16));
+    root.style.setProperty('--primary-gradient', `linear-gradient(135deg, ${buttonColor}, ${buttonColor})`);
+    root.style.setProperty('--app-font-family', fontFamily);
+    root.style.setProperty('--app-font-size', `${fontSize}px`);
+    document.body.style.color = fontColor;
+    document.body.style.fontFamily = fontFamily;
+    document.body.style.fontSize = `${fontSize}px`;
+  }, [settings.fontColor, settings.fontFamily, settings.fontSize, settings.buttonColor, settings.buttonTextColor, settings.buttonHoverColor, settings.menuHighlightColor]);
 
   // Nakładanie klasy tła na <body>
   useEffect(() => {
@@ -206,9 +295,15 @@ export const AppSettingsProvider = ({ children }) => {
       customBackground,
       saveCustomBackground,
       cardColor: settings.cardColor,
-      // NOWE WARTOŚCI DLA KOLORÓW TŁA
+      fontColor: settings.fontColor,
+      fontFamily: settings.fontFamily,
+      fontSize: settings.fontSize,
+      buttonColor: settings.buttonColor,
+      menuHighlightColor: settings.menuHighlightColor,
       menuBackgroundColor,
       cardBackgroundColor,
+      cardBorderColor: settings.cardBorderColor,
+      cardBorderWidth: settings.cardBorderWidth,
       saveMenuBackgroundColor,
       saveCardBackgroundColor,
     }}>
