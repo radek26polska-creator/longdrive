@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Navigation, MapPin, Activity, Battery, Satellite, AlertTriangle, RefreshCw, Info } from 'lucide-react';
+import { Navigation, Activity, Battery, Satellite, AlertTriangle, RefreshCw, Info } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -195,7 +195,7 @@ const GPSLiveTracker = ({
 
   // Jakość sygnału GPS
   const getAccuracyStatus = () => {
-    if (!accuracy) return { color: 'text-slate-400', label: 'brak', icon: AlertTriangle };
+    if (!accuracy) return { color: 'text-token-muted', label: 'brak', icon: AlertTriangle };
     if (accuracy < 10) return { color: 'text-green-400', label: 'Doskonała', icon: Satellite };
     if (accuracy < 30) return { color: 'text-emerald-400', label: 'Dobra', icon: Satellite };
     if (accuracy < 100) return { color: 'text-yellow-400', label: 'Średnia', icon: Activity };
@@ -218,15 +218,15 @@ const GPSLiveTracker = ({
             
             {/* Instrukcje dla błędu uprawnień */}
             {errorType === 'permission' && (
-              <div className="mt-2 text-xs text-slate-300 space-y-1">
+              <div className="mt-2 text-xs text-token-secondary space-y-1">
                 <p className="flex items-center gap-1">
                   <Info className="w-3 h-3" />
                   Jak włączyć lokalizację:
                 </p>
                 <ul className="list-disc list-inside ml-2 space-y-1">
                   <li>Kliknij ikonę 🔒 lub 🛈 w pasku adresu</li>
-                  <li>Znajdź opcję "Lokalizacja" lub "Geolokalizacja"</li>
-                  <li>Zmień na "Zezwól"</li>
+                  <li>Znajdź opcję &quot;Lokalizacja&quot; lub &quot;Geolokalizacja&quot;</li>
+                  <li>Zmień na &quot;Zezwól&quot;</li>
                   <li>Odśwież stronę</li>
                 </ul>
                 <Button
@@ -264,7 +264,7 @@ const GPSLiveTracker = ({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tracking ? 'bg-red-500/20' : 'bg-slate-700'}`}>
-            <Navigation className={`w-5 h-5 ${tracking ? 'text-red-400 animate-pulse' : 'text-slate-400'}`} />
+            <Navigation className={`w-5 h-5 ${tracking ? 'text-red-400 animate-pulse' : 'text-token-muted'}`} />
           </div>
           <div>
             <h3 className="text-theme-white font-semibold">Śledzenie GPS na żywo</h3>
@@ -295,7 +295,7 @@ const GPSLiveTracker = ({
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 bg-slate-800/50 rounded-lg"
+            className="mb-4 p-3 surface-subtle rounded-lg"
           >
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -327,14 +327,14 @@ const GPSLiveTracker = ({
       {/* Statystyki trasy - tylko gdy śledzenie aktywne i nie ma błędu */}
       {tracking && !error && (
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="text-center p-2 bg-slate-800/50 rounded-lg">
+          <div className="text-center p-2 surface-subtle rounded-lg">
             <p className="text-xs text-theme-white-muted flex items-center justify-center gap-1">
               <Activity className="w-3 h-3" />
               Dystans
             </p>
             <p className="text-lg font-bold text-theme-white">{formatDistance(distance)}</p>
           </div>
-          <div className="text-center p-2 bg-slate-800/50 rounded-lg">
+          <div className="text-center p-2 surface-subtle rounded-lg">
             <p className="text-xs text-theme-white-muted flex items-center justify-center gap-1">
               <Battery className="w-3 h-3" />
               Czas
@@ -346,7 +346,7 @@ const GPSLiveTracker = ({
 
       {/* Historia punktów */}
       {trackHistory.length > 0 && !error && (
-        <div className="mt-3 pt-3 border-t border-slate-700">
+        <div className="mt-3 pt-3 border-t border-token">
           <p className="text-xs text-theme-white-muted mb-2">
             Zapisane punkty: {trackHistory.length}
           </p>
