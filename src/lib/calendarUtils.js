@@ -1,5 +1,4 @@
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addDays, subDays } from 'date-fns';
-import { pl } from 'date-fns/locale';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 
 // Generowanie dni tygodnia
 export const getWeekDays = (currentDate) => {
