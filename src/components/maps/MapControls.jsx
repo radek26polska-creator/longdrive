@@ -1,9 +1,8 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { 
   ZoomIn, ZoomOut, Maximize2, Minimize2, Crosshair, 
   Layers, Sun, Moon, Map, Satellite, Terrain,
-  Navigation, Home
+  Home
 } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/button';
@@ -94,7 +93,7 @@ const MapControls = ({
       {/* Kontrolki stylu mapy */}
       {showStyleControls && (
         <GlassCard className="p-1 flex flex-col gap-1">
-          <div className="px-2 py-1 text-xs text-theme-white-muted text-center border-b border-slate-700">
+          <div className="px-2 py-1 text-xs text-theme-white-muted text-center border-b border-token">
             Styl
           </div>
           {styles.map((style) => {
@@ -118,7 +117,7 @@ const MapControls = ({
       {/* Kontrolki dostawcy mapy */}
       {showProviderControls && (
         <GlassCard className="p-1 flex flex-col gap-1">
-          <div className="px-2 py-1 text-xs text-theme-white-muted text-center border-b border-slate-700">
+          <div className="px-2 py-1 text-xs text-theme-white-muted text-center border-b border-token">
             Źródło
           </div>
           {providers.map((provider) => (
