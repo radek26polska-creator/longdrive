@@ -7,7 +7,6 @@ import {
   Wrench,
   Plus,
   Search,
-  Calendar,
   Car,
   DollarSign,
   Gauge,
@@ -48,12 +47,12 @@ import { Label } from "@/components/ui/label";
 import api from "@/api/apiClient";
 
 const serviceTypeConfig = {
-  inspection: { label: 'Przegląd', color: 'bg-blue-500' },
-  oil_change: { label: 'Wymiana oleju', color: 'bg-amber-500' },
-  tires: { label: 'Opony', color: 'bg-slate-500' },
-  brakes: { label: 'Hamulce', color: 'bg-red-500' },
-  repair: { label: 'Naprawa', color: 'bg-purple-500' },
-  other: { label: 'Inne', color: 'bg-cyan-500' }
+  inspection: { label: 'Przegląd', color: 'status-info' },
+  oil_change: { label: 'Wymiana oleju', color: 'status-warning' },
+  tires: { label: 'Opony', color: 'status-info' },
+  brakes: { label: 'Hamulce', color: 'status-danger' },
+  repair: { label: 'Naprawa', color: 'status-success' },
+  other: { label: 'Inne', color: 'status-info' }
 };
 
 export default function Services() {
@@ -205,7 +204,7 @@ export default function Services() {
         action={
           <Button 
             onClick={() => { resetForm(); setIsDialogOpen(true); }}
-            className="bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="w-4 h-4 mr-2" />
             Dodaj serwis
@@ -217,17 +216,17 @@ export default function Services() {
       <GlassCard className="p-4" delay={0.1}>
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
             <Input
               placeholder="Szukaj serwisu..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+              className="pl-10 bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
             />
           </div>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full sm:w-40 bg-slate-700/50 border-slate-600 text-white">
-              <Filter className="w-4 h-4 mr-2 text-slate-400" />
+            <SelectTrigger className="w-full sm:w-40 bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)]">
+              <Filter className="w-4 h-4 mr-2 text-[var(--text-muted)]" />
               <SelectValue placeholder="Typ serwisu" />
             </SelectTrigger>
             <SelectContent>
@@ -241,8 +240,8 @@ export default function Services() {
             </SelectContent>
           </Select>
           <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
-            <SelectTrigger className="w-full sm:w-48 bg-slate-700/50 border-slate-600 text-white">
-              <Car className="w-4 h-4 mr-2 text-slate-400" />
+            <SelectTrigger className="w-full sm:w-48 bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)]">
+              <Car className="w-4 h-4 mr-2 text-[var(--text-muted)]" />
               <SelectValue placeholder="Pojazd" />
             </SelectTrigger>
             <SelectContent>
@@ -261,14 +260,14 @@ export default function Services() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-slate-800/50 rounded-2xl animate-pulse" />
+            <div key={i} className="h-32 surface rounded-[var(--radius-md)] animate-pulse" />
           ))}
         </div>
       ) : filteredServices.length === 0 ? (
         <GlassCard className="p-12 text-center">
-          <Wrench className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+          <Wrench className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-white mb-2">Brak serwisów</h3>
-          <p className="text-slate-400 mb-4">
+          <p className="text-[var(--text-muted)] mb-4">
             {searchTerm || typeFilter !== 'all' || vehicleFilter !== 'all'
               ? "Nie znaleziono serwisów spełniających kryteria"
               : "Dodaj pierwszy serwis"}
@@ -276,7 +275,7 @@ export default function Services() {
           {!searchTerm && typeFilter === 'all' && vehicleFilter === 'all' && (
             <Button 
               onClick={() => setIsDialogOpen(true)}
-              className="bg-gradient-to-r from-indigo-500 to-cyan-500"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Plus className="w-4 h-4 mr-2" />
               Dodaj serwis
@@ -298,35 +297,35 @@ export default function Services() {
                 <GlassCard className="p-6" hover={true} animate={false}>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center">
-                        <Settings2 className="w-6 h-6 text-slate-300" />
+                      <div className="w-12 h-12 rounded-xl bg-[var(--surface-raised)] border border-[var(--border-color)] flex items-center justify-center">
+                        <Settings2 className="w-6 h-6 text-[var(--text-secondary)]" />
                       </div>
                       <div>
-                        <Badge className={`${serviceTypeConfig[service.serviceType]?.color || 'bg-slate-500'} text-white border-0`}>
+                        <Badge className={`${serviceTypeConfig[service.serviceType]?.color || 'status-info'} text-[var(--text-primary)]`}>
                           {serviceTypeConfig[service.serviceType]?.label || service.serviceType}
                         </Badge>
-                        <p className="text-sm text-slate-400 mt-1">
+                        <p className="text-sm text-[var(--text-muted)] mt-1">
                           {service.date && format(new Date(service.date), 'dd MMM yyyy', { locale: pl })}
                         </p>
                       </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+                        <Button variant="ghost" size="icon" className="text-[var(--text-muted)] hover:text-white">
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
+                      <DropdownMenuContent align="end" className="bg-[var(--popover-surface)] border-[var(--border-color)]">
                         <DropdownMenuItem 
                           onClick={() => handleEdit(service)}
-                          className="text-slate-300 hover:text-white hover:bg-slate-700"
+                          className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
                         >
                           <Edit className="w-4 h-4 mr-2" />
                           Edytuj
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => deleteMutation.mutate(service.id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                          className="text-[var(--danger)] hover:text-[var(--danger)] hover:bg-[var(--danger-soft)]"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Usuń
@@ -337,15 +336,15 @@ export default function Services() {
 
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-white">
-                      <Car className="w-4 h-4 text-indigo-400" />
+                      <Car className="w-4 h-4 text-[var(--primary-light)]" />
                       <span className="font-medium">{getVehicleName(service.vehicleId)}</span>
                     </div>
 
                     {service.description && (
-                      <p className="text-slate-400 text-sm">{service.description}</p>
+                      <p className="text-[var(--text-muted)] text-sm">{service.description}</p>
                     )}
 
-                    <div className="flex flex-wrap gap-4 text-sm text-slate-400 pt-2 border-t border-slate-700/50">
+                    <div className="flex flex-wrap gap-4 text-sm text-[var(--text-muted)] pt-2 border-t border-[var(--border-color)]">
                       <div className="flex items-center gap-1">
                         <DollarSign className="w-4 h-4 text-emerald-400" />
                         <span className="text-emerald-400 font-medium">{service.cost?.toLocaleString()} PLN</span>
@@ -379,12 +378,12 @@ export default function Services() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-[var(--surface)] border-[var(--border-color)] text-[var(--text-primary)] max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
               {editingService ? 'Edytuj serwis' : 'Nowy serwis'}
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-[var(--text-muted)]">
               {editingService ? 'Zmień dane istniejącego serwisu' : 'Dodaj nowy wpis serwisowy'}
             </DialogDescription>
           </DialogHeader>
@@ -399,7 +398,7 @@ export default function Services() {
                   required
                   name="vehicle"
                 >
-                  <SelectTrigger id="vehicle" className="bg-slate-800 border-slate-700">
+                  <SelectTrigger id="vehicle" className="bg-[var(--popover-surface)] border-[var(--border-color)]">
                     <SelectValue placeholder="Wybierz pojazd" />
                   </SelectTrigger>
                   <SelectContent>
@@ -419,7 +418,7 @@ export default function Services() {
                   required
                   name="serviceType"
                 >
-                  <SelectTrigger id="serviceType" className="bg-slate-800 border-slate-700">
+                  <SelectTrigger id="serviceType" className="bg-[var(--popover-surface)] border-[var(--border-color)]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -443,7 +442,7 @@ export default function Services() {
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({...formData, date: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   required
                 />
               </div>
@@ -455,7 +454,7 @@ export default function Services() {
                   type="number"
                   value={formData.mileageAtService}
                   onChange={(e) => setFormData({...formData, mileageAtService: parseInt(e.target.value) || 0})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                 />
               </div>
               <div className="space-y-2">
@@ -467,7 +466,7 @@ export default function Services() {
                   step="0.01"
                   value={formData.cost}
                   onChange={(e) => setFormData({...formData, cost: parseFloat(e.target.value) || 0})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                 />
               </div>
             </div>
@@ -480,7 +479,7 @@ export default function Services() {
                   name="workshop"
                   value={formData.workshopName}
                   onChange={(e) => setFormData({...formData, workshopName: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   placeholder="Nazwa warsztatu"
                 />
               </div>
@@ -491,7 +490,7 @@ export default function Services() {
                   name="invoice"
                   value={formData.invoiceNumber}
                   onChange={(e) => setFormData({...formData, invoiceNumber: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                   placeholder="FV 2025/01"
                 />
               </div>
@@ -504,7 +503,7 @@ export default function Services() {
                 name="description"
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
-                className="bg-slate-800 border-slate-700"
+                className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                 rows={3}
                 placeholder="Opisz wykonane prace..."
               />
@@ -519,7 +518,7 @@ export default function Services() {
                   type="date"
                   value={formData.nextServiceDate}
                   onChange={(e) => setFormData({...formData, nextServiceDate: e.target.value})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                 />
               </div>
               <div className="space-y-2">
@@ -530,7 +529,7 @@ export default function Services() {
                   type="number"
                   value={formData.nextServiceMileage}
                   onChange={(e) => setFormData({...formData, nextServiceMileage: parseInt(e.target.value) || 0})}
-                  className="bg-slate-800 border-slate-700"
+                  className="bg-[var(--popover-surface)] border-[var(--border-color)]"
                 />
               </div>
             </div>
@@ -540,13 +539,13 @@ export default function Services() {
                 type="button" 
                 variant="outline" 
                 onClick={() => setIsDialogOpen(false)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                className="border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
               >
                 Anuluj
               </Button>
               <Button 
                 type="submit"
-                className="bg-gradient-to-r from-indigo-500 to-cyan-500"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {editingService ? 'Zapisz zmiany' : 'Dodaj serwis'}
