@@ -17,7 +17,7 @@ export default function SortButton({ field, sortConfig, onSort, children, classN
     <button
       onClick={() => onSort(field)}
       className={`flex items-center gap-1 text-left font-medium transition-colors hover:text-primary ${
-        isActive ? 'text-primary' : 'text-slate-400'
+        isActive ? 'text-primary' : 'text-[var(--text-muted)]'
       } ${className}`}
     >
       {children}
